@@ -1,0 +1,38 @@
+{
+  "date": "2026-11-03",
+  "scope": "0.1 SMOKE, one gateway fault family with port variants",
+  "model": "gpt-5.6-sol",
+  "completed_seasons": 2,
+  "real_task_runs": 16,
+  "passed_real_task_runs": 16,
+  "model_requests": 50,
+  "reported_tokens": 35704,
+  "decisions": [
+    {
+      "status": "rejected",
+      "reason": "no_strict_success_gain"
+    },
+    {
+      "status": "rejected",
+      "reason": "no_strict_success_gain"
+    }
+  ],
+  "automated_tests": {
+    "count": 19,
+    "all_passed": true,
+    "docker_integration_enabled": true
+  },
+  "browser_checks": [
+    "real season start and live feed",
+    "custom policy registration and roster selection",
+    "parent child diff and execution replay",
+    "desktop and narrow viewport have no horizontal overflow",
+    "model key is not sent to browser"
+  ],
+  "limitations": [
+    "single fault family",
+    "one instance per phase per version",
+    "no demonstrated evolution gain",
+    "no distributed workers or automatic in-flight takeover"
+  ]
+}

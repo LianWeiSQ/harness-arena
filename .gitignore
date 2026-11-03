@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+.evoarena/
+.env
+.env.*
+!.env.example
+.DS_Store

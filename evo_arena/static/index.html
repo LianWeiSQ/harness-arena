@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      name="description"
+      content="EvoArena：观察 Agent 完成真实任务、竞争和演化的完整证据。"
+    />
+    <title>EvoArena · 竞争与进化</title>
+    <link rel="stylesheet" href="/style.css" />
+    <script defer src="/app.js"></script>
+  </head>
+  <body>
+    <header class="top">
+      <a class="brand" href="#"
+        ><span class="mark">E</span>Evo<span>Arena</span
+        ><small>LOCAL LAB</small></a
+      >
+      <nav aria-label="主导航">
+        <a href="#arena">竞技场</a><a href="#evolution">进化记录</a
+        ><a href="#replay">执行回放</a>
+      </nav>
+      <span id="model" class="model">正在连接</span>
+    </header>
+    <main>
+      <section class="intro">
+        <div>
+          <p class="eyebrow"><span class="pulse"></span> AGENT EVOLUTION LAB</p>
+          <h1>在竞争中演化<span>。</span></h1>
+          <p class="intro-copy">
+            同一道真实任务，不同的行动策略。每一次晋级，都有证据。
+          </p>
+        </div>
+        <div class="season-meta">
+          <span class="tag">FIXOPS / 01</span><strong>Restore the Shop</strong
+          ><span>第一赛场 · 恢复订单服务</span>
+        </div>
+      </section>
+      <section class="toolbar" aria-label="赛季控制">
+        <label
+          >赛季<select id="season-select">
+            <option value="">尚无赛季</option>
+          </select></label
+        >
+        <div class="new-settings">
+          <label
+            >阵容<select id="roster">
+              <option value="builtin">内置策略</option>
+              <option value="custom">自选策略</option>
+            </select></label
+          ><label
+            >种群<select id="population">
+              <option value="2">2 个 Agent</option>
+              <option value="4">4 个 Agent</option>
+            </select></label
+          ><label
+            >轮次<select id="rounds">
+              <option value="2">2 轮</option>
+              <option value="3">3 轮</option>
+            </select></label
+          ><button id="start" class="primary">＋ 开始赛季</button
+          ><button id="cancel" class="danger" hidden>停止派发并取消</button>
+        </div>
+        <div id="version-picker" class="version-picker" hidden></div>
+      </section>
+      <p id="notice" class="notice" role="status">
+        真实模型实验 · 每季最多 32 次请求、220,000 token，单环境顺序运行。Token
+        达阈值后停止新请求，进行中的一次请求可能超出阈值。
+      </p>
+      <div id="error" class="error" role="alert" hidden></div>
+      <section class="stats" aria-label="赛季概览">
+        <article>
+          <span>赛季状态</span><strong id="status">等待开始</strong
+          ><small id="round-label">从第一个真实任务开始</small>
+        </article>
+        <article>
+          <span>有效任务通过</span><strong id="success">—</strong
+          ><small>独立业务验收</small>
+        </article>
+        <article>
+          <span>进化尝试</span><strong id="mutations">0</strong
+          ><small id="promotion-label">候选与父本配对评测</small>
+        </article>
+        <article>
+          <span>模型用量</span><strong id="tokens">0</strong
+          ><small id="calls">0 次模型请求</small>
+        </article>
+      </section>
+      <div class="main-grid">
+        <div class="main-column">
+          <section id="arena" class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">THE POPULATION</p>
+                <h2>当前种群</h2>
+              </div>
+              <span id="sample" class="badge">SMOKE · 小样本演示</span>
+            </div>
+            <div id="agents" class="agents">
+              <div class="empty">
+                启动赛季后，参赛策略将在这里出现。<br />相同模型、相同预算，各自处理独立的订单环境。
+              </div>
+            </div>
+            <details class="register">
+              <summary>提交自己的策略</summary>
+              <form id="register-form">
+                <label
+                  >策略名称<input
+                    id="policy-name"
+                    required
+                    maxlength="80"
+                    placeholder="给你的 Agent 起个名字" /></label
+                ><label
+                  >修复行动策略<textarea
+                    id="policy-text"
+                    required
+                    minlength="10"
+                    maxlength="8000"
+                    rows="4"
+                    placeholder="例如：先检查服务监听和当前配置，确认根因后进行最小修改，在三次动作内提交验收。"
+                  ></textarea>
+                </label>
+                <p class="muted">
+                  此处只注册策略，不发起模型请求。注册后可在“自选策略”中勾选参赛。
+                </p>
+                <button type="submit" id="register-submit">
+                  注册不可变版本</button
+                ><span id="register-result" role="status"></span>
+              </form>
+            </details>
+            <div class="legend">
+              <span>● 探索比赛</span><span>● 配对准入</span
+              ><span>● 封存集报告</span>
+            </div>
+          </section>
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <p class="eyebrow">ROUND RESULTS</p>
+                <h2>本轮排名</h2>
+              </div>
+              <span class="muted">验收通过优先</span>
+            </div>
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>排名</th>
+                    <th>策略</th>
+                    <th>验收</th>
+                    <th>执行时间</th>
+                    <th>Token</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="ranking">
+                  <tr>
+                    <td colspan="6" class="empty">等待完整比赛结果</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="footnote">
+              每轮一个探索实例。同分按执行耗时展示；本演示不据此宣称统计显著差异。
+            </p>
+          </section>
+        </div>
+        <aside class="panel feed-panel">
+          <div class="panel-head">
+            <div>
+              <p class="eyebrow">LIVE FEED</p>
+              <h2>实验动态</h2>
+            </div>
+            <span id="feed-status" class="live-label">↺ REPLAY</span>
+          </div>
+          <div id="feed" class="feed">
+            <p class="empty">执行、变异和验收事件将在这里记录。</p>
+          </div>
+        </aside>
+      </div>
+      <section id="evolution" class="panel">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">EVOLUTION ARCHIVE</p>
+            <h2>每一代，改了什么？</h2>
+          </div>
+          <span class="muted">失败版本同样保留</span>
+        </div>
+        <div id="lineage" class="lineage">
+          <p class="empty">
+            首轮比赛完成后，进化器会选择 Parent 并生成一个 Child。
+          </p>
+        </div>
+      </section>
+      <section id="replay" class="panel">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">EXECUTION REPLAY</p>
+            <h2>沿着证据，回看一次修复</h2>
+          </div>
+          <span id="replay-status" class="muted">选择一条执行记录</span>
+        </div>
+        <div class="replay-grid">
+          <div id="runs" class="run-list">
+            <p class="empty">还没有执行记录</p>
+          </div>
+          <div id="trace" class="trace">
+            <p class="empty">
+              在左侧选择任务，查看实际动作、工具结果和独立验收。
+            </p>
+          </div>
+        </div>
+      </section>
+      <section class="panel">
+        <div class="panel-head">
+          <div>
+            <p class="eyebrow">SEALED REPORT</p>
+            <h2>离开改进过程，再测一次</h2>
+          </div>
+          <span class="muted">赛季结束后开启</span>
+        </div>
+        <div id="report">
+          <p class="empty">
+            使用另一端口变体比较初始与最终版本。这里的结果不用于当前赛季生成候选或决定晋级。
+          </p>
+        </div>
+      </section>
+      <footer>
+        <span>EvoArena <b>0.1</b> · 可验证的 Agent 竞争与进化</span
+        ><span>真实 Docker 服务 · 策略版本 · 独立验收</span>
+      </footer>
+    </main>
+  </body>
+</html>
