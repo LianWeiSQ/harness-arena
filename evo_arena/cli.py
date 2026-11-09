@@ -49,6 +49,9 @@ def main(argv=None) -> int:
             cmd.add_argument("--policy-file", type=Path, required=True)
         if name == "serve":
             cmd.add_argument("--port", type=int, default=8787)
+            cmd.add_argument("--harness-repo", type=Path, help="Desktop repository with the task's original commits")
+            cmd.add_argument("--harbor-bin", type=Path, help="Harbor CLI from harbor-eval")
+            cmd.add_argument("--harness-image", default="evoarena-harbor:arena")
         if name == "export":
             cmd.add_argument("--season", required=True)
             cmd.add_argument("--output", type=Path, required=True)
@@ -123,7 +126,9 @@ def main(argv=None) -> int:
         with owner_lock(args.data_dir), StoreContext(args.data_dir) as store:
             if args.command == "serve":
                 from .web import serve
-                serve(store, settings, port=args.port, base_image=args.base_image)
+                serve(store, settings, port=args.port, base_image=args.base_image,
+                      harness_repo=args.harness_repo, harbor_bin=args.harbor_bin.resolve() if args.harbor_bin else None,
+                      harness_image=args.harness_image)
                 return 0
             if args.max_calls < 1 or args.max_tokens < 1000:
                 raise ValueError("Budget limits must be positive")

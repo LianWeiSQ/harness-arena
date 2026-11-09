@@ -17,4 +17,4 @@ evo-arena = "evo_arena.cli:main"
 include = ["evo_arena*"]
 
 [tool.setuptools.package-data]
-evo_arena = ["static/*", "fixtures/*"]
+evo_arena = ["static/*", "fixtures/*", "fixtures/harness/*"]

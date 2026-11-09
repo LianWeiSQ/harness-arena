@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>EvoArena · Harness 竞技场</title>
+  <link rel="stylesheet" href="/style.css?v=arena">
+  <link rel="stylesheet" href="/harness.css?v=2">
+  <script defer src="/harness.js?v=2"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/harness"><span>Evo<b>Arena</b></span></a>
+    <nav class="topnav" aria-label="页面导航">
+      <a href="#arena">对局</a><a href="#evidence">证据回放</a><a href="/fixops">FixOps 档案</a>
+    </nav>
+    <div class="header-actions"><span id="status" class="system-status">正在连接</span></div>
+  </header>
+  <dl class="ticker" aria-label="本场概况">
+    <div><dt>赛场</dt><dd>Agent 工程维护</dd></div>
+    <div><dt>评测引擎</dt><dd>Harbor</dd></div>
+    <div><dt>固定模型</dt><dd id="model">—</dd></div>
+    <div><dt>赛制</dt><dd>同模型 · 同题 · 独立验收</dd></div>
+  </dl>
+  <main class="page duel" id="arena">
+    <section class="card" aria-labelledby="title">
+      <header class="card-head match-head">
+        <div><p class="eyebrow">HARNESS ARENA / AGENT 工程维护</p><h1 id="title">DSH <span class="versus">vs</span> <span class="title-opponent">Pi</span><span class="title-solo" hidden>单跑记录</span></h1></div>
+        <button id="start-match" class="primary" type="button" disabled>开始对局 ↗</button>
+      </header>
+      <div class="match-intro">
+        <p>给两个 Harness 同一个模型和同样的任务。双方都有验收结果时，每通过一题得一分。</p>
+        <label>对局记录 <select id="matches" aria-label="对局记录" disabled><option>暂无记录</option></select></label>
+      </div>
+      <p id="error-message" class="error" role="alert" hidden></p>
+      <div class="scoreboard" id="scoreboard" aria-label="对局比分"></div>
+      <div class="match-foot">
+        <p id="verdict" role="status">等待对局结果。</p>
+        <p id="budget" class="muted"></p>
+      </div>
+    </section>
+    <section class="card" id="evidence" aria-labelledby="evidence-title">
+      <header class="card-head">
+        <div><p class="eyebrow">TASK / REPLAY</p><h2 id="evidence-title">逐题回放</h2></div>
+        <div class="seg" id="evidence-tabs" role="group" aria-label="证据类型">
+          <button data-tab="checks" type="button" aria-pressed="true">验收</button>
+          <button data-tab="trace" type="button" aria-pressed="false">轨迹</button>
+          <button data-tab="patch" type="button" aria-pressed="false">补丁</button>
+        </div>
+      </header>
+      <div class="task-list" id="tasks" role="group" aria-label="选择任务"></div>
+      <div class="task-description" id="task-description"></div>
+      <div class="evidence-grid" id="evidence-grid"></div>
+    </section>
+    <footer><span>EvoArena</span><span>运行与验收由 Harbor 执行</span></footer>
+  </main>
+</body>
+</html>

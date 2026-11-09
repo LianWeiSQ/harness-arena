@@ -7,6 +7,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 from .arena import SeasonRunner
+from .harness import ACTIVE, HarnessMatch
 from .provider import Budget, ResponsesClient
 from .scenario import build_image, docker
 from .store import Store, digest, now
@@ -33,6 +34,14 @@ def recover(store: Store) -> None:
             season.update(status="interrupted", reason="owner_process_lost", finished_at=now())
             store.update("season", season["id"], season)
             store.event(season["id"], "season.interrupted", {"reason": "owner_process_lost"})
+
+    for match in store.list("harness_match"):
+        if match["status"] in ACTIVE:
+            for run in match["runs"]:
+                if run["status"] == "running":
+                    run.update(status="error", error="服务重启，执行中断")
+            match.update(status="incomplete", finished=now())
+            store.update("harness_match", match["id"], match)
 
 
 class Manager:
@@ -77,10 +86,29 @@ class Manager:
             self.worker.start()
             return season, 202
 
+    def start_harness(self, harness: HarnessMatch, key: str) -> tuple[dict, int]:
+        with self.lock:
+            request_id = digest(key)
+            old = self.store.get("harness_request", request_id)
+            if old:
+                return self.store.get("harness_match", old["match"]), 200
+            if self.worker and self.worker.is_alive():
+                return {"error": "已有一场对比正在运行"}, 409
+            if not harness.ready:
+                return {"error": "请先配置模型、任务仓库和 Harbor CLI"}, 400
+            match = harness.create()
+            self.store.create("harness_request", request_id, {"match": match["id"]})
+            self.current = None
+            self.worker = threading.Thread(target=harness.execute, args=(match,), daemon=True)
+            self.worker.start()
+            return match, 202
 
-def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="python:3.13-slim"):
+
+def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="python:3.13-slim",
+          harness_repo=None, harbor_bin=None, harness_image="evoarena-harbor:arena"):
     recover(store)
     manager = Manager(store, settings, base_image)
+    harness = HarnessMatch(store, settings, harness_repo, harbor_bin, harness_image)
 
     class Handler(BaseHTTPRequestHandler):
         def send_json(self, data, status=200):
@@ -95,6 +123,11 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
         def do_GET(self):
             parsed = urlparse(self.path)
             path = parsed.path
+            if path == "/api/harness":
+                return self.send_json(harness.overview())
+            if path.startswith("/api/harness/matches/"):
+                match = store.get("harness_match", path.rsplit("/", 1)[-1])
+                return self.send_json(match or {"error": "not_found"}, 200 if match else 404)
             if path == "/api/overview":
                 return self.send_json({"seasons": store.list("season"), "versions": store.list("version"),
                     "model": settings.public() if settings else None,
@@ -118,7 +151,9 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
                     return self.send_json({"events": store.events(args.get("scope", [None])[0], int(args.get("after", [0])[0]))})
                 except ValueError:
                     return self.send_json({"error": "invalid_cursor"}, 400)
-            files = {"/": "index.html", "/app.js": "app.js", "/style.css": "style.css"}
+            files = {"/": "harness.html" if harness_repo else "index.html", "/fixops": "index.html",
+                     "/harness": "harness.html", "/harness.js": "harness.js", "/harness.css": "harness.css",
+                     "/app.js": "app.js", "/style.css": "style.css"}
             name = files.get(path)
             if name:
                 body = (STATIC / name).read_bytes()
@@ -146,6 +181,12 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
                 payload = json.loads(self.rfile.read(size))
                 if not isinstance(payload, dict):
                     raise ValueError()
+                if self.path == "/api/harness/matches":
+                    key = self.headers.get("Idempotency-Key", "")
+                    if payload or not 1 <= len(key) <= 128:
+                        return self.send_json({"error": "invalid_harness_request"}, 400)
+                    data, code = manager.start_harness(harness, key)
+                    return self.send_json(data, code)
                 if self.path == "/api/seasons":
                     key = self.headers.get("Idempotency-Key", "")
                     if not 1 <= len(key) <= 128:
