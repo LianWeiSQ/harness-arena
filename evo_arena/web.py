@@ -8,6 +8,7 @@ from urllib.parse import parse_qs, urlparse
 
 from .arena import SeasonRunner
 from .harness import ACTIVE, HarnessMatch
+from .models import ModelProfiles
 from .provider import Budget, ResponsesClient
 from .scenario import build_image, docker
 from .store import Store, digest, now
@@ -86,18 +87,27 @@ class Manager:
             self.worker.start()
             return season, 202
 
-    def start_harness(self, harness: HarnessMatch, key: str) -> tuple[dict, int]:
+    def start_harness(self, harness: HarnessMatch, key: str, payload=None, models=None) -> tuple[dict, int]:
+        payload = {} if payload is None else payload
         with self.lock:
             request_id = digest(key)
             old = self.store.get("harness_request", request_id)
             if old:
+                if old.get("payload_sha256", digest({})) != digest(payload):
+                    return {"error": "同一请求不能更换模型或选手，请重新创建对局"}, 409
                 return self.store.get("harness_match", old["match"]), 200
             if self.worker and self.worker.is_alive():
                 return {"error": "已有一场对比正在运行"}, 409
+            if set(payload) - {"runners", "model_profile"} or ("model_profile" in payload and not isinstance(payload["model_profile"], str)):
+                return {"error": "对局配置格式错误"}, 400
+            profile, label = None, None
+            if models:
+                selected, profile, label = models.resolve(payload.get("model_profile"))
+                harness = HarnessMatch(harness.store, selected, harness.repo, harness.harbor, harness.image)
             if not harness.ready:
                 return {"error": "请先配置模型、任务仓库和 Harbor CLI"}, 400
-            match = harness.create()
-            self.store.create("harness_request", request_id, {"match": match["id"]})
+            match = harness.create(payload.get("runners"), profile, label)
+            self.store.create("harness_request", request_id, {"match": match["id"], "payload_sha256": digest(payload)})
             self.current = None
             self.worker = threading.Thread(target=harness.execute, args=(match,), daemon=True)
             self.worker.start()
@@ -109,6 +119,7 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
     recover(store)
     manager = Manager(store, settings, base_image)
     harness = HarnessMatch(store, settings, harness_repo, harbor_bin, harness_image)
+    models = ModelProfiles(store.root, settings)
 
     class Handler(BaseHTTPRequestHandler):
         def send_json(self, data, status=200):
@@ -124,7 +135,14 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
             parsed = urlparse(self.path)
             path = parsed.path
             if path == "/api/harness":
-                return self.send_json(harness.overview())
+                overview = harness.overview()
+                profiles = models.public()
+                overview["models"] = profiles
+                overview["ready"] = bool(profiles["profiles"] and harness.repo and harness.repo.is_dir()
+                                         and harness.harbor and harness.harbor.is_file())
+                return self.send_json(overview)
+            if path == "/api/models":
+                return self.send_json(models.public())
             if path.startswith("/api/harness/matches/"):
                 match = store.get("harness_match", path.rsplit("/", 1)[-1])
                 return self.send_json(match or {"error": "not_found"}, 200 if match else 404)
@@ -153,6 +171,7 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
                     return self.send_json({"error": "invalid_cursor"}, 400)
             files = {"/": "harness.html" if harness_repo else "index.html", "/fixops": "index.html",
                      "/harness": "harness.html", "/harness.js": "harness.js", "/harness.css": "harness.css",
+                     "/settings": "settings.html", "/settings.js": "settings.js",
                      "/app.js": "app.js", "/style.css": "style.css"}
             name = files.get(path)
             if name:
@@ -160,6 +179,7 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
                 self.send_response(200)
                 self.send_header("Content-Type", {"html": "text/html; charset=utf-8", "js": "text/javascript; charset=utf-8", "css": "text/css; charset=utf-8"}[name.rsplit(".", 1)[-1]])
                 self.send_header("Content-Length", str(len(body)))
+                self.send_header("Cache-Control", "no-cache")
                 self.send_header("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'")
                 self.send_header("X-Content-Type-Options", "nosniff")
                 self.end_headers()
@@ -181,11 +201,17 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
                 payload = json.loads(self.rfile.read(size))
                 if not isinstance(payload, dict):
                     raise ValueError()
+                if self.path == "/api/models":
+                    return self.send_json(models.save(payload))
+                if self.path == "/api/models/delete":
+                    if set(payload) != {"id"} or not isinstance(payload["id"], str):
+                        raise ValueError()
+                    return self.send_json(models.remove(payload["id"]))
                 if self.path == "/api/harness/matches":
                     key = self.headers.get("Idempotency-Key", "")
-                    if payload or not 1 <= len(key) <= 128:
+                    if not 1 <= len(key) <= 128:
                         return self.send_json({"error": "invalid_harness_request"}, 400)
-                    data, code = manager.start_harness(harness, key)
+                    data, code = manager.start_harness(harness, key, payload, models)
                     return self.send_json(data, code)
                 if self.path == "/api/seasons":
                     key = self.headers.get("Idempotency-Key", "")
@@ -200,8 +226,14 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
                 if self.path == "/api/cancel":
                     manager.cancel.set()
                     return self.send_json({"status": "cancellation_requested"})
-            except (ValueError, TypeError):
+            except ValueError as error:
+                if self.path in {"/api/models", "/api/models/delete", "/api/harness/matches"}:
+                    return self.send_json({"error": str(error) or "请求格式错误"}, 400)
                 return self.send_json({"error": "invalid_request"}, 400)
+            except TypeError:
+                return self.send_json({"error": "invalid_request"}, 400)
+            except OSError:
+                return self.send_json({"error": "本地文件写入失败，请检查数据目录权限"}, 500)
             self.send_json({"error": "not_found"}, 404)
 
     server = ThreadingHTTPServer((host, port), Handler)

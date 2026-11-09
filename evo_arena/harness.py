@@ -270,11 +270,16 @@ class HarnessMatch:
                 "matches": [{k: v for k, v in match.items() if k != "runs"}
                             for match in self.store.list("harness_match")]}
 
-    def create(self):
+    def create(self, runners=None, model_profile=None, model_label=None):
+        runners = list(RUNNERS) if runners is None else runners
+        if (not isinstance(runners, list) or not runners or
+                any(not isinstance(r, str) or r not in RUNNERS for r in runners) or len(set(runners)) != len(runners)):
+            raise ValueError("请选择已接入的 Harness，每位选手只能出现一次")
         ident = "hm-" + uuid.uuid4().hex[:12]
         return self.store.create("harness_match", ident, {"id": ident, "model": self.settings.model,
             "created": now(), "status": "queued", "base": BASE, "fix": FIX, "runs": [],
-            "engine": "harbor", "mode": "arena", "runners": list(RUNNERS), "limits": LIMITS})
+            "engine": "harbor", "mode": "arena", "runners": list(runners), "limits": LIMITS,
+            "model_profile": model_profile, "model_label": model_label})
 
     def execute(self, match):
         try:

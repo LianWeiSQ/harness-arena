@@ -1,58 +1,187 @@
 <!doctype html>
-<html lang="zh-CN">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>EvoArena · Harness 竞技场</title>
-  <link rel="stylesheet" href="/style.css?v=arena">
-  <link rel="stylesheet" href="/harness.css?v=2">
-  <script defer src="/harness.js?v=2"></script>
-</head>
-<body>
-  <header class="topbar">
-    <a class="brand" href="/harness"><span>Evo<b>Arena</b></span></a>
-    <nav class="topnav" aria-label="页面导航">
-      <a href="#arena">对局</a><a href="#evidence">证据回放</a><a href="/fixops">FixOps 档案</a>
-    </nav>
-    <div class="header-actions"><span id="status" class="system-status">正在连接</span></div>
-  </header>
-  <dl class="ticker" aria-label="本场概况">
-    <div><dt>赛场</dt><dd>Agent 工程维护</dd></div>
-    <div><dt>评测引擎</dt><dd>Harbor</dd></div>
-    <div><dt>固定模型</dt><dd id="model">—</dd></div>
-    <div><dt>赛制</dt><dd>同模型 · 同题 · 独立验收</dd></div>
-  </dl>
-  <main class="page duel" id="arena">
-    <section class="card" aria-labelledby="title">
-      <header class="card-head match-head">
-        <div><p class="eyebrow">HARNESS ARENA / AGENT 工程维护</p><h1 id="title">DSH <span class="versus">vs</span> <span class="title-opponent">Pi</span><span class="title-solo" hidden>单跑记录</span></h1></div>
-        <button id="start-match" class="primary" type="button" disabled>开始对局 ↗</button>
-      </header>
-      <div class="match-intro">
-        <p>给两个 Harness 同一个模型和同样的任务。双方都有验收结果时，每通过一题得一分。</p>
-        <label>对局记录 <select id="matches" aria-label="对局记录" disabled><option>暂无记录</option></select></label>
+<html lang="zh-CN" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>EvoArena · Harness 竞技场</title>
+    <link rel="stylesheet" href="/harness.css?v=4" />
+    <script defer src="/harness.js?v=4"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/harness"
+        ><span class="brand-mark" aria-hidden="true">◇</span> Evo<b>Arena</b></a
+      >
+      <nav aria-label="页面导航">
+        <a href="/harness" aria-current="page">竞技场</a
+        ><a href="#evidence">回放</a><a href="/settings">模型设置</a>
+      </nav>
+      <div class="header-actions">
+        <span id="status" class="system-status">正在连接</span
+        ><button id="theme-toggle" class="icon-btn" aria-label="切换明暗主题">
+          ◐
+        </button>
       </div>
-      <p id="error-message" class="error" role="alert" hidden></p>
-      <div class="scoreboard" id="scoreboard" aria-label="对局比分"></div>
+    </header>
+    <dl class="ticker">
+      <div>
+        <dt>赛场</dt>
+        <dd>Agent 工程维护</dd>
+      </div>
+      <div>
+        <dt>本场模型</dt>
+        <dd id="model">—</dd>
+      </div>
+      <div>
+        <dt>有效任务</dt>
+        <dd id="coverage">—</dd>
+      </div>
+      <div>
+        <dt>模型请求</dt>
+        <dd id="total-calls">—</dd>
+      </div>
+      <div>
+        <dt>累计 Token</dt>
+        <dd id="total-tokens">—</dd>
+      </div>
+      <div>
+        <dt>评测引擎</dt>
+        <dd>Harbor</dd>
+      </div>
+    </dl>
+    <main class="page" id="arena">
+      <div class="page-heading">
+        <div>
+          <p class="eyebrow">HARNESS × MODEL / 可验证的 Agent 竞技场</p>
+          <h1 id="title">Harness Arena</h1>
+        </div>
+        <div class="toolbar">
+          <select id="matches" aria-label="对局记录" disabled>
+            <option>暂无对局</option></select
+          ><button id="start-match" class="primary" disabled>
+            新建对局 ↗
+          </button>
+        </div>
+      </div>
+      <p id="error-message" class="error notice" role="alert" hidden></p>
+      <div class="arena-grid">
+        <section class="card chart-card" aria-labelledby="chart-title">
+          <header class="card-head">
+            <div>
+              <p class="eyebrow">逐题表现 · 当前对局</p>
+              <h2 id="chart-title">任务耗时</h2>
+            </div>
+            <div class="seg" id="metric-tabs" aria-label="图表指标">
+              <button data-metric="seconds" aria-pressed="true">耗时</button
+              ><button data-metric="tokens" aria-pressed="false">Token</button>
+            </div>
+          </header>
+          <div id="performance-chart" class="performance-chart"></div>
+          <div class="chart-foot">
+            <span id="chart-note">选择任务查看双方执行证据</span
+            ><span>每通过一题得 1 分</span>
+          </div>
+          <div id="scoreboard" class="scoreboard" aria-label="对局比分"></div>
+        </section>
+        <aside class="card activity-card" aria-labelledby="activity-title">
+          <header class="card-head">
+            <h2 id="activity-title">执行动态</h2>
+            <span class="muted">按时间排序</span>
+          </header>
+          <div id="activity-feed" class="activity-feed"></div>
+        </aside>
+      </div>
       <div class="match-foot">
-        <p id="verdict" role="status">等待对局结果。</p>
+        <p id="verdict" role="status">等待对局结果</p>
         <p id="budget" class="muted"></p>
       </div>
-    </section>
-    <section class="card" id="evidence" aria-labelledby="evidence-title">
-      <header class="card-head">
-        <div><p class="eyebrow">TASK / REPLAY</p><h2 id="evidence-title">逐题回放</h2></div>
-        <div class="seg" id="evidence-tabs" role="group" aria-label="证据类型">
-          <button data-tab="checks" type="button" aria-pressed="true">验收</button>
-          <button data-tab="trace" type="button" aria-pressed="false">轨迹</button>
-          <button data-tab="patch" type="button" aria-pressed="false">补丁</button>
+      <section class="card standings" aria-labelledby="standings-title">
+        <header class="card-head">
+          <h2 id="standings-title">本场成绩</h2>
+          <span class="muted">同模型 · 同题 · 同预算</span>
+        </header>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Harness</th>
+                <th>得分</th>
+                <th>验收完成</th>
+                <th>执行耗时</th>
+                <th>模型请求</th>
+                <th>Token 用量</th>
+                <th>执行异常</th>
+              </tr>
+            </thead>
+            <tbody id="standings-body"></tbody>
+          </table>
         </div>
-      </header>
-      <div class="task-list" id="tasks" role="group" aria-label="选择任务"></div>
-      <div class="task-description" id="task-description"></div>
-      <div class="evidence-grid" id="evidence-grid"></div>
-    </section>
-    <footer><span>EvoArena</span><span>运行与验收由 Harbor 执行</span></footer>
-  </main>
-</body>
+      </section>
+      <section class="card" id="evidence" aria-labelledby="evidence-title">
+        <header class="card-head">
+          <div>
+            <p class="eyebrow">TASK / REPLAY</p>
+            <h2 id="evidence-title">逐题回放</h2>
+          </div>
+          <div class="seg" id="evidence-tabs" aria-label="证据类型">
+            <button data-tab="checks" aria-pressed="true">验收</button
+            ><button data-tab="trace" aria-pressed="false">轨迹</button
+            ><button data-tab="patch" aria-pressed="false">补丁</button>
+          </div>
+        </header>
+        <div
+          id="tasks"
+          class="task-list"
+          role="group"
+          aria-label="选择任务"
+        ></div>
+        <div id="task-description" class="task-description"></div>
+        <div id="evidence-grid" class="evidence-grid"></div>
+      </section>
+      <footer>
+        <span>EvoArena · Harness 竞技场</span
+        ><a href="/fixops">FixOps 进化档案 ↗</a
+        ><span>真实执行 · 独立验收</span>
+      </footer>
+    </main>
+    <dialog id="match-dialog" aria-labelledby="dialog-title">
+      <form id="match-form">
+        <header class="card-head">
+          <div>
+            <p class="eyebrow">NEW MATCH</p>
+            <h2 id="dialog-title">创建对局</h2>
+          </div>
+          <button type="button" id="close-dialog" aria-label="关闭">×</button>
+        </header>
+        <div class="dialog-content">
+          <label class="field"
+            >模型连接<select id="match-model" required></select
+          ></label>
+          <p class="hint">
+            所有选手使用这一模型。<a href="/settings">管理模型连接 ↗</a>
+          </p>
+          <fieldset>
+            <legend>参赛 Harness</legend>
+            <div id="runner-options" class="runner-options"></div>
+          </fieldset>
+          <p id="roster-hint" class="hint"></p>
+          <div class="rule-box">
+            <strong>Agent 工程维护 · 2 道任务</strong>
+            <p>清理后台进程 / 下单回执超时恢复</p>
+            <p>
+              每位选手每题限时 240 秒、12 次模型请求，累计 180,000 Token
+              后停止派发。
+            </p>
+          </div>
+          <p id="dialog-error" class="error" role="alert" hidden></p>
+        </div>
+        <div class="dialog-actions">
+          <span class="muted">启动后会产生真实模型调用</span
+          ><button type="submit" id="launch-match" class="primary">
+            启动对局 ↗
+          </button>
+        </div>
+      </form>
+    </dialog>
+  </body>
 </html>

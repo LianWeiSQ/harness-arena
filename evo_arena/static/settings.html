@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>EvoArena · 模型设置</title>
+    <link rel="stylesheet" href="/harness.css?v=4" />
+    <script defer src="/settings.js?v=3"></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/harness"
+        ><span class="brand-mark" aria-hidden="true">◇</span> Evo<b>Arena</b></a
+      >
+      <nav aria-label="页面导航">
+        <a href="/harness">竞技场</a><a href="/harness#evidence">回放</a
+        ><a href="/settings" aria-current="page">模型设置</a>
+      </nav>
+      <div class="header-actions">
+        <span class="system-status">本地配置</span
+        ><button id="theme-toggle" class="icon-btn" aria-label="切换明暗主题">
+          ◐
+        </button>
+      </div>
+    </header>
+    <main class="page settings-page">
+      <div class="page-heading">
+        <div>
+          <p class="eyebrow">SETTINGS / MODEL CONNECTIONS</p>
+          <h1>模型连接</h1>
+        </div>
+        <a href="/harness">返回竞技场 ↗</a>
+      </div>
+      <p class="hint">
+        保存模型连接后，在新建对局中选择。一个对局内，所有 Harness
+        共用同一个模型。
+      </p>
+      <div class="settings-grid">
+        <section class="card" aria-labelledby="profiles-title">
+          <header class="card-head">
+            <h2 id="profiles-title">已保存连接</h2>
+            <span id="profile-count" class="muted"></span>
+          </header>
+          <div id="profiles"></div>
+        </section>
+        <section class="card" aria-labelledby="form-title">
+          <header class="card-head">
+            <div>
+              <p class="eyebrow">OPENAI-COMPATIBLE / RESPONSES API</p>
+              <h2 id="form-title">添加模型连接</h2>
+            </div>
+            <button id="new-profile" type="button">新建 +</button>
+          </header>
+          <form id="model-form" class="settings-form">
+            <input type="hidden" id="profile-id" />
+            <div class="form-row">
+              <label class="field"
+                >连接名称<input
+                  id="profile-name"
+                  placeholder="例如，开发环境 GPT"
+                  maxlength="120"
+                  required /></label
+              ><label class="field"
+                >模型 ID<input
+                  id="profile-model"
+                  placeholder="例如，gpt-5.6-sol"
+                  maxlength="256"
+                  required
+                  spellcheck="false"
+              /></label>
+            </div>
+            <label class="field"
+              >API 地址<input
+                id="profile-url"
+                type="url"
+                placeholder="https://api.example.com/v1"
+                required
+                spellcheck="false"
+            /></label>
+            <p class="hint">填写 Responses API 的基础地址，通常以 /v1 结尾。</p>
+            <label class="field"
+              >API Key<input
+                id="profile-key"
+                type="password"
+                autocomplete="new-password"
+                placeholder="输入此连接的 API Key"
+                required
+            /></label>
+            <p id="key-hint" class="hint">
+              密钥仅保存在本机数据目录，页面只显示是否已配置。
+            </p>
+            <label class="checkbox-field"
+              ><input
+                id="profile-default"
+                type="checkbox"
+              />将此连接设为新对局的默认模型</label
+            >
+            <div class="form-actions">
+              <button type="submit" id="save-model" class="primary">
+                保存连接</button
+              ><span class="muted">保存后立即可用</span>
+            </div>
+            <p id="save-status" class="save-status" role="status"></p>
+          </form>
+        </section>
+      </div>
+      <div class="settings-info">
+        <p>
+          当前支持兼容 OpenAI Responses API 的模型服务。模型 ID 和 API
+          地址需与服务商配置一致。
+        </p>
+        <p>
+          启动配置来自服务启动参数，可直接用于对局。新增连接保存在本机
+          .evoarena/models.json。正在运行和已完成的对局保留启动时的模型信息。
+        </p>
+      </div>
+      <footer>
+        <span>EvoArena · 模型设置</span><span>配置 → 选择选手 → 开始对局</span>
+      </footer>
+    </main>
+  </body>
+</html>
