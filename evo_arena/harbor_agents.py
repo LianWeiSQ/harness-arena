@@ -4,10 +4,10 @@ from __future__ import annotations
 import json
 import os
 import shlex
+import yaml
 from functools import wraps
 from pathlib import Path
 
-from agents.deepseek_harness import DeepSeekHarness
 from harbor.agents.installed.base import BaseInstalledAgent
 
 from .versions import file_hashes, verify_version
@@ -65,10 +65,35 @@ def local_env(agent):
     }
 
 
-class ArenaDSH(DeepSeekHarness):
-    def __init__(self, **kwargs):
-        super().__init__(provider="arena", api_key_env="ARENA_TRIAL_TOKEN", **kwargs)
-        self.base_url = self._get_env("ARENA_TRIAL_URL") + "/v1"
+class ArenaDSH(BaseInstalledAgent):
+    """Pinned DSH CLI adapter, independent of any neighboring Harbor project.
+
+    Provider usage and tool evidence are recorded by TrialGateway. DSH's native
+    session logs are retained; this adapter does not synthesize an ATIF trace.
+    """
+    @staticmethod
+    def name() -> str:
+        return "deepseek-harness"
+
+    def get_version_command(self) -> str:
+        return "dsh --version"
+
+    def _settings(self):
+        model = self.model_name.split("/", 1)[-1]
+        return yaml.safe_dump({
+            "llm-pi-ai": {"providers": {"arena": {
+                "api": "openai-responses", "apiKeyEnv": "ARENA_TRIAL_TOKEN",
+                "baseURL": self._get_env("ARENA_TRIAL_URL") + "/v1",
+                "models": [{"id": model, "name": model}],
+            }}},
+            "agent-default-model": {"provider": "arena", "model": model},
+        }, allow_unicode=True, sort_keys=False)
+
+    @staticmethod
+    def _home_patch():
+        # A Trial owns one Agent. Recursive workers cannot share its budget.
+        return yaml.safe_dump([{"id": "tool-" + name, "disabled": True} for name in
+            ("subagent-control", "subagent-list-agents", "subagent", "subagent-fork", "workflow", "ralph")])
 
     async def install(self, environment):
         await self.exec_as_agent(environment, "dsh --version")

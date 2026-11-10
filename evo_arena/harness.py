@@ -387,8 +387,9 @@ class HarborTrial:
         jobs.mkdir(exist_ok=True)
         run["job"] = job
         gateway = TrialGateway(self.settings, record, version, case, experiment_budget, run.get("id"))
-        worker_root = self.harbor.parent.parent.parent
-        python_path = os.pathsep.join([str(Path(__file__).resolve().parent.parent), str(worker_root)])
+        # The adapter lives in this distribution. Harbor's executable location
+        # is not a project root and must not expose an adjacent agents package.
+        python_path = str(Path(__file__).resolve().parent.parent)
         from .trial_resources import workspace
         with workspace(experiment_budget, run, root, job, self.harbor) as temporary, (root / f"{job}.log").open("w") as logs:
             spool, ledger = Path(temporary) / "spool", Path(temporary) / "ledger"
@@ -422,7 +423,7 @@ class HarborTrial:
             record("Harbor 启动", f"{RUNNERS[runner][0]} · {(case or TASKS[task])['title']}")
             if experiment_budget:
                 experiment_budget.check_control()
-            with subprocess.Popen(args, env=env, cwd=worker_root, stdout=logs, stderr=subprocess.STDOUT,
+            with subprocess.Popen(args, env=env, cwd=root, stdout=logs, stderr=subprocess.STDOUT,
                                   start_new_session=True) as process:
                 deadline = time.monotonic() + TIME_LIMIT + 150
                 if experiment_budget:

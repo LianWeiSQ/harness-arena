@@ -4,6 +4,7 @@ import argparse
 import fcntl
 import json
 import os
+import shutil
 import sys
 from contextlib import contextmanager
 from pathlib import Path
@@ -26,10 +27,21 @@ def owner_lock(root: Path):
         yield
 
 
+def find_harbor(explicit=None):
+    if explicit is not None:
+        return explicit.expanduser().resolve()
+    # Prefer the CLI installed with this Python environment over a global tool.
+    local = Path(sys.executable).parent / "harbor"
+    if local.is_file() and os.access(local, os.X_OK):
+        return local.resolve()
+    found = shutil.which("harbor")
+    return Path(found).resolve() if found else None
+
+
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(prog="evo-arena")
     sub = parser.add_subparsers(dest="command", required=True)
-    for name in ["doctor", "calibrate", "demo", "serve", "export", "register"]:
+    for name in ["doctor", "calibrate", "calibrate-business", "demo", "serve", "export", "register"]:
         cmd = sub.add_parser(name)
         cmd.add_argument("--data-dir", type=Path, default=Path(".evoarena"))
         cmd.add_argument("--import-config", type=Path)
@@ -49,8 +61,8 @@ def main(argv=None) -> int:
             cmd.add_argument("--policy-file", type=Path, required=True)
         if name == "serve":
             cmd.add_argument("--port", type=int, default=8787)
-            cmd.add_argument("--harness-repo", type=Path, help="Desktop repository with the task's original commits")
-            cmd.add_argument("--harbor-bin", type=Path, help="Harbor CLI from harbor-eval")
+            cmd.add_argument("--harness-repo", type=Path, help="Optional source repository for the legacy /harness maintenance task")
+            cmd.add_argument("--harbor-bin", type=Path, help="Harbor CLI (defaults to this Python environment, then PATH)")
             cmd.add_argument("--harness-image", default="evoarena-harbor:arena")
         if name == "export":
             cmd.add_argument("--season", required=True)
@@ -69,6 +81,11 @@ def main(argv=None) -> int:
                     referenced = Path(profile[field]).expanduser()
                     setattr(args, field, referenced if referenced.is_absolute() else args.profile.resolve().parent / referenced)
         args.base_image = args.base_image or os.environ.get("EVOARENA_BASE_IMAGE") or profile.get("base_image") or "python:3.13-slim"
+        if args.command == "calibrate-business":
+            from .calibration import calibrate
+            report = calibrate()
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+            return 0 if report["passed"] else 1
         if args.command == "register":
             with StoreContext(args.data_dir) as store:
                 version = store.version(args.name, args.policy_file.read_text())
@@ -127,7 +144,7 @@ def main(argv=None) -> int:
             if args.command == "serve":
                 from .web import serve
                 serve(store, settings, port=args.port, base_image=args.base_image,
-                      harness_repo=args.harness_repo, harbor_bin=args.harbor_bin.resolve() if args.harbor_bin else None,
+                      harness_repo=args.harness_repo, harbor_bin=find_harbor(args.harbor_bin),
                       harness_image=args.harness_image)
                 return 0
             if args.max_calls < 1 or args.max_tokens < 1000:

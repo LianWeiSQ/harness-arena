@@ -4,7 +4,7 @@
 
 默认首页 `/evo` 提供不可变基线、人工候选、运行前 diff 和真实版本加载实验。Pi 支持系统策略追加和原生 Skill；DSH 支持任务指令前缀，原生 Skill 尚未验证。详见 [用法与首组加载证据](docs/version-loading-check.md)。旧对战和 FixOps 历史仍在 `/harness` 与 `/fixops`。
 
-新业务任务包有 3 类问题、18 个不同机制场景，开发/验证/封存各 6 题。页面可选择开发冒烟、重复验证或封存报告，配置实验总预算，查看逐题差异与可信验收。真实 Pi 冒烟中两版均为 3/3，报告“未观察到收益”；DSH 的永久失败补偿路径也已实际通过。见 [评测用法与边界](docs/business-evaluation.md) 和 [脱敏验证摘要](docs/m2-verification.json)。新任务不依赖旁边的桌面项目代码，但 DSH 适配器当前仍依赖已有 Harbor 工作区；独立克隆安装在 M6 完成。
+新业务任务包有 3 类问题、18 个不同机制场景，开发/验证/封存各 6 题。页面可选择开发冒烟、重复验证或封存报告，配置实验总预算，查看逐题差异与可信验收。真实 Pi 冒烟中两版均为 3/3，报告“未观察到收益”；DSH 的永久失败补偿路径也已实际通过。见 [评测用法与边界](docs/business-evaluation.md) 和 [脱敏验证摘要](docs/m2-verification.json)。运行器适配器和业务任务现已包含在此仓库，安装方式见下方。
 
 M3 的“自动改进”入口已经接通：6 次开发基线 → 有证据引用的模型诊断 → 单文件候选 → 24 次配对验证 → 事务判定。可独立选择生成模型，所有调用共用预算，候选不能更换执行模型或运行器。真实模型已生成 Skill；本次验证在 10/24 次有效结果后遇到模型响应异常，以证据不足结束，没有晋升，M3 完整验收仍待完成。见 [自动改进用法与边界](docs/automatic-improvement.md)。
 
@@ -13,6 +13,25 @@ M3 的“自动改进”入口已经接通：6 次开发基线 → 有证据引�
 工作台现按总览、实验、版本、任务集和设置组织。可导出版本包及脱敏报告，重新绑定模型导入资产，回滚本地推荐并保留审计记录；全新工作区提供不写入用户历史的真实案例回放。见 [页面与交付用法](docs/delivery-and-workspace.md)。
 
 ![Evo 总览：真实候选已生成，验证因用量未知而停止，当前推荐未变](docs/images/evo-overview.png)
+
+## 启动 Evo 工作台
+
+需要 macOS 或 Linux、Python 3.12+、uv、Node.js 22+ 和运行中的 Docker。首次安装和构建需要联网下载依赖。只浏览页面时无需 Docker 和模型密钥。
+
+```sh
+git clone https://github.com/LianWeiSQ/harness-arena.git
+cd harness-arena
+uv sync --frozen --extra harbor --python 3.13
+docker build -t evoarena-harbor:arena -f evo_arena/fixtures/harness/Dockerfile evo_arena/fixtures/harness
+uv run --frozen --extra harbor evo-arena calibrate-business
+uv run --frozen --extra harbor evo-arena serve
+```
+
+打开 <http://127.0.0.1:8787/evo>，在“设置”添加兼容 Responses API 的模型连接，再创建 Pi 或 DSH 基线。模型配置保存在本机，创建版本和查看只读案例不调用模型；启动实验才使用模型预算。Harbor 固定为 `0.22.0`，CLI 自动选择当前 Python 环境中的 Harbor，可用 `--harbor-bin` 显式指定。
+
+这条路径不需要 `../app`、`../harbor-eval` 或个人凭据文件。只看工作台可省略 Harbor extra：`uv run --frozen evo-arena serve`。完整安装、依赖边界和 wheel 校验见 [独立安装](docs/installation.md)，页面操作见 [工作台与交付](docs/delivery-and-workspace.md)。
+
+## 历史 Arena 原型
 
 EvoArena 让工具型 Agent 在可验证任务中竞争，并根据执行反馈产生候选策略。比赛、策略差异、父子配对、晋级或拒绝都有持久记录。
 
@@ -36,12 +55,12 @@ FixOps 页面可提交自己的策略，再从“自选策略”中选择 2 或 
 
 首屏展示双方比分、逐题胜平负以及耗时和 Token 差距。得分沿用独立验收结果，效率比较只汇总双方共同通过且用量完整的同题任务，以用量较高的一方为基准计算节省比例。逐题交锋表可直接跳到相应证据，条件不一致或执行异常的任务不参与配对结论。结果仅描述当前对局。
 
-需要一个已安装 Harbor 的本地 `harbor-eval` 工作区和包含任务原始提交的桌面项目。构建比赛镜像后，使用已有模型配置启动。
+旧 `/harness` 的进程清理题仍需要包含任务原始提交的桌面项目；Evo 的业务任务不需要它。两者使用同一公开 Harbor 依赖和本仓库适配器：
 
 ```sh
 docker build -t evoarena-harbor:arena -f evo_arena/fixtures/harness/Dockerfile evo_arena/fixtures/harness
-uv run evo-arena serve --profile .evoarena/local-profile.json \
-  --harness-repo ../app --harbor-bin ../harbor-eval/.venv/bin/harbor
+uv run --extra harbor evo-arena serve --profile .evoarena/local-profile.json \
+  --harness-repo /path/to/legacy-task-source
 ```
 
 打开 <http://127.0.0.1:8787/harness>。Harbor 原始记录保存在 `.evoarena/harbor/`。Agent 和验收容器采用 Docker 的离线网络模式，模型请求由宿主机中继到配置的网关。每位选手每题限时 240 秒，最多派发 12 次模型请求，达到 180,000 个供应商报告 token 后停止派发下一次请求。达到赛制上限时，如独立验收已运行，则按当时的产物计分。供应商或运行器异常会让该题退出配对计分。

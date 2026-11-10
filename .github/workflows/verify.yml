@@ -1,0 +1,29 @@
+name: Verify Evo
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.11.6"
+          enable-cache: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: uv sync --frozen --extra harbor --python 3.13
+      - run: uv run --frozen --extra harbor python -m unittest discover -s tests
+      - run: node --check evo_arena/static/evo.js && node --check evo_arena/static/settings.js
+      - run: uv run --frozen --extra harbor evo-arena calibrate-business
+      - run: uv build --wheel
+      - name: Verify installed wheel outside the checkout
+        shell: bash
+        run: |
+          uv venv "$RUNNER_TEMP/evo-wheel" --python 3.13
+          uv pip install --python "$RUNNER_TEMP/evo-wheel/bin/python" dist/*.whl
+          cd "$RUNNER_TEMP"
+          "$RUNNER_TEMP/evo-wheel/bin/evo-arena" calibrate-business
+          "$RUNNER_TEMP/evo-wheel/bin/python" -I -c 'from importlib.resources import files; import json; root=files("evo_arena"); assert root.joinpath("static/evo.html").is_file(); assert json.loads(root.joinpath("fixtures/evo-example.json").read_text())["readonly"]'
