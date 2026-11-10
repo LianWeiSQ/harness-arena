@@ -16,7 +16,7 @@ async function api(path, payload, key) {
   if (!response.ok) throw new Error(result.error || '请求失败');
   return result;
 }
-function notice(message) {$('notice').hidden=!message;$('notice').textContent=message;}
+function notice(message,source='action') {$('notice').hidden=!message;$('notice').textContent=message;$('notice').dataset.source=source;}
 function options(select, rows, value) {select.innerHTML=rows.map(([id,label])=>`<option value="${esc(id)}">${esc(label)}</option>`).join('');if(rows.some(([id])=>id===value))select.value=value;}
 function version(id) {return state.overview.versions.find(row=>row.id===id);}
 function descendsFrom(row, ancestor) {const seen=new Set();while(row&&!seen.has(row.id)){if(row.id===ancestor)return true;seen.add(row.id);row=version(row.parent);}return false;}
@@ -77,7 +77,7 @@ function renderExperiment() {
   const cancelling=ex.control?.state==='cancelling';
   const controls=active(ex.status)?`<button data-control="cancel" ${cancelling?'disabled':''}>${cancelling?'正在取消…':'取消实验'}</button><span>${cancelling?'正在结算已发出的请求、停止执行并清理本实验资源。':'取消后保留已完成证据，停止派发新调用。'}</span>`:ex.status==='interrupted'?`<button data-control="resume" ${ex.recovery?.eligible?'':'disabled'}>从检查点继续</button><span>${ex.recovery?.eligible?'跳过已确认的 Trial，沿用剩余预算与原截止时间。':esc((ex.recovery?.reasons||[]).join('；'))}</span>`:'';
   if(controls)$('experiment-body').insertAdjacentHTML('afterbegin',`<div class="evo-budget evo-controls">${controls}</div>`);
-  if(ex.resources?.some(r=>r.state!=='cleaned'))$('experiment-body').insertAdjacentHTML('beforeend','<p class="evo-error evo-scope">执行资源尚未全部核对完成，不能继续派发。</p>');
+  if(!active(ex.status)&&ex.resources?.some(r=>r.state!=='cleaned'))$('experiment-body').insertAdjacentHTML('beforeend','<p class="evo-error evo-scope">执行资源尚未全部核对完成，不能继续派发。</p>');
   options($('run-select'),ex.runs.length?ex.runs.map(r=>[r.id,`${r.phase==='development'?'开发':'验证'} · ${r.role==='baseline'?'基线':'候选'} · ${r.family?families[r.family]+' 场景 '+r.task.split('-').at(-1)+' · 第 '+(r.repeat+1)+' 次 · ':''}${labels[r.status]||r.status}`]):[['','暂无执行']],$('run-select').value);
   renderDiagnosis();
   renderEvidence();
@@ -104,7 +104,8 @@ async function refresh(){
       state.experiment=experiment;
       if(state.loadedId!==state.selected&&!state.draft){$('baseline').value=state.experiment.baseline;$('protocol').value=state.experiment.mode||'loading';protocolChanged();if(!state.experiment.automatic_evolution)$('candidate').value=state.experiment.candidate;else{$('feedback-mode').value=state.experiment.feedback_mode||'development';$('target').value=state.experiment.target;$('optimizer-profile').value=state.experiment.optimizer_model.profile;}previewSelection();state.loadedId=state.selected;}
       if(state.experimentKey!==experimentKey){renderExperiment();state.experimentKey=experimentKey;}}
-  }catch(error){notice(error.message);}
+    if($('notice').dataset.source==='refresh')notice('');
+  }catch(error){notice(error.message,'refresh');}
 }
 function addSkill(skill={name:'',description:'',body:''}){
   if($('skills').children.length>=4)return;

@@ -7,14 +7,20 @@
     "passed": 77,
     "skipped": 1,
     "skip_reason": "Optional legacy Docker integration test is opt-in.",
-    "javascript_syntax": ["evo.js", "settings.js"],
+    "javascript_syntax": [
+      "evo.js",
+      "settings.js"
+    ],
     "git_diff_check": "passed"
   },
   "portable_version": {
     "source_version": "av-adcbb19519b4a526f770",
     "archive_bytes": 2514,
     "package_sha256": "490213a695906ad73db7576faa99fba4c52df1255acea7e4ce421e29fc4c409f",
-    "files": ["policy.md", "skills/order-recovery/SKILL.md"],
+    "files": [
+      "policy.md",
+      "skills/order-recovery/SKILL.md"
+    ],
     "downloaded_in_browser": true,
     "imported_in_isolated_workspace": true,
     "file_bytes_preserved": true,
@@ -61,7 +67,13 @@
     "scope": "Host-side independent verifier calibration, not Agent benchmark results."
   },
   "browser": {
-    "views": ["overview", "experiments", "versions", "tasks", "settings"],
+    "views": [
+      "overview",
+      "experiments",
+      "versions",
+      "tasks",
+      "settings"
+    ],
     "desktop_verified": true,
     "narrow_viewport_px": 390,
     "horizontal_overflow": false,
@@ -76,5 +88,25 @@
     "M6: independent clone and installation without adjacent workspaces",
     "M6: frozen initial baseline, sealed evaluation and equal-search-budget no-feedback control",
     "M6: final reproducibility report, CI, extension guide and interview documentation"
-  ]
+  ],
+  "active_status_followup": {
+    "date": "2026-11-10",
+    "experiment": "ex-306d6835a050",
+    "validation_snapshot": {
+      "valid": 17,
+      "planned": 24,
+      "complete": false
+    },
+    "active_resource_warning_removed": true,
+    "stopped_unclean_resource_warning_preserved_in_code": true,
+    "temporary_readonly_proxy_error_observed": true,
+    "error_cleared_automatically_after_recovery": true,
+    "added_model_calls": 0,
+    "screenshot": "docs/images/evo-active-validation.png",
+    "scope": "Live rendering and one read-only transient-connection probe; no experiment mutation or complete-quality claim.",
+    "user_action_message_preservation": {
+      "source_inspected": true,
+      "browser_tested_separately": false
+    }
+  }
 }
