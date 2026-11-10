@@ -1,6 +1,6 @@
 # Evo 自改进平台深度架构解析
 
-> 代码基线：`39bc2a4b4290eadf1cd696bcddd5ac755ec1df86`，2026-11-10。深度：L4，Agent/Harness 专项。
+> 代码基线：`39bc2a4b4290eadf1cd696bcddd5ac755ec1df86`，2026-11-10。深度：L4，Agent/Harness 专项。以下原有行号对应此审计基线；增量核对至 `605e5c1dcf28067d0815a5244d1c2e510ce64899`。
 > 输入：本仓库代码、配置、测试、M1—M6 分阶段实测及本地执行状态。
 > `[FACT]` 表示已核对的实现或证据；`[INFERENCE]` 是推断；`[TARGET]` 是后续设计；`[UNKNOWN]` 表示尚未证明。历史 M0 目标方案保留在 Git 历史，本文更新为当前实现审计。
 
@@ -193,7 +193,7 @@
 
 ## 16. 测试与验证计划
 
-[FACT] 当前 86 项自动化测试中 85 通过，1 项旧版可选 Docker 集成跳过；[提交 CI](https://github.com/LianWeiSQ/harness-arena/actions/runs/42796998028) 已通过。覆盖内容比数量更重要：
+[FACT] 当前 91 项自动化测试中 90 通过，1 项旧版可选 Docker 集成跳过；[提交 CI](https://github.com/LianWeiSQ/harness-arena/actions/runs/42801717521) 已通过。覆盖内容比数量更重要：
 
 | 层级 | 关键断言 | 证据 |
 | --- | --- | --- |
@@ -205,7 +205,9 @@
 | 交付 | ZIP 校验、绑定、报告白名单、导入事务 | delivery 测试、M5 浏览器 |
 | 安装 | 新目录与 wheel，无私有相邻依赖 | M6 实测和 CI |
 
-[FACT] 受控测试中的晋升是机制验证，不是实际模型收益。feedback-01 的真实结果尚待完成，不能用通过的 CI 补上缺失质量证据。
+[FACT] 受控测试中的晋升是机制验证，不是实际模型收益。feedback-01 因响应异常及未知用量停止，验证有效覆盖 2/24，对照和封存未启动；[失败报告](studies/2026-11-10-feedback-01-result.json) 保留。新预登记 feedback-02 尚待完整结果，不能用通过的 CI 补上缺失质量证据。
+
+[FACT] 605e5c1 增量修正把模型终止状态与费用确认分开：`response_protocol.py:44` 解码 SSE/JSON，`harness.py:138` 先结算用量再拒绝失败/未完成终止，`experiment_budget.py:87` 持久保存白名单响应摘要，`delivery.py:225` 导出再次过滤。已知用量的失败仍停止 Trial，未知用量仍不重放。旧实验缺少摘要，根因不能事后推定；参见 [处理与验证](provider-response-handling.md)。
 
 ## 17. 未知项与最小验证
 

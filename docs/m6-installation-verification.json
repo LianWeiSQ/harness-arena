@@ -269,5 +269,15 @@
     "unknown_calls": 0,
     "passed_trials": 4,
     "planned_trials": 4
+  },
+  "post_update_empty_startup": {
+    "commit": "605e5c1dcf28067d0815a5244d1c2e510ce64899",
+    "source": "fresh directory outside checkout; updated independent clone",
+    "empty_versions": 0,
+    "empty_experiments": 0,
+    "example_read_only": true,
+    "html_bytes": 12443,
+    "model_calls": 0,
+    "server_stopped_after_check": true
   }
 }
