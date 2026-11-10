@@ -29,6 +29,21 @@ uv run --frozen --extra harbor python tests/manual_feedback_study.py \
 
 验证和封存都只有有限场景及两次重复，供应商未声明 seed 支持；单个候选对照只能描述这次实验，不能证明普遍有效或统计显著。
 
+## 核对完整报告
+
+只有研究脚本生成 `complete.json` 后，才运行汇总检查；没有该文件时保留各阶段的部分报告，不补造完成标记：
+
+```sh
+uv run --frozen --extra harbor python tests/manual_feedback_report.py \
+  --plan docs/studies/2026-11-10-feedback-02-plan.json \
+  --source .evoarena/studies/feedback-02 \
+  --output .evoarena/studies/feedback-02/summary.json
+```
+
+此命令不调用模型，也不重新运行实验。它检查报告与计划哈希、模型/运行器/镜像、初始资产、授权文件、分组和两次配对覆盖、加载收据、逐题判定、搜索调用次数、总账与 Trial 成本，以及最终选择与封存报告的绑定。两组选择同一版本时，封存费用只累计一次；选择不同版本时必须有各自报告。验证改善但封存无收益会分别呈现。
+
+检查针对已导出工件的一致性，不等于供应商账单或原始验收签名审计。小样本结果、早前失败尝试和优化实际消耗仍需在发布说明中保留，不能用汇总哈希宣称可归因的普遍提升。
+
 ## 已登记研究
 
 `feedback-01` 已停止：反馈组有效验证 2/24，1 次未知用量，对照和封存未启动。它不能用于比较反馈效果，也没有候选晋升。见 [不可补写的原始报告摘要](studies/2026-11-10-feedback-01-result.json) 与 [响应处理修正](provider-response-handling.md)。
