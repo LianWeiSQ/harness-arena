@@ -13,6 +13,8 @@ from .models import ModelProfiles
 from .provider import Budget, ResponsesClient
 from .scenario import build_image, docker
 from .store import Store, digest, now
+from .versions import CAPABILITIES, VersionRegistry, version_diff
+from .evolution import VersionExperiment
 
 STATIC = Path(__file__).with_name("static")
 
@@ -45,6 +47,14 @@ def recover(store: Store) -> None:
             match.update(status="incomplete", finished=now())
             store.update("harness_match", match["id"], match)
 
+    for experiment in store.list("evo_experiment"):
+        if experiment["status"] in ACTIVE:
+            for run in experiment["runs"]:
+                if run["status"] == "running":
+                    run.update(status="interrupted", error="控制面重启，需核对已有执行")
+            experiment.update(status="interrupted", finished=now())
+            store.update("evo_experiment", experiment["id"], experiment)
+
 
 class Manager:
     def __init__(self, store: Store, settings, base_image: str):
@@ -53,6 +63,21 @@ class Manager:
         self.worker = None
         self.cancel = threading.Event()
         self.current = None
+
+    def start_evolution(self, engine, payload, key):
+        with self.lock:
+            previous = self.store.get("evo_request", digest(key))
+            if previous:
+                if previous["payload_hash"] != digest(payload):
+                    return {"error": "同一请求不能更改版本"}, 409
+                return self.store.get("evo_experiment", previous["experiment"]), 200
+            if self.worker and self.worker.is_alive():
+                return {"error": "已有实验正在运行"}, 409
+            experiment, settings, _ = engine.create(payload, key)
+            self.current = None
+            self.worker = threading.Thread(target=engine.execute, args=(experiment, settings), daemon=True)
+            self.worker.start()
+            return experiment, 202
 
     def start(self, payload: dict, key: str) -> tuple[dict, int]:
         with self.lock:
@@ -121,6 +146,8 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
     manager = Manager(store, settings, base_image)
     harness = HarnessMatch(store, settings, harness_repo, harbor_bin, harness_image)
     models = ModelProfiles(store.root, settings)
+    registry = VersionRegistry(store, models)
+    evolution = VersionExperiment(store, registry, harbor_bin, harness_image)
 
     class Handler(BaseHTTPRequestHandler):
         def send_json(self, data, status=200):
@@ -135,6 +162,22 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
         def do_GET(self):
             parsed = urlparse(self.path)
             path = parsed.path
+            if path == "/api/evo/diff":
+                args = parse_qs(parsed.query)
+                baseline = store.get("evo_version", args.get("baseline", [""])[0])
+                candidate = store.get("evo_version", args.get("candidate", [""])[0])
+                if not baseline or not candidate or candidate["parent"] != baseline["id"]:
+                    return self.send_json({"error": "请选择有父子关系的两个版本"}, 400)
+                return self.send_json({"diff": version_diff(baseline, candidate)})
+            if path == "/api/evo":
+                return self.send_json({"capabilities": CAPABILITIES, "models": models.public(),
+                    "ready": bool(harbor_bin and harbor_bin.is_file() and models.public()["profiles"]),
+                    "versions": store.list("evo_version"),
+                    "experiments": [{k: v for k, v in row.items() if k not in {"runs", "diff"}}
+                                    for row in store.list("evo_experiment")]})
+            if path.startswith("/api/evo/experiments/"):
+                result = store.get("evo_experiment", path.rsplit("/", 1)[-1])
+                return self.send_json(result or {"error": "not_found"}, 200 if result else 404)
             if path == "/api/harness":
                 overview = harness.overview()
                 profiles = models.public()
@@ -172,7 +215,8 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
                     return self.send_json({"events": store.events(args.get("scope", [None])[0], int(args.get("after", [0])[0]))})
                 except ValueError:
                     return self.send_json({"error": "invalid_cursor"}, 400)
-            files = {"/": "harness.html" if harness_repo else "index.html", "/fixops": "index.html",
+            files = {"/": "evo.html", "/evo": "evo.html", "/evo.js": "evo.js", "/evo.css": "evo.css",
+                     "/fixops": "index.html",
                      "/harness": "harness.html", "/harness.js": "harness.js", "/harness.css": "harness.css",
                      "/settings": "settings.html", "/settings.js": "settings.js",
                      "/app.js": "app.js", "/style.css": "style.css"}
@@ -199,11 +243,19 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
                 return self.send_json({"error": "same_origin_request_required"}, 403)
             try:
                 size = int(self.headers.get("Content-Length", "0"))
-                if not 0 < size <= (32768 if self.path == "/api/versions" else 4096):
+                if not 0 < size <= (128000 if self.path == "/api/evo/versions" else 32768 if self.path == "/api/versions" else 4096):
                     raise ValueError()
                 payload = json.loads(self.rfile.read(size))
                 if not isinstance(payload, dict):
                     raise ValueError()
+                if self.path == "/api/evo/versions":
+                    return self.send_json(registry.register(payload), 201)
+                if self.path == "/api/evo/experiments":
+                    key = self.headers.get("Idempotency-Key", "")
+                    if not 1 <= len(key) <= 128:
+                        raise ValueError("需要请求幂等键")
+                    data, code = manager.start_evolution(evolution, payload, key)
+                    return self.send_json(data, code)
                 if self.path == "/api/models":
                     return self.send_json(models.save(payload))
                 if self.path == "/api/models/delete":
@@ -230,7 +282,7 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
                     manager.cancel.set()
                     return self.send_json({"status": "cancellation_requested"})
             except ValueError as error:
-                if self.path in {"/api/models", "/api/models/delete", "/api/harness/matches"}:
+                if self.path.startswith("/api/evo/") or self.path in {"/api/models", "/api/models/delete", "/api/harness/matches"}:
                     return self.send_json({"error": str(error) or "请求格式错误"}, 400)
                 return self.send_json({"error": "invalid_request"}, 400)
             except TypeError:

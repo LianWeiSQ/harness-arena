@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Evo · Harness 自改进工作台</title>
+<link rel="stylesheet" href="/harness.css?v=6"><link rel="stylesheet" href="/evo.css?v=1">
+<script defer src="/evo.js?v=1"></script></head>
+<body>
+<header class="topbar"><a class="brand" href="/evo"><span class="brand-mark" aria-hidden="true">◇</span><span>E<b>vo</b></span></a>
+<nav aria-label="页面导航"><a href="/evo" aria-current="page">实验</a><a href="#versions">版本库</a><a href="/settings">模型设置</a><a href="/harness">历史对比</a></nav><span class="evo-tag">HARNESS EVOLUTION</span></header>
+<main class="evo-page">
+<div class="evo-heading"><div><p class="eyebrow">WORKSPACE / 从执行反馈开始</p><h1>让改动进入真实执行。</h1><p class="evo-muted">固化基线，创建候选，检查实际加载的策略与 Skill，再对照业务验收。</p></div><button class="primary" id="new-version">创建基线版本 ↗</button></div>
+<div id="notice" class="evo-notice" role="status" hidden></div>
+<section class="evo-strip" aria-label="工作台状态"><div><span>不可变版本</span><strong id="version-count">—</strong></div><div><span>运行记录</span><strong id="experiment-count">—</strong></div><div><span>当前任务</span><strong>订单回执恢复</strong></div><div><span>验证范围</span><strong>加载检查 · SMOKE</strong></div></section>
+<div class="evo-layout">
+<section class="evo-main">
+<section class="evo-panel" aria-labelledby="experiment-title"><div class="evo-panel-head"><h2 id="experiment-title">版本实验</h2><select id="history" aria-label="实验记录"><option value="">暂无实验</option></select></div>
+<div class="evo-launch"><label>基线<select id="baseline" aria-label="基线版本"></select></label><span aria-hidden="true">→</span><label>候选<select id="candidate" aria-label="候选版本"></select></label><button id="run-experiment" class="primary" disabled>验证两个版本</button></div>
+<p class="evo-scope">同一模型、同一任务、独立环境。每个版本最多 12 次模型请求；加载检查不产生晋升结论。</p>
+<details class="evo-draft"><summary>运行前检查所选版本的改动</summary><pre id="draft-diff" class="evo-diff">请选择一组基线与候选。</pre></details>
+<div id="experiment-body" class="evo-experiment-body"><div class="evo-empty"><span class="evo-empty-symbol" aria-hidden="true">↗</span><h3>先保留一个可复现的起点</h3><p>创建基线后，从它生成一个人工候选。实验会核对版本文件与实际模型输入，并展示两次执行的差异。</p></div></div>
+</section>
+<section class="evo-panel" id="changes"><div class="evo-panel-head"><h2>具体改动</h2><span class="evo-muted">基线 → 候选</span></div><pre id="version-diff" class="evo-diff">选择或运行一组版本后，在这里查看文件差异。</pre></section>
+<section class="evo-panel" id="evidence"><div class="evo-panel-head"><h2>执行证据</h2><select id="run-select" aria-label="查看版本执行"><option>暂无执行</option></select></div><div id="run-evidence" class="evo-evidence"><p class="evo-muted">运行结束后，可查看加载收据、逐项验收和真实工具轨迹。</p></div></section>
+</section>
+<aside class="evo-aside">
+<section class="evo-panel" id="versions"><div class="evo-panel-head"><h2>版本库</h2><span class="evo-muted">只追加，不覆盖</span></div><div id="version-list" class="evo-version-list"></div></section>
+<section class="evo-panel"><div class="evo-panel-head"><h2>可改进的能力</h2></div><div id="capabilities" class="evo-capabilities"></div><p class="evo-scope">仅开放已接入的修改范围。自动诊断与候选生成将接在同一版本链路上。</p></section>
+</aside></div>
+<footer class="evo-footer"><span>版本 → 改动 → 执行 → 证据</span><span>本地数据 · 密钥留在模型设置</span></footer>
+</main>
+<dialog id="version-dialog"><form id="version-form"><div class="evo-panel-head"><h2 id="form-title">创建基线版本</h2><button type="button" id="close-dialog" aria-label="关闭">×</button></div><div class="evo-form-body">
+<input type="hidden" id="parent-id"><label>版本名称<input id="version-name" required maxlength="80" placeholder="例如：订单助手 · 基线"></label>
+<div class="evo-form-row"><label>Harness<select id="runner"><option value="pi">Pi</option><option value="dsh">DeepSeek Harness</option></select></label><label>模型连接<select id="model-profile" required></select></label></div>
+<p id="form-context" class="evo-muted">模型和运行器会随版本固化，后续编辑连接不会自动改变此版本。</p>
+<label>执行策略<textarea id="policy" rows="4" maxlength="8000" placeholder="告诉 Agent 怎样工作。留空表示保留运行器默认策略。"></textarea></label>
+<div class="evo-skill-heading"><h3>Skill 文件 <span class="evo-muted">可选</span></h3><button type="button" id="add-skill">＋ 添加 Skill</button></div><p id="skill-hint" class="evo-muted">Pi 使用原生 Skill 加载；正文是否进入上下文会单独记录。</p><div id="skills"></div>
+<p id="form-error" class="evo-error" role="alert" hidden></p></div><div class="evo-form-footer"><span class="evo-muted">保存版本不会调用模型</span><button id="save-version" class="primary" type="submit">保存不可变版本</button></div></form></dialog>
+</body></html>

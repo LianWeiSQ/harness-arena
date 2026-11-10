@@ -20,6 +20,7 @@ from pathlib import Path
 
 from .provider import Budget, BudgetExceeded, NoRedirect, ProviderError
 from .store import now
+from .versions import InputEvidence, file_hashes, materialize_version
 
 
 FIXTURES = Path(__file__).with_name("fixtures") / "harness"
@@ -71,7 +72,7 @@ def read_text(path: Path, limit: int = 200_000) -> str:
 
 class TrialGateway:
     """Forward one trial's model calls and keep the order ledger outside the sandbox."""
-    def __init__(self, settings, record):
+    def __init__(self, settings, record, version=None):
         self.settings, self.record = settings, record
         self.budget = Budget(MAX_CALLS, MAX_TOKENS)
         self.opener = urllib.request.build_opener(NoRedirect())
@@ -81,6 +82,7 @@ class TrialGateway:
         self.writes = 0
         self.checked_after_fault = False
         self.verifier_token = secrets.token_urlsafe()
+        self.input_evidence = InputEvidence(version) if version else None
 
     def model(self, raw: bytes) -> tuple[int, str, str]:
         try:
@@ -97,6 +99,8 @@ class TrialGateway:
             return self.error(429, "达到模型请求或 Token 预算")
         except (ValueError, TypeError):
             return self.error(400, "Unsupported model request")
+        if self.input_evidence:
+            self.input_evidence.observe(data)
         for item in data.get("input", []) if isinstance(data.get("input"), list) else []:
             if isinstance(item, dict) and item.get("type") == "function_call_output":
                 call_id = str(item.get("call_id", ""))
@@ -196,8 +200,9 @@ def atomic_json(path, data):
     temporary.replace(path)
 
 
-def materialize_tasks(root: Path, image: str, original: dict[str, str]) -> None:
-    for key, task in TASKS.items():
+def materialize_tasks(root: Path, image: str, original: dict[str, str], task_ids=None) -> None:
+    for key in TASKS if task_ids is None else task_ids:
+        task = TASKS[key]
         path = root / key
         maintenance = key == "process-cleanup"
         artifacts = json.dumps(["/work/" + file for file in FILES]) if maintenance else '["/arena-ledger/receipt.json"]'
@@ -318,12 +323,25 @@ class HarnessMatch:
             run["trace"].append({"label": label, "text": message, "time": now()})
             self.save(match)
 
+        HarborTrial(self.settings, self.harbor).execute(run, root, original, record)
+
+    @staticmethod
+    def load_result(run, path, original, provider_failure):
+        return HarborTrial.load_result(run, path, original, provider_failure)
+
+
+class HarborTrial:
+    """One isolated execution, shared by legacy matches and version experiments."""
+    def __init__(self, settings, harbor):
+        self.settings, self.harbor = settings, harbor
+
+    def execute(self, run, root, original, record, version=None):
         task, runner = run["task"], run["runner"]
-        job = f"{task}-{runner}"
+        job = f"{task}-{runner}" + ("-" + run["id"] if version else "")
         jobs = root / "jobs"
         jobs.mkdir(exist_ok=True)
         run["job"] = job
-        gateway = TrialGateway(self.settings, record)
+        gateway = TrialGateway(self.settings, record, version)
         worker_root = self.harbor.parent.parent.parent
         python_path = os.pathsep.join([str(Path(__file__).resolve().parent.parent), str(worker_root)])
         with tempfile.TemporaryDirectory(prefix="evoarena-relay-") as temporary, (root / f"{job}.log").open("w") as logs:
@@ -332,18 +350,23 @@ class HarnessMatch:
             spool.chmod(0o777)
             ledger.mkdir(mode=0o755)
             gateway.write_ledger(ledger)
-            mounts = json.dumps([
+            mounts = [
                 {"type": "bind", "source": str(spool), "target": "/arena-relay"},
                 {"type": "bind", "source": str(ledger), "target": "/arena-ledger", "read_only": True},
-            ])
+            ]
             env = {**os.environ, "PYTHONPATH": python_path, "ARENA_TRIAL_URL": "http://127.0.0.1:18765",
                    "ARENA_TRIAL_TOKEN": "arena", "HARBOR_TELEMETRY": "off"}
+            env.pop("EVO_VERSION_FILE", None)
+            if version:
+                version_root = Path(temporary) / "version"
+                env["EVO_VERSION_FILE"] = str(materialize_version(version, version_root))
+                mounts.append({"type": "bind", "source": str(version_root), "target": "/evo-version", "read_only": True})
             for name in ("ARENA_API_KEY", "OPENAI_API_KEY", "MAAS_API_KEY", "ANTHROPIC_API_KEY"):
                 env.pop(name, None)
             args = [str(self.harbor), "run", "--path", str(root / "tasks" / task), "--jobs-dir", str(jobs),
                     "--job-name", job, "--agent", "evo_arena.harbor_agents:" + RUNNERS[runner][1],
-                    "--model", "arena/" + match["model"], "--n-concurrent", "1", "--max-retries", "0",
-                    "--mounts", mounts, "--yes"]
+                    "--model", "arena/" + self.settings.model, "--n-concurrent", "1", "--max-retries", "0",
+                    "--mounts", json.dumps(mounts), "--yes"]
             if task == "lost-receipt":
                 args += ["--ve", "ARENA_VERIFY_TOKEN=" + gateway.verifier_token]
             record("Harbor 启动", f"{RUNNERS[runner][0]} · {TASKS[task]['title']}")
@@ -363,6 +386,8 @@ class HarnessMatch:
                             os.killpg(process.pid, signal.SIGKILL)
                             process.wait()
                 run["usage"] = gateway.budget.public()
+                if gateway.input_evidence:
+                    run["input_evidence"] = gateway.input_evidence.public()
                 if gateway.budget_exhausted:
                     run["stop_reason"] = "达到模型请求或 Token 预算"
         results = list((jobs / job).glob("*/result.json"))
@@ -370,6 +395,18 @@ class HarnessMatch:
             run.update(status="error", error="Harbor 未生成单题结果")
             return
         self.load_result(run, results[0], original, gateway.failure)
+        if version:
+            receipt = read_text(results[0].parent / "agent" / "version-load.json")
+            try:
+                receipt = json.loads(receipt)
+            except (ValueError, TypeError):
+                receipt = {}
+            run["version_load"] = receipt
+            expected = {"version_id": version["id"], "manifest_sha256": version["manifest_sha256"],
+                        "runner": runner, "runtime_version": version["manifest"]["runtime_version"],
+                        "file_hashes": file_hashes(version["manifest"])}
+            if receipt != expected or not run.get("input_evidence", {}).get("registration_verified"):
+                run.update(status="error", error="版本加载证据不完整或与 manifest 不一致")
 
     @staticmethod
     def load_result(run, path, original, provider_failure):

@@ -2,10 +2,40 @@
 from __future__ import annotations
 
 import json
+import os
 import shlex
+from pathlib import Path
 
 from agents.deepseek_harness import DeepSeekHarness
 from harbor.agents.installed.base import BaseInstalledAgent
+
+from .versions import file_hashes, verify_version
+
+
+async def load_version(agent, environment, runner):
+    source = os.environ.get("EVO_VERSION_FILE")
+    if not source:
+        return None
+    version = json.loads(Path(source).read_text())
+    manifest = verify_version(version)
+    if manifest["runner"] != runner:
+        raise ValueError("Version runner mismatch")
+    actual_version = (await agent.exec_as_agent(environment, f"{runner} --version")).stdout.strip()
+    if actual_version != manifest["runtime_version"]:
+        raise ValueError("Installed runtime does not match immutable version")
+    script = ("const fs=require('node:fs'),c=require('node:crypto');const paths="
+              + json.dumps(list(manifest["files"]))
+              + ";console.log(JSON.stringify(Object.fromEntries(paths.map(p=>[p,c.createHash('sha256').update(fs.readFileSync('/evo-version/'+p)).digest('hex')]))))")
+    result = await agent.exec_as_agent(environment, "node -e " + shlex.quote(script))
+    actual = json.loads(result.stdout)
+    if actual != file_hashes(manifest):
+        raise ValueError("Mounted version does not match expected hashes")
+    # Written by the host adapter, before the Harness starts executing.
+    (agent.logs_dir / "version-load.json").write_text(json.dumps({
+        "version_id": version["id"], "manifest_sha256": version["manifest_sha256"],
+        "runner": runner, "runtime_version": actual_version, "file_hashes": actual,
+    }))
+    return manifest
 
 
 async def start_relay(agent, environment):
@@ -30,6 +60,9 @@ class ArenaDSH(DeepSeekHarness):
         await self.exec_as_agent(environment, "dsh --version")
 
     async def run(self, instruction, environment, context):
+        manifest = await load_version(self, environment, "dsh")
+        if manifest and manifest["files"]["policy.md"]:
+            instruction = "Execution policy:\n" + manifest["files"]["policy.md"] + "\n\nTask:\n" + instruction
         await start_relay(self, environment)
         home = "/logs/agent/dsh-home"
         await self.exec_as_agent(environment, f"mkdir -p {home}")
@@ -54,6 +87,7 @@ class ArenaPi(BaseInstalledAgent):
         await self.exec_as_agent(environment, self.get_version_command())
 
     async def run(self, instruction, environment, context):
+        manifest = await load_version(self, environment, "pi")
         await start_relay(self, environment)
         home = "/logs/agent/pi-home"
         model = self.model_name.split("/", 1)[-1]
@@ -68,6 +102,13 @@ class ArenaPi(BaseInstalledAgent):
                                        remote_path=f"{home}/models.json", filename="models.json")
         args = ["pi", "-p", "--offline", "--mode", "json", "--provider", "arena", "--model", model,
                 "--no-session", "--no-extensions", "--no-skills", "--no-prompt-templates",
-                "--no-themes", "--no-context-files", instruction]
+                "--no-themes", "--no-context-files"]
+        if manifest:
+            if manifest["files"]["policy.md"]:
+                args += ["--append-system-prompt", "/evo-version/policy.md"]
+            for path in manifest["files"]:
+                if path != "policy.md":
+                    args += ["--skill", "/evo-version/" + path]
+        args.append(instruction)
         await self.exec_as_agent(environment, shlex.join(args) + " > /logs/agent/pi.jsonl",
                                  env={**local_env(self), "PI_CODING_AGENT_DIR": home})

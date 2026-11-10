@@ -274,3 +274,5 @@ Trial 使用 queued/running/verifying/passed/failed/error/interrupted；重试�
 深度等级 L4；核心账本为 8 FACT / 1 INFERENCE / 3 TARGET / 2 UNKNOWN，其余章节具体标识目标与未知。已核对源码入口、版本存储、执行适配、恢复、比较及相关测试源码。架构文档严格结构校验通过（agent-harness 专项，0 错误、0 警告），文档本地链接与本机敏感引用检查通过。
 
 本次只交付规划，不改变运行时，不执行新付费模型调用，不宣称完成任何 v0.2 功能或获得收益。外部方法依据见 [总体规划](evo-platform-plan.md#外部方法与工程边界)。
+
+后续状态更新：M1 已完成，实际支持的注入面、加载证据与实现范围见 [版本加载实验](version-loading-check.md)。本文账本保留规划时的代码基线，不把后续实现倒写为当时的事实。

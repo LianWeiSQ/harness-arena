@@ -42,6 +42,8 @@ class Store:
                 revision INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(season,slot));
             CREATE TRIGGER IF NOT EXISTS immutable_version BEFORE UPDATE ON objects
                 WHEN OLD.kind='version' BEGIN SELECT RAISE(ABORT,'immutable version'); END;
+            CREATE TRIGGER IF NOT EXISTS immutable_evo_version BEFORE UPDATE ON objects
+                WHEN OLD.kind='evo_version' BEGIN SELECT RAISE(ABORT,'immutable evo version'); END;
         """)
 
     def close(self):

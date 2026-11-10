@@ -1,0 +1,169 @@
+{
+  "schema": "evo-m1-verification-v1",
+  "date": "2026-11-10",
+  "scope": "single-task loading smoke; no promotion or generalization claim",
+  "experiment": {
+    "id": "ex-29464e74e216",
+    "coverage": "SMOKE",
+    "status": "completed",
+    "automatic_evolution": false,
+    "decision": null,
+    "harbor_version": "0.22.0",
+    "image_id": "sha256:a57d62434aea2bd07377b526a43fda736352b343db661f08af55c4549c7c9b27"
+  },
+  "runs": [
+    {
+      "role": "baseline",
+      "version_id": "av-7627401ce21c6a7fe48a",
+      "runner": "pi",
+      "model": "gpt-5.6-sol",
+      "status": "failed",
+      "seconds": 62.11,
+      "usage": {
+        "calls": 11,
+        "max_calls": 12,
+        "max_tokens": 180000,
+        "tokens": 75178,
+        "unknown_usage_calls": 0
+      },
+      "checks": [
+        {
+          "label": "外部账本只写入一笔订单",
+          "passed": false
+        },
+        {
+          "label": "模拟回执超时后查询订单状态",
+          "passed": true
+        }
+      ],
+      "ledger": {
+        "checkedAfterFault": true,
+        "writes": 2
+      },
+      "runtime_version": "0.82.1",
+      "verifier_mode": "separate",
+      "version_load": {
+        "file_hashes": {
+          "policy.md": "9c8fe62fcabd402545f2f3f2ba37d08c901404f90f5d3756dbbd4669c0fbf03c",
+          "skills/order-recovery/SKILL.md": "a6c0c48a9c186851eba4113296346a2f923914397ea5270e32f4a631db580ec6"
+        },
+        "manifest_sha256": "27e6fd018693341618ea3397b70ca601e1e3ada1981442709ae19336a54799c8",
+        "runner": "pi",
+        "runtime_version": "0.82.1",
+        "version_id": "av-7627401ce21c6a7fe48a"
+      },
+      "input_evidence": {
+        "manifest_sha256": "27e6fd018693341618ea3397b70ca601e1e3ada1981442709ae19336a54799c8",
+        "policy_in_input": true,
+        "registration_verified": true,
+        "requests_observed": 11,
+        "skill_catalog": [
+          "skills/order-recovery/SKILL.md"
+        ],
+        "skill_contents_in_input": [
+          "skills/order-recovery/SKILL.md"
+        ]
+      }
+    },
+    {
+      "role": "candidate",
+      "version_id": "av-99c207e9352dd698acc0",
+      "runner": "pi",
+      "model": "gpt-5.6-sol",
+      "status": "passed",
+      "seconds": 24.67,
+      "usage": {
+        "calls": 5,
+        "max_calls": 12,
+        "max_tokens": 180000,
+        "tokens": 30676,
+        "unknown_usage_calls": 0
+      },
+      "checks": [
+        {
+          "label": "外部账本只写入一笔订单",
+          "passed": true
+        },
+        {
+          "label": "模拟回执超时后查询订单状态",
+          "passed": true
+        }
+      ],
+      "ledger": {
+        "checkedAfterFault": true,
+        "writes": 1
+      },
+      "runtime_version": "0.82.1",
+      "verifier_mode": "separate",
+      "version_load": {
+        "file_hashes": {
+          "policy.md": "9c8fe62fcabd402545f2f3f2ba37d08c901404f90f5d3756dbbd4669c0fbf03c",
+          "skills/order-recovery/SKILL.md": "f6a236431a3bc61ece108bbe66ed8c03a3fe5f854d2954d50820f24d8a27be1b"
+        },
+        "manifest_sha256": "0b1ccfa06cb786703f92351aa1f5c3b13cc180967567e66370404cca20ccc49a",
+        "runner": "pi",
+        "runtime_version": "0.82.1",
+        "version_id": "av-99c207e9352dd698acc0"
+      },
+      "input_evidence": {
+        "manifest_sha256": "0b1ccfa06cb786703f92351aa1f5c3b13cc180967567e66370404cca20ccc49a",
+        "policy_in_input": true,
+        "registration_verified": true,
+        "requests_observed": 5,
+        "skill_catalog": [
+          "skills/order-recovery/SKILL.md"
+        ],
+        "skill_contents_in_input": [
+          "skills/order-recovery/SKILL.md"
+        ]
+      }
+    }
+  ],
+  "dsh_compatibility": {
+    "runner": "dsh",
+    "model": "gpt-5.6-sol",
+    "status": "passed",
+    "seconds": 23.93,
+    "usage": {
+      "calls": 5,
+      "tokens": 48135,
+      "max_calls": 12,
+      "max_tokens": 180000,
+      "unknown_usage_calls": 0
+    },
+    "checks": [
+      {
+        "label": "外部账本只写入一笔订单",
+        "passed": true
+      },
+      {
+        "label": "模拟回执超时后查询订单状态",
+        "passed": true
+      }
+    ],
+    "ledger": {
+      "writes": 1,
+      "checkedAfterFault": true
+    },
+    "runtime_version": "0.1.2-rc.1",
+    "verifier_mode": "separate",
+    "version_load": {
+      "version_id": "av-f560c81385bc26aae67d",
+      "manifest_sha256": "a87a68c87c6d9fa18418d8a4ca74abf37a62a09e604d9386592bb8d04ea5deb3",
+      "runner": "dsh",
+      "runtime_version": "0.1.2-rc.1",
+      "file_hashes": {
+        "policy.md": "dc274cc62e78eba42f6e1b27370e6c38b54fba54b637beb8b5b34a1999c96f2c"
+      }
+    },
+    "input_evidence": {
+      "manifest_sha256": "a87a68c87c6d9fa18418d8a4ca74abf37a62a09e604d9386592bb8d04ea5deb3",
+      "requests_observed": 5,
+      "policy_in_input": true,
+      "skill_catalog": [],
+      "skill_contents_in_input": [],
+      "registration_verified": true
+    },
+    "atif_available": true
+  }
+}
