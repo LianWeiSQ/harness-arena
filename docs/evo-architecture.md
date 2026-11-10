@@ -1,6 +1,6 @@
 # Evo 自改进平台深度架构解析
 
-> 代码基线：`39bc2a4b4290eadf1cd696bcddd5ac755ec1df86`，2026-11-10。深度：L4，Agent/Harness 专项。以下原有行号对应此审计基线；增量核对至 `605e5c1dcf28067d0815a5244d1c2e510ce64899`。
+> 代码基线：`39bc2a4b4290eadf1cd696bcddd5ac755ec1df86`，2026-11-10。深度：L4，Agent/Harness 专项。以下原有行号对应此审计基线；增量核对至 `a9feef4b96e54e6f6d77eeabdd01d98879a0df30`。
 > 输入：本仓库代码、配置、测试、M1—M6 分阶段实测及本地执行状态。
 > `[FACT]` 表示已核对的实现或证据；`[INFERENCE]` 是推断；`[TARGET]` 是后续设计；`[UNKNOWN]` 表示尚未证明。历史 M0 目标方案保留在 Git 历史，本文更新为当前实现审计。
 
@@ -32,7 +32,7 @@
 | C-12 | 自动诊断、单文件生成、验证、判定均有实现 | [FACT] | `improvement.py:156`；M3 部分真实证据与受控测试 | 高 | 完整真实协议仍在验收 |
 | C-13 | 当前吞吐主要受串行执行和外部模型等待限制 | [INFERENCE] | 单 Trial 执行路径与 M6 单题耗时 | 中 | 未做压力测试和延迟分位数统计 |
 | C-14 | 多 Worker 需独立领取、租约和共享存储协议 | [TARGET] | 单目录锁、SQLite 与单线程的边界 | 中 | 不在 v0.2 范围 |
-| C-15 | 开发反馈是否提升未见任务质量 | [UNKNOWN] | 预登记 feedback-01 正在执行 | 未定 | 不用部分结果替代完整对照 |
+| C-15 | 开发反馈是否提升未见任务质量 | [UNKNOWN] | feedback-01/02 均因模型响应问题停止，对照与封存未启动 | 未定 | 不用部分结果替代完整对照 |
 | C-16 | 断电恢复、磁盘损坏恢复的 RPO/RTO | [UNKNOWN] | 现有证据仅为进程级故障注入 | 未定 | 尚无备份恢复和电源故障演练 |
 
 证据冲突已按版本区分：M1 的 DSH ATIF 来自旧相邻 adapter；新独立 adapter 保留原生日志及网关轨迹，不生成 ATIF。M3 旧失败记录保留原判定原因，不用新代码改写旧实验。M0 的“目标状态”不再当作实现证据。
@@ -208,6 +208,10 @@
 [FACT] 受控测试中的晋升是机制验证，不是实际模型收益。feedback-01 因响应异常及未知用量停止，验证有效覆盖 2/24，对照和封存未启动；[失败报告](studies/2026-11-10-feedback-01-result.json) 保留。feedback-02 也在 22/24 后因连接/读取异常停止，见 [停止报告](studies/2026-11-10-feedback-02-result.json)；新的完整研究仍待完成，不能用通过的 CI 补上缺失质量证据。
 
 [FACT] 605e5c1 增量修正把模型终止状态与费用确认分开：`response_protocol.py:44` 解码 SSE/JSON，`harness.py:138` 先结算用量再拒绝失败/未完成终止，`experiment_budget.py:87` 持久保存白名单响应摘要，`delivery.py:225` 导出再次过滤。已知用量的失败仍停止 Trial，未知用量仍不重放。旧实验缺少摘要，根因不能事后推定；参见 [处理与验证](provider-response-handling.md)。
+
+[FACT] a9feef4 增量改为按 SSE 事件读取，在终止事件结束后解析和结算，不继续等待 HTTP EOF（`response_protocol.py` 的 `read_response`、`harness.py` 的 `TrialGateway.model`）。读取异常仍使 Trial 无效，部分响应中可核对的用量独立记账。截止时间在读取之间检查，仍可能等待一次 socket 空闲超时，不保证硬实时取消。97 项测试中 96 通过、1 项旧版可选测试跳过，CI 通过。
+
+[FACT] 有限真实检查中，SSE/JSON 随机文本回显均通过，Pi 消费了三次以终止事件结束的返回；第四次请求收到上游 HTTP 502，资源清理后停止。完整兼容检查和完整研究尚未通过。见 [收据](transport-compatibility-verification.json)，它不能证明旧连接失败的根因或长期稳定性。
 
 ## 17. 未知项与最小验证
 

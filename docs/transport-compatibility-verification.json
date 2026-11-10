@@ -1,0 +1,273 @@
+{
+  "schema": "evo-transport-check-v1",
+  "code_commit": "a9feef4b96e54e6f6d77eeabdd01d98879a0df30",
+  "protocol_sha256": "753781b8bc4d761e2931ae102256a426a8af71a5ee6974e69b2f640113e2e698",
+  "purpose": "Finite compatibility check after changing SSE termination. Not a quality or full study result.",
+  "provider_check": {
+    "model": "gpt-5.6-sol",
+    "protocol_sha256": "753781b8bc4d761e2931ae102256a426a8af71a5ee6974e69b2f640113e2e698",
+    "checks": [
+      {
+        "stream": true,
+        "http_status": 200,
+        "marker_matched": true
+      },
+      {
+        "stream": false,
+        "http_status": 200,
+        "marker_matched": true
+      }
+    ],
+    "budget": {
+      "calls": 2,
+      "deadline": 1794311210.5166788,
+      "limits": {
+        "calls": 2,
+        "seconds": 240,
+        "tokens": 10000
+      },
+      "pending": 0,
+      "started": "2026-11-10T11:42:50.516564+00:00",
+      "tokens": 8836,
+      "unknown_usage_calls": 0
+    },
+    "calls": [
+      {
+        "created": "2026-11-10T11:42:54.705560+00:00",
+        "experiment": "provider-check-02",
+        "finished": "2026-11-10T11:42:58.326840+00:00",
+        "id": "call-5fa4855f02de423b8fc69f738cdb7b06",
+        "phase": "execution",
+        "request_hash": "83394e8bd279644b8544ebb00ab6a000fb470e3b016246f936d1a75ac487539b",
+        "response_summary": {
+          "bytes": 23720,
+          "category": "ok",
+          "elapsed_ms": 3621,
+          "read_termination": "eof",
+          "sha256": "20dc48e9f17984bcf63697abdb70a035539dfc69e25735398c8e57156d98af12",
+          "terminal": "completed",
+          "transport": "json",
+          "usage_state": "known"
+        },
+        "status": "settled",
+        "tokens": 4417,
+        "trial": "bounded-protocol-check"
+      },
+      {
+        "created": "2026-11-10T11:42:50.520247+00:00",
+        "experiment": "provider-check-02",
+        "finished": "2026-11-10T11:42:54.699522+00:00",
+        "id": "call-6306d9957a0c4fb388580d4e08e11163",
+        "phase": "execution",
+        "request_hash": "d0fd7044a937e12a4ec51f5c36554485517b18af27ab96a98411886808ebdf1c",
+        "response_summary": {
+          "bytes": 74682,
+          "category": "ok",
+          "elapsed_ms": 4179,
+          "event_count": 19,
+          "read_termination": "terminal",
+          "sha256": "29815950c78114470b95e25760b7fcccda64434df06834cb0b86b7db7640623f",
+          "terminal": "completed",
+          "transport": "sse",
+          "usage_state": "known"
+        },
+        "status": "settled",
+        "tokens": 4419,
+        "trial": "bounded-protocol-check"
+      }
+    ]
+  },
+  "pi_check": {
+    "status": "stopped_http_502",
+    "full_compatibility_verified": false,
+    "successful_stream_calls": 3,
+    "failed_call_started_utc": "2026-11-10T11:43:38.491412+00:00",
+    "failed_call_finished_utc": "2026-11-10T11:43:39.522991+00:00",
+    "resource_states": [
+      "cleaned"
+    ],
+    "report": {
+      "schema": "evo-experiment-report-v1",
+      "exported": "2026-11-10T11:44:22.678069+00:00",
+      "experiment": {
+        "id": "ex-ab2f5383f6e6",
+        "mode": "loading",
+        "feedback_mode": null,
+        "status": "incomplete",
+        "phase": "loading-check",
+        "created": "2026-11-10T11:43:19.661581+00:00",
+        "finished": "2026-11-10T11:44:18.692655+00:00",
+        "baseline": "av-7627401ce21c6a7fe48a",
+        "candidate": "av-c4bfae5e61f18fa49a40",
+        "initial_version": null,
+        "task_pack": "receipt-loading-smoke-v2",
+        "target": null,
+        "epoch": 1
+      },
+      "optimization": null,
+      "versions": [
+        {
+          "id": "av-7627401ce21c6a7fe48a",
+          "parent": null,
+          "manifest_sha256": "27e6fd018693341618ea3397b70ca601e1e3ada1981442709ae19336a54799c8",
+          "runner": "pi",
+          "runtime_version": "0.82.1",
+          "model": "gpt-5.6-sol",
+          "files": {
+            "policy.md": "9c8fe62fcabd402545f2f3f2ba37d08c901404f90f5d3756dbbd4669c0fbf03c",
+            "skills/order-recovery/SKILL.md": "a6c0c48a9c186851eba4113296346a2f923914397ea5270e32f4a631db580ec6"
+          }
+        },
+        {
+          "id": "av-c4bfae5e61f18fa49a40",
+          "parent": "av-7627401ce21c6a7fe48a",
+          "manifest_sha256": "f63860c25278e0129f2105e36e6dc877cbd01ecc161d91ec1bc7d176a53934b3",
+          "runner": "pi",
+          "runtime_version": "0.82.1",
+          "model": "gpt-5.6-sol",
+          "files": {
+            "policy.md": "9c8fe62fcabd402545f2f3f2ba37d08c901404f90f5d3756dbbd4669c0fbf03c",
+            "skills/order-recovery/SKILL.md": "640e3cddcf0618e2f5e7fb9b665518adc176b5fbc4f8b51e6341cc9130a1f165"
+          }
+        }
+      ],
+      "plan": null,
+      "evaluation": null,
+      "runtime": {
+        "harbor_version": "0.22.0",
+        "image_id": "sha256:c3208589727a0680d246c3b2e1771b68aeeed230f8f77b53ceb25dc43a63a86c",
+        "protocol_sha256": "753781b8bc4d761e2931ae102256a426a8af71a5ee6974e69b2f640113e2e698"
+      },
+      "task_pack": null,
+      "budget": {
+        "calls": 4,
+        "deadline": 1794312199.664486,
+        "limits": {
+          "calls": 24,
+          "seconds": 1200,
+          "tokens": 240000
+        },
+        "pending": 0,
+        "started": "2026-11-10T11:43:19.664484+00:00",
+        "tokens": 17820,
+        "unknown_usage_calls": 1
+      },
+      "cost_by_phase": {
+        "execution": {
+          "calls": 4,
+          "known_tokens": 17820,
+          "unknown_calls": 1,
+          "pending_calls": 0
+        }
+      },
+      "decision": null,
+      "runs": [
+        {
+          "id": "tr-6afe20c69d",
+          "key": null,
+          "phase": null,
+          "task": "lost-receipt",
+          "role": "baseline",
+          "repeat": null,
+          "version_id": "av-7627401ce21c6a7fe48a",
+          "status": "error",
+          "seconds": 31.18,
+          "usage": {
+            "calls": 4,
+            "max_calls": 12,
+            "max_tokens": 180000,
+            "tokens": 17820,
+            "unknown_usage_calls": 1
+          },
+          "verifier_attested": null,
+          "execution_frozen": null,
+          "task_checksum": "f6da5e136a68d7d912338639e3168a3664aaab88fd3123a96bbc1270c773fea5",
+          "checks": [
+            {
+              "key": null,
+              "passed": true,
+              "critical": false
+            },
+            {
+              "key": null,
+              "passed": false,
+              "critical": false
+            }
+          ],
+          "version_load": {
+            "verified": true,
+            "version_id": "av-7627401ce21c6a7fe48a",
+            "manifest_sha256": "27e6fd018693341618ea3397b70ca601e1e3ada1981442709ae19336a54799c8",
+            "runner": "pi",
+            "runtime_version": "0.82.1",
+            "file_hashes": {
+              "policy.md": "9c8fe62fcabd402545f2f3f2ba37d08c901404f90f5d3756dbbd4669c0fbf03c",
+              "skills/order-recovery/SKILL.md": "a6c0c48a9c186851eba4113296346a2f923914397ea5270e32f4a631db580ec6"
+            }
+          },
+          "input_registration_verified": true
+        }
+      ],
+      "scope": "Model-reported known usage only; unknown and pending calls are not zero cost. Raw traces, generated text, file contents and connection configuration are excluded. Exporting a running experiment is an interim snapshot.",
+      "model_responses": [
+        {
+          "call": "call-1fc1d2742c164914bf8d33f428c53571",
+          "trial": "tr-6afe20c69d",
+          "summary": {
+            "category": "http_error",
+            "usage_state": "unknown",
+            "http_status": 502,
+            "elapsed_ms": 1030
+          }
+        },
+        {
+          "call": "call-e837ca996eaa447dbf35836a8216dd10",
+          "trial": "tr-6afe20c69d",
+          "summary": {
+            "category": "ok",
+            "transport": "sse",
+            "terminal": "completed",
+            "usage_state": "known",
+            "read_termination": "terminal",
+            "bytes": 113520,
+            "event_count": 58,
+            "elapsed_ms": 4070,
+            "sha256": "74704d1e1b26441908361de38e043d8be9b8604d1ad9da784ae3e85a25576499"
+          }
+        },
+        {
+          "call": "call-2432ada328dc47aeaca06bfb2b844b19",
+          "trial": "tr-6afe20c69d",
+          "summary": {
+            "category": "ok",
+            "transport": "sse",
+            "terminal": "completed",
+            "usage_state": "known",
+            "read_termination": "terminal",
+            "bytes": 113557,
+            "event_count": 57,
+            "elapsed_ms": 5337,
+            "sha256": "89f2b292a1f9fce1ff0c232dc9e4c9eb09ce2984400e11da0d72f10619aca958"
+          }
+        },
+        {
+          "call": "call-4bb107d9b4c347e7b876c5f9b3698a08",
+          "trial": "tr-6afe20c69d",
+          "summary": {
+            "category": "ok",
+            "transport": "sse",
+            "terminal": "completed",
+            "usage_state": "known",
+            "read_termination": "terminal",
+            "bytes": 115987,
+            "event_count": 72,
+            "elapsed_ms": 4258,
+            "sha256": "cab8f36e484cd3d7efa24174ffc1215dc9003b9eec8a2bb1bf04b15171385c86"
+          }
+        }
+      ],
+      "sha256": "1f0ff33f33e06687feaaefffb67cd97aa3ead842110779171db75396882faebc"
+    }
+  },
+  "conclusion": "Two marker checks passed. Pi consumed three complete streamed replies. The next upstream request returned HTTP 502; no retry was forwarded, the candidate trial was not started, and the baseline resource was cleaned. This does not establish the cause of prior study failures or sustained provider reliability."
+}
