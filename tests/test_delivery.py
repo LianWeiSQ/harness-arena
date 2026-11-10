@@ -141,6 +141,10 @@ class DeliveryTests(unittest.TestCase):
         ex["runs"][0]["version_load"] = {"base_url": "private-endpoint", "raw": "private-key"}
         ex["diagnosis"]["hypothesis"]["summary"] = "private-key"
         self.f.store.update("evo_experiment", ex["id"], ex)
+        call = self.f.store.list("evo_call")[0]
+        call["response_summary"] = {"category": "response_failed", "usage_state": "known",
+                                    "message": "private-key", "base_url": "private-endpoint"}
+        self.f.store.update("evo_call", call["id"], call)
         report = experiment_report(self.f.store, ex["id"])
         text = json.dumps(report)
         for forbidden in ("private-key", "private-endpoint", "/local/secret", "raw_output", "base_url"):
@@ -149,6 +153,7 @@ class DeliveryTests(unittest.TestCase):
         self.assertEqual(sum(x["calls"] for x in report["cost_by_phase"].values()), 32)
         self.assertEqual(report["evaluation"]["valid_trials"], 24)
         self.assertEqual(len(report["runs"]), 30)
+        self.assertEqual(report["model_responses"][0]["summary"], {"category": "response_failed", "usage_state": "known"})
         self.assertEqual(report["sha256"], digest({k: v for k, v in report.items() if k != "sha256"}))
 
     def test_taskpack_calibration_is_real_and_does_not_call_a_model(self):

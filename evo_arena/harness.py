@@ -3,6 +3,7 @@ from __future__ import annotations
 import difflib
 import hashlib
 import hmac
+import http.client
 import json
 import os
 import re
@@ -23,6 +24,7 @@ from .store import now
 from .versions import InputEvidence, file_hashes, materialize_version
 from .business import BusinessService
 from .store import digest
+from .response_protocol import decode_response, public_summary, MESSAGES
 
 
 FIXTURES = Path(__file__).with_name("fixtures") / "harness"
@@ -79,6 +81,7 @@ class TrialGateway:
         self.budget = Budget(MAX_CALLS, MAX_TOKENS)
         self.opener = urllib.request.build_opener(NoRedirect())
         self.failure = None
+        self.failure_detail = None
         self.budget_exhausted = False
         self.outputs = set()
         self.writes = 0
@@ -90,6 +93,8 @@ class TrialGateway:
         self.end_marker = None
 
     def model(self, raw: bytes) -> tuple[int, str, str]:
+        if self.failure:
+            return self.error(502, self.failure)
         ledger_call_id = None
         try:
             data = json.loads(raw)
@@ -120,29 +125,21 @@ class TrialGateway:
         req = urllib.request.Request(self.settings.base_url + "/responses",
             data=json.dumps(data).encode(), method="POST",
             headers={"Authorization": "Bearer " + self.settings.api_key, "Content-Type": "application/json"})
+        summary = {"category": "transport_error", "usage_state": "unknown"}
+        usage = None
         try:
             timeout = min(75, max(.1, self.experiment_budget.remaining_seconds())) if self.experiment_budget else 75
             with self.opener.open(req, timeout=timeout) as response:
                 content_type = response.headers.get("Content-Type", "application/json")
-                result = response.read(6_000_001).decode()
-            if len(result) > 6_000_000:
-                raise ValueError()
-            if "text/event-stream" in content_type:
-                records = [json.loads(line[5:]) for line in result.splitlines()
-                           if line.startswith("data:") and line[5:].strip() not in {"", "[DONE]"}]
-                completed = next((r["response"] for r in reversed(records)
-                                  if r.get("type") == "response.completed"), {})
-            else:
-                completed = json.loads(result)
-            if not isinstance(completed, dict):
-                raise ValueError("Invalid response object")
-            usage = completed.get("usage")
-            if not isinstance(usage, dict):
-                usage = {}
+                body = response.read(6_000_001)
+            completed, summary = decode_response(body, content_type)
+            usage = (completed or {}).get("usage")
             if self.experiment_budget:
-                self.experiment_budget.settle(ledger_call_id, usage)
+                self.experiment_budget.settle(ledger_call_id, usage, response_summary=summary)
                 ledger_call_id = None
-            self.budget.record(usage)
+            self.budget.record(usage if isinstance(usage, dict) else {})
+            if summary["category"] != "ok":
+                raise ProviderError(MESSAGES[summary["category"]])
             for item in completed.get("output", []):
                 if item.get("type") == "function_call":
                     self.record("调用 " + str(item.get("name", "tool")), str(item.get("arguments", ""))[:2600])
@@ -150,14 +147,23 @@ class TrialGateway:
                     for part in item.get("content", []):
                         if part.get("type") == "output_text" and part.get("text"):
                             self.record("Agent 输出", part["text"][:2600])
-            return 200, content_type, result
+            return 200, content_type, body.decode()
         except urllib.error.HTTPError as error:
-            self.failure = f"模型供应商 HTTP {error.code}"
-        except (OSError, ValueError, ProviderError, KeyError, TypeError, AttributeError):
-            self.failure = "模型响应异常或用量未报告"
-        self.budget.unknown_usage_calls = max(1, self.budget.unknown_usage_calls)
+            summary = {"category": "http_error", "http_status": error.code, "usage_state": "unknown"}
+        except TimeoutError:
+            summary = {"category": "timeout", "usage_state": "unknown"}
+        except (OSError, http.client.HTTPException, ValueError, ProviderError, KeyError, TypeError, AttributeError):
+            if summary["category"] == "ok":
+                summary["category"] = "invalid_response"
+        self.failure_detail = public_summary(summary)
+        self.failure = MESSAGES[self.failure_detail["category"]]
+        if self.failure_detail.get("http_status"):
+            self.failure += " " + str(self.failure_detail["http_status"])
+        if summary.get("usage_state") != "known":
+            self.budget.unknown_usage_calls = max(1, self.budget.unknown_usage_calls)
         if ledger_call_id:
-            self.experiment_budget.settle(ledger_call_id)
+            self.experiment_budget.settle(ledger_call_id, response_summary=summary)
+        self.record("模型响应异常", json.dumps(self.failure_detail, ensure_ascii=False))
         return self.error(502, self.failure)
 
     @staticmethod
@@ -443,6 +449,8 @@ class HarborTrial:
                             os.killpg(process.pid, signal.SIGKILL)
                             process.wait()
                     run["usage"] = gateway.budget.public()
+                    if gateway.failure_detail:
+                        run["provider_failure"] = gateway.failure_detail
                     if gateway.input_evidence:
                         run["input_evidence"] = gateway.input_evidence.public()
                     if gateway.budget_exhausted:

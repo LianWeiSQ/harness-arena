@@ -221,5 +221,8 @@ def _experiment_report(store, ident):
                   "checks": [{"key": c.get("id", c.get("name")), "passed": c.get("passed"), "critical": c.get("critical", False)} for c in r.get("checks", [])],
                   "version_load": loading_evidence(r), "input_registration_verified": r.get("input_evidence", {}).get("registration_verified", False)} for r in ex["runs"]],
         "scope": "Model-reported known usage only; unknown and pending calls are not zero cost. Raw traces, generated text, file contents and connection configuration are excluded. Exporting a running experiment is an interim snapshot."}
+    from .response_protocol import public_summary
+    report["model_responses"] = [{"call": c["id"], "trial": c["trial"],
+        "summary": public_summary(c["response_summary"])} for c in calls if c.get("response_summary")]
     report["sha256"] = digest(report)
     return report

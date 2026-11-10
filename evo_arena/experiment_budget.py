@@ -64,7 +64,7 @@ class ExperimentBudget:
                                   (canonical(budget), self.ident))
         return ident
 
-    def settle(self, ident, usage=None):
+    def settle(self, ident, usage=None, *, response_summary=None):
         value = usage.get("total_tokens") if isinstance(usage, dict) else None
         valid = type(value) is int and value >= 0
         with self.store.lock, self.store.db:
@@ -82,5 +82,8 @@ class ExperimentBudget:
             else:
                 budget["unknown_usage_calls"] += 1
             call.update(status="settled" if valid else "unknown", tokens=value if valid else None, finished=now())
+            if response_summary is not None:
+                from .response_protocol import public_summary
+                call["response_summary"] = public_summary(response_summary)
             for kind, key, data in (("evo_call", ident, call), ("evo_budget", self.ident, budget)):
                 self.store.db.execute("UPDATE objects SET data=? WHERE kind=? AND id=?", (canonical(data), kind, key))

@@ -207,7 +207,7 @@ class BudgetAndEvaluationTests(unittest.TestCase):
         self.assertEqual(gateway.model(request)[0], 502)
         self.assertEqual(budget.public()["unknown_usage_calls"], 1)
         self.assertEqual(budget.public()["pending"], 0)
-        self.assertEqual(gateway.model(request)[0], 429)
+        self.assertEqual(gateway.model(request)[0], 502)
         self.assertEqual(gateway.opener.open.call_count, 2)
         self.assertEqual(len(self.store.list("evo_call")), 2)
         ledger = Path(self.temp.name) / "ledger"; ledger.mkdir()
@@ -231,7 +231,7 @@ class BudgetAndEvaluationTests(unittest.TestCase):
             self.assertEqual(gateway.model(b'{"model":"model"}')[0], 502)
             self.assertEqual(budget.public()["unknown_usage_calls"], 1)
             self.assertEqual(budget.public()["pending"], 0)
-            self.assertEqual(gateway.model(b'{"model":"model"}')[0], 429)
+            self.assertEqual(gateway.model(b'{"model":"model"}')[0], 502)
 
     def test_missing_infra_duplicate_and_per_case_regression_do_not_promote(self):
         plan = make_plan(current_pack(), "b", "c", "validation")

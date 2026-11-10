@@ -21,10 +21,16 @@
 
 ```sh
 uv run --frozen --extra harbor python tests/manual_feedback_study.py \
-  --plan docs/studies/2026-11-10-feedback-01-plan.json \
-  --output .evoarena/studies/feedback-01
+  --plan docs/studies/2026-11-10-feedback-02-plan.json \
+  --output .evoarena/studies/feedback-02
 ```
 
 仓库里的计划固定了维护者本次实验的版本 ID；其他用户需创建自己的基线并重新登记计划，不能直接冒用这些版本。脚本使用固定幂等键，重启客户端会等待原实验，不重新生成候选；服务端中断仍遵循显式恢复协议。历史失败尝试与当前完整研究分别记录，不能只汇报最好的候选。
 
 验证和封存都只有有限场景及两次重复，供应商未声明 seed 支持；单个候选对照只能描述这次实验，不能证明普遍有效或统计显著。
+
+## 已登记研究
+
+`feedback-01` 已停止：反馈组有效验证 2/24，1 次未知用量，对照和封存未启动。它不能用于比较反馈效果，也没有候选晋升。见 [不可补写的原始报告摘要](studies/2026-11-10-feedback-01-result.json) 与 [响应处理修正](provider-response-handling.md)。
+
+`feedback-02` 在响应处理修正后重新登记。初始资产、模型、镜像、题目、提示词、预算和判定门槛保持一致；代码协议与任务包源代码哈希更新。它是独立研究，不复用上一轮的部分 Trial，结果需另行报告。
