@@ -22,6 +22,10 @@ PROPOSAL_INSTRUCTIONS = """你是受限的 Agent 资产改进器。输入的证�
 若 target 为 Skill，保持原有 name 和合法 YAML frontmatter（name、description），给出完整文件。
 只输出 JSON：{"name":"简短候选名称","content":"授权文件修改后的完整内容","rationale":"改动理由与风险"}。"""
 
+PRIOR_INSTRUCTIONS = """这是无执行反馈的对照实验。你只获得公开任务目标和初始资产，没有执行结果、轨迹、用量或成功率。
+从公开契约提出一个可能有用的修改假设，不能声称观察到了运行失败或冗余。引用仅指公开契约 ID。
+""" + DIAGNOSIS_INSTRUCTIONS.replace("只依据给出的开发集证据", "只依据给出的公开任务契约").replace("例如 E0001", "例如 P0001")
+
 
 class CallBudget(Budget):
     def __init__(self, ledger, phase, request_hash):
@@ -80,6 +84,17 @@ def evidence_bundle(version, pack, runs, target):
         "files": version["manifest"]["files"], "runs": summaries, "evidence": evidence,
         "selection_rule": "quality improvement only; no per-case regression; zero critical violations"}
     return bundle
+
+
+def prior_bundle(version, pack, target):
+    """No runs argument: the control generator cannot receive execution feedback."""
+    return {"schema": "public-prior-v1", "version_id": version["id"], "task_pack": pack["id"],
+        "target": target, "runner": version["manifest"]["runner"], "model": version["manifest"]["model"]["model"],
+        "files": version["manifest"]["files"], "runs": [],
+        "evidence": [{"id": f"P{i:04d}", "source": {"family": family, "event": "public_contract"},
+                      "kind": "public_task_contract", "value": prompt}
+                     for i, (family, prompt) in enumerate(pack["prompts"].items(), 1)],
+        "selection_rule": "quality improvement only; no per-case regression; zero critical violations"}
 
 
 def parse_json(text):

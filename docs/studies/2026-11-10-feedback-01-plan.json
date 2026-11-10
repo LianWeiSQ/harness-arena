@@ -1,0 +1,62 @@
+{
+  "schema": "evo-feedback-study-v1",
+  "id": "2026-11-10-feedback-01",
+  "created": "2026-11-10T10:10:20.475973+00:00",
+  "protocol_sha256": "28f4312a844ea5950ee28873212ac895fa126415f070824079204ce8b15b7f6b",
+  "baseline": "av-7627401ce21c6a7fe48a",
+  "baseline_manifest_sha256": "27e6fd018693341618ea3397b70ca601e1e3ada1981442709ae19336a54799c8",
+  "model": "gpt-5.6-sol",
+  "runner": "pi",
+  "runtime_version": "0.82.1",
+  "task_pack": "tp-c0893d6a8685709aa928",
+  "image_id": "sha256:c3208589727a0680d246c3b2e1771b68aeeed230f8f77b53ceb25dc43a63a86c",
+  "arms": [
+    {
+      "name": "feedback",
+      "payload": {
+        "mode": "improve",
+        "baseline": "av-7627401ce21c6a7fe48a",
+        "target": "skills/order-recovery/SKILL.md",
+        "optimizer_profile": "startup",
+        "limits": {
+          "calls": 363,
+          "tokens": 3000000,
+          "seconds": 14400
+        },
+        "feedback_mode": "development"
+      }
+    },
+    {
+      "name": "control",
+      "payload": {
+        "mode": "improve",
+        "baseline": "av-7627401ce21c6a7fe48a",
+        "target": "skills/order-recovery/SKILL.md",
+        "optimizer_profile": "startup",
+        "limits": {
+          "calls": 363,
+          "tokens": 3000000,
+          "seconds": 14400
+        },
+        "feedback_mode": "none"
+      }
+    }
+  ],
+  "order": "feedback then control; sequential on one worker; not randomized",
+  "candidate_count_per_arm": 1,
+  "diagnosis_attempt_limit_per_arm": 2,
+  "proposal_attempt_limit_per_arm": 1,
+  "development_trials_per_arm": 6,
+  "validation_trials_per_arm": 24,
+  "validation_repeats": 2,
+  "selected_version_rule": "Accepted candidate after complete paired validation, otherwise initial baseline for completed unchanged/regression decision. Incomplete or invalid generation stops study.",
+  "sealed_limits": {
+    "calls": 288,
+    "tokens": 2400000,
+    "seconds": 9600
+  },
+  "sealed_repeats": 2,
+  "sealed_plan": "Compare initial baseline against each distinct selected version. Share one report only when selections are identical. No sealed feedback enters selection.",
+  "stop_rule": "No replacement candidates or automatic retry of failed/unknown calls. Keep partial reports and all previous attempts.",
+  "scope": "Single candidate per arm and small task set; no statistical significance claim."
+}

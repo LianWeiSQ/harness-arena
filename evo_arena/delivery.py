@@ -205,7 +205,12 @@ def _experiment_report(store, ident):
     # Deliberate allowlist: no free-form traces, model outputs, connection URL,
     # credential fields, arbitrary exception strings or local paths in a report.
     report = {"schema": "evo-experiment-report-v1", "exported": now(), "experiment": {k: ex.get(k) for k in
-        ("id", "mode", "status", "phase", "created", "finished", "baseline", "candidate", "initial_version", "task_pack", "target", "epoch")},
+        ("id", "mode", "feedback_mode", "status", "phase", "created", "finished", "baseline", "candidate", "initial_version", "task_pack", "target", "epoch")},
+        "optimization": {"feedback_mode": ex.get("feedback_mode", "development"),
+            "input_schema": ex.get("evidence_bundle", {}).get("schema"),
+            "input_sha256": digest(ex["evidence_bundle"]) if ex.get("evidence_bundle") else None,
+            "policy": ex.get("optimizer_policy"), "model": ex.get("optimizer_model", {}).get("model")}
+            if ex.get("automatic_evolution") else None,
         "versions": versions, "plan": ex.get("plan"), "evaluation": ex.get("evaluation"),
         "runtime": {"harbor_version": ex.get("harbor_version"), "image_id": ex.get("image_id"),
                     "protocol_sha256": execution.get("protocol_sha256") if execution else None},

@@ -7,8 +7,8 @@ from .evaluation import evaluate
 from .evolution import VersionExperiment
 from .experiment_budget import ExperimentBudget, limits_checked
 from .harness import LIMITS
-from .optimizer import (BudgetedOptimizer, DIAGNOSIS_INSTRUCTIONS, PROPOSAL_INSTRUCTIONS,
-                        evidence_bundle, parse_json, validate_diagnosis, validate_proposal)
+from .optimizer import (BudgetedOptimizer, DIAGNOSIS_INSTRUCTIONS, PROPOSAL_INSTRUCTIONS, PRIOR_INSTRUCTIONS,
+                        evidence_bundle, prior_bundle, parse_json, validate_diagnosis, validate_proposal)
 from .provider import BudgetExceeded, ProviderError
 from .store import canonical, digest, now
 from .taskpacks import current_pack, make_plan
@@ -90,10 +90,13 @@ class ImprovementExperiment(VersionExperiment):
     optimizer_factory = BudgetedOptimizer
 
     def create(self, payload, key):
-        allowed = {"baseline", "mode", "target", "limits", "optimizer_profile", "project"}
+        allowed = {"baseline", "mode", "target", "limits", "optimizer_profile", "project", "feedback_mode"}
         if (not isinstance(payload, dict) or set(payload) - allowed or payload.get("mode") != "improve"
                 or not isinstance(payload.get("baseline"), str) or not isinstance(payload.get("target"), str)):
             raise ValueError("请选择基线、授权文件和改进预算")
+        feedback_mode = payload.get("feedback_mode", "development")
+        if not isinstance(feedback_mode, str) or feedback_mode not in {"development", "none"}:
+            raise ValueError("反馈方式只能是 development 或 none")
         if not self.harbor or not self.harbor.is_file():
             raise ValueError("请配置 Harbor CLI")
         baseline = self.store.get("evo_version", payload["baseline"])
@@ -114,21 +117,26 @@ class ImprovementExperiment(VersionExperiment):
                 if prior["payload_hash"] != digest(payload):
                     raise ValueError("同一请求不能更改实验")
                 return self.store.get("evo_experiment", prior["experiment"]), bindings, False
-            project_id = payload.get("project") or "project-" + digest(baseline["id"])[:16]
+            prefix = "control-project-" if feedback_mode == "none" else "project-"
+            project_id = payload.get("project") or prefix + digest(baseline["id"])[:16]
             if not isinstance(project_id, str):
                 raise ValueError("项目格式错误")
             project = self.store.get("evo_project", project_id)
             if payload.get("project") and not project:
                 raise ValueError("项目不存在")
+            if project and project.get("feedback_mode", "development") != feedback_mode:
+                raise ValueError("反馈实验和无反馈对照必须使用独立项目")
             if project and project["current_version"] != baseline["id"]:
                 raise ValueError("项目推荐版本已变化，请刷新后选择当前版本")
             if not project:
-                project = {"id": project_id, "name": baseline["name"], "initial_version": baseline["id"],
+                project = {"id": project_id, "name": ("无反馈对照 · " if feedback_mode == "none" else "") + baseline["name"],
+                    "feedback_mode": feedback_mode, "initial_version": baseline["id"],
                     "current_version": baseline["id"], "revision": 0, "created": now()}
                 self.store.db.execute("INSERT INTO objects VALUES(?,?,?,?)", ("evo_project", project_id, canonical(project), now()))
             ident = "ex-" + uuid.uuid4().hex[:12]
             experiment = {"id": ident, "schema": "evo-improvement-v1", "kind": "improvement", "mode": "improve",
                 "created": now(), "status": "queued", "phase": "baseline", "automatic_evolution": True,
+                "feedback_mode": feedback_mode,
                 "baseline": baseline["id"], "candidate": None, "target": payload["target"], "diff": "", "runs": [],
                 "runner": baseline["manifest"]["runner"], "model": settings.model,
                 "optimizer_model": {"profile": optimizer_profile, "model": optimizer_settings.model, "base_url": optimizer_settings.base_url},
@@ -160,7 +168,8 @@ class ImprovementExperiment(VersionExperiment):
                 if run["status"] not in {"passed", "failed"}:
                     raise ProviderError("开发基线执行异常；不生成候选")
             experiment["phase"] = "diagnosing"
-            bundle = evidence_bundle(baseline, pack, [r for r in experiment["runs"] if r.get("phase") == "development"], experiment["target"])
+            bundle = (prior_bundle(baseline, pack, experiment["target"]) if experiment.get("feedback_mode") == "none" else
+                      evidence_bundle(baseline, pack, [r for r in experiment["runs"] if r.get("phase") == "development"], experiment["target"]))
             experiment["evidence_bundle"] = bundle
             self.save(experiment)
             optimizer = self.optimizer_factory(settings["optimizer"], budget)
@@ -240,7 +249,8 @@ class ImprovementExperiment(VersionExperiment):
     def diagnose(self, experiment, optimizer, bundle):
         payload = bundle
         for _ in range(experiment["optimizer_policy"]["max_diagnosis_attempts"]):
-            raw, usage, attempt = self.output(experiment, optimizer, "diagnosis", DIAGNOSIS_INSTRUCTIONS, payload)
+            instructions = PRIOR_INSTRUCTIONS if experiment.get("feedback_mode") == "none" else DIAGNOSIS_INSTRUCTIONS
+            raw, usage, attempt = self.output(experiment, optimizer, "diagnosis", instructions, payload)
             try:
                 diagnosis = validate_diagnosis(parse_json(raw), bundle)
                 attempt["status"] = "valid"

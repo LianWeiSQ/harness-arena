@@ -232,8 +232,8 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
                 args = parse_qs(parsed.query)
                 baseline = store.get("evo_version", args.get("baseline", [""])[0])
                 candidate = store.get("evo_version", args.get("candidate", [""])[0])
-                if not baseline or not candidate or candidate["parent"] != baseline["id"]:
-                    return self.send_json({"error": "请选择有父子关系的两个版本"}, 400)
+                if not baseline or not candidate:
+                    return self.send_json({"error": "请选择两个已有版本"}, 400)
                 return self.send_json({"diff": version_diff(baseline, candidate)})
             if path == "/api/evo":
                 return self.send_json({"capabilities": CAPABILITIES, "models": models.public(),

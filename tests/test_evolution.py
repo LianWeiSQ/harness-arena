@@ -137,6 +137,19 @@ class VersionExperimentTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.engine.create({**payload, "limits": {"calls": 0}}, "bad")
 
+    def test_sealed_report_supports_unchanged_selection_and_multigeneration_descendant(self):
+        grandchild = self.registry.derive(self.candidate, "Grandchild", "policy.md", "Inspect and verify the final result.")
+        for selected in (self.baseline, grandchild):
+            ex, _, _ = self.engine.create({"baseline": self.baseline["id"], "candidate": selected["id"], "mode": "report"}, selected["id"])
+            self.assertEqual(len(ex["plan"]["trials"]), 24)
+            self.assertFalse(ex["plan"]["automatic_promotion"])
+            self.assertEqual({r["split"] for r in ex["plan"]["trials"]}, {"sealed"})
+            self.assertEqual(len({r["key"] for r in ex["plan"]["trials"]}), 24)
+        unrelated = self.registry.register({**self.payload, "name": "Unrelated"})
+        for candidate, mode in ((unrelated, "report"), (self.baseline, "validation"), (grandchild, "validation")):
+            with self.assertRaises(ValueError):
+                self.engine.create({"baseline": self.baseline["id"], "candidate": candidate["id"], "mode": mode}, "bad-report")
+
 
 if __name__ == "__main__":
     unittest.main()

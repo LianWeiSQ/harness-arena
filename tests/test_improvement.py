@@ -123,6 +123,42 @@ class ImprovementTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             evidence_bundle(self.baseline, current_pack(), result["runs"], "policy.md")
 
+    def test_no_feedback_control_keeps_budget_and_trials_but_withholds_execution_evidence(self):
+        ordinary, _, _ = self.create("feedback")
+        self.payload["feedback_mode"] = "none"
+        ex, bindings, _ = self.create("control")
+        result = self.execute(ex, bindings)
+        self.assertEqual(result["decision"]["status"], "accepted")
+        self.assertEqual(len(result["runs"]), 30)
+        self.assertEqual(result["budget"]["calls"], 32)
+        self.assertEqual(ex["limits"], ordinary["limits"])
+        self.assertEqual(ex["optimizer_policy"], ordinary["optimizer_policy"])
+        self.assertEqual(ex["development_plan"], ordinary["development_plan"])
+        self.assertEqual(ex["validation_template"], ordinary["validation_template"])
+        self.assertEqual(result["evidence_bundle"]["schema"], "public-prior-v1")
+        text = json.dumps(self.inputs)
+        for forbidden in ("DEVELOPMENT_ONLY", "VALIDATION_CANARY", "private-key", "private-endpoint.invalid", "seconds", "tokenUsage"):
+            self.assertNotIn(forbidden, text)
+        for run in result["runs"]:
+            self.assertNotIn(run["id"], text)
+        self.assertNotEqual(ex["project"], ordinary["project"])
+        self.assertEqual(self.store.get("evo_project", ordinary["project"])["current_version"], self.baseline["id"])
+        self.assertEqual(self.store.get("evo_project", ex["project"])["current_version"], result["candidate"])
+        self.payload["project"] = ordinary["project"]
+        with self.assertRaisesRegex(ValueError, "独立项目"):
+            self.create("bad-cross-arm-project")
+
+    def test_feedback_mode_is_frozen_and_validated(self):
+        from evo_arena import execution_control as control
+        for value in ([], "all", None):
+            self.payload["feedback_mode"] = value
+            with self.assertRaises(ValueError): self.create("invalid-mode")
+        self.payload["feedback_mode"] = "none"
+        ex, _, _ = self.create("frozen-mode")
+        ex["feedback_mode"] = "development"
+        self.store.update("evo_experiment", ex["id"], ex)
+        with self.assertRaises(control.ExecutionStopped): control.acquire(self.store, ex)
+
     def test_no_gain_regression_and_invalid_candidate_leave_recommendation_unchanged(self):
         for behavior in ("unchanged", "regress", "invalid"):
             with self.subTest(behavior=behavior):

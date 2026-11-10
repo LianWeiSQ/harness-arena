@@ -37,6 +37,9 @@ def evaluate(plan, runs):
     complete = len(valid) == len(expected) and not invalid and not duplicates
     if not complete:
         outcome = "insufficient_evidence"
+    elif plan["mode"] == "report" and ({r["version_id"] for r in plan["trials"] if r["role"] == "baseline"}
+            == {r["version_id"] for r in plan["trials"] if r["role"] == "candidate"}):
+        outcome = "same_version"  # Independent repetitions, never an improvement claim.
     elif violations or any(g["candidate"] < g["baseline"] for g in groups.values()):
         outcome = "regression"
     elif totals["candidate"] > totals["baseline"]:

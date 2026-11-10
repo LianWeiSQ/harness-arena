@@ -251,6 +251,18 @@ class BudgetAndEvaluationTests(unittest.TestCase):
         runs[4]["status"] = "failed"  # Counterbalanced second case starts with candidate.
         self.assertEqual(evaluate(plan, runs)["outcome"], "regression")
 
+    def test_same_version_sealed_repetitions_never_claim_version_gain(self):
+        plan = make_plan(current_pack(), "initial", "initial", "report")
+        runs = [{**r, "status": "passed" if r["role"] == "candidate" else "failed", "task_checksum": r["task"],
+                 "checks": [{"passed": r["role"] == "candidate", "critical": True}],
+                 "input_evidence": {"registration_verified": True}, "usage": {"unknown_usage_calls": 0},
+                 "verifier_mode": "separate", "verifier_attested": True, "execution_frozen": True} for r in plan["trials"]]
+        result = evaluate(plan, runs)
+        self.assertEqual(result["outcome"], "same_version")
+        self.assertEqual(result["successes"], {"baseline": 0, "candidate": 12})
+        self.assertFalse(result["gate_eligible"])
+        self.assertEqual(evaluate(plan, runs[:-1])["outcome"], "insufficient_evidence")
+
 
 if __name__ == "__main__":
     unittest.main()

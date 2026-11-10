@@ -44,7 +44,20 @@ class VersionExperiment:
         if not self.harbor or not self.harbor.is_file():
             raise ValueError("请配置 Harbor CLI")
         baseline, candidate = [self.store.get("evo_version", payload[k]) for k in ("baseline", "candidate")]
-        if not baseline or not candidate or candidate["parent"] != baseline["id"]:
+        if not baseline or not candidate:
+            raise ValueError("版本不存在")
+        if mode == "report":
+            # Final selection can retain the initial version or follow several
+            # accepted generations. Reporting never grants promotion rights.
+            cursor, seen = candidate, set()
+            while cursor and cursor["id"] not in seen and cursor["id"] != baseline["id"]:
+                seen.add(cursor["id"])
+                cursor = self.store.get("evo_version", cursor.get("parent") or "")
+            if not cursor or cursor["id"] != baseline["id"]:
+                raise ValueError("封存报告只能比较同一版本或初始基线的后代")
+            if any(baseline["manifest"][k] != candidate["manifest"][k] for k in ("runner", "runtime_version", "model")):
+                raise ValueError("封存报告必须固定模型与运行器")
+        elif candidate["parent"] != baseline["id"]:
             raise ValueError("候选必须从所选基线创建")
         settings = self.registry.settings_for(baseline)
         self.registry.settings_for(candidate)

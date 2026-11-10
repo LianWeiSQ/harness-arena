@@ -17,7 +17,7 @@ class ExecutionStopped(RuntimeError):
 
 INTENT_FIELDS = ("schema", "kind", "mode", "baseline", "target", "runner", "model", "optimizer_model",
     "task_pack", "limits", "limits_per_trial", "development_plan", "validation_template", "optimizer_policy",
-    "project", "initial_version", "expected_revision")
+    "project", "initial_version", "expected_revision", "feedback_mode")
 
 
 def protocol_hash():
