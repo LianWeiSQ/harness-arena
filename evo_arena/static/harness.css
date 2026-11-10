@@ -304,13 +304,16 @@ h3 {
   color: var(--faint);
   font-size: 10px;
 }
+.duel-card {
+  margin-bottom: 12px;
+}
 .scoreboard {
   display: grid;
-  grid-template-columns: 1fr;
-  border-top: 1px solid var(--line);
+  grid-template-columns: 1fr 180px;
+  align-items: stretch;
 }
 .scoreboard.paired {
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) 200px minmax(0, 1fr);
 }
 .runner-dsh {
   --runner-color: var(--s1);
@@ -318,48 +321,162 @@ h3 {
 .runner-pi {
   --runner-color: var(--s2);
 }
-.score {
-  padding: 10px 15px;
-  display: grid;
-  grid-template-columns: 1fr auto;
+.fighter {
+  padding: 18px 22px;
   position: relative;
-  gap: 2px 8px;
+  border-top: 3px solid var(--runner-color);
 }
-.score::before {
-  content: "";
-  position: absolute;
-  left: 6px;
-  top: 12px;
-  bottom: 12px;
-  width: 3px;
-  background: var(--runner-color);
+.fighter:last-child {
+  text-align: right;
 }
-.score + .score {
+.fighter small {
+  font: 10px var(--mono);
+  color: var(--faint);
+}
+.fighter h2 {
+  font: 700 21px var(--mono);
+  color: var(--runner-color);
+  margin: 5px 0;
+}
+.fighter-model {
+  font: 11px var(--mono);
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.fighter-record {
+  display: inline-block;
+  margin-top: 10px;
+  font: 11px var(--mono);
+}
+.winner-badge {
+  display: block;
+  color: var(--runner-color);
+  font-size: 11px;
+  margin-top: 6px;
+}
+.duel-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   border-left: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  background: var(--subtle);
+  padding: 12px 8px;
+  gap: 5px;
 }
-.score h3 {
-  font: 650 12px var(--mono);
+.duel-center small {
+  font: 10px var(--mono);
+  color: var(--faint);
+  letter-spacing: 0.08em;
 }
-.score small {
+.duel-score {
+  font: 750 40px/1.1 var(--mono);
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.duel-outcome {
+  font-size: 12px;
+  font-weight: 650;
+}
+.duel-rule {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 7px 14px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 10px;
+}
+.comparison-insights {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.insight {
+  padding: 11px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.insight small {
   font-size: 10px;
   color: var(--faint);
 }
-.score-value {
-  grid-column: 2;
-  grid-row: 1/4;
-  font: 650 26px var(--mono);
-  color: var(--runner-color);
-  align-self: center;
+.insight strong {
+  font-size: 16px;
+  color: var(--runner-color, var(--ink));
 }
-.score h3,
-.score small {
-  grid-column: 1;
+.insight p {
+  font: 11px var(--mono);
+  color: var(--muted);
+}
+.round-card {
+  margin-bottom: 16px;
+}
+.round-table {
+  table-layout: fixed;
+  white-space: normal;
+  text-align: left;
+}
+.round-table th,
+.round-table td {
+  padding: 10px 14px;
+  vertical-align: middle;
+}
+.round-table th:first-child {
+  width: 30%;
+}
+.round-table small {
+  display: block;
+  font-size: 10px;
+  margin-top: 3px;
+  color: var(--faint);
+}
+.round-table strong {
+  font-size: 11px;
+}
+.round-table .runner-name {
+  color: var(--runner-color);
+}
+.round-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  font-size: 11px;
+  line-height: 1.6;
+  font-weight: 650;
+}
+.round-link:hover {
+  background: transparent;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.selected-round {
+  background: var(--subtle);
+}
+.chart-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: 12px;
+}
+.chart-key::before {
+  content: "";
+  width: 14px;
+  height: 3px;
+  background: var(--runner-color);
 }
 .activity-card {
   display: flex;
   flex-direction: column;
-  height: 388px;
-  max-height: 388px;
+  height: 318px;
+  max-height: 318px;
 }
 .activity-feed {
   overflow: auto;
@@ -844,5 +961,68 @@ legend {
   }
   .brand-mark {
     display: none;
+  }
+}
+
+@media (max-width: 700px) {
+  .scoreboard.paired {
+    grid-template-columns: minmax(0, 1fr) 94px minmax(0, 1fr);
+  }
+  .scoreboard {
+    grid-template-columns: 1fr 100px;
+  }
+  .fighter {
+    padding: 12px 10px;
+  }
+  .fighter h2 {
+    font-size: 14px;
+    overflow-wrap: anywhere;
+  }
+  .fighter-model {
+    font-size: 9px;
+  }
+  .fighter small,
+  .fighter-record {
+    font-size: 9px;
+  }
+  .duel-score {
+    font-size: 24px;
+  }
+  .duel-center small {
+    font-size: 8px;
+    letter-spacing: 0;
+  }
+  .duel-outcome {
+    font-size: 10px;
+  }
+  .comparison-insights {
+    gap: 8px;
+  }
+  .insight {
+    padding: 10px;
+  }
+  .insight strong {
+    font-size: 13px;
+  }
+  .insight p {
+    font-size: 9px;
+  }
+  .round-table {
+    min-width: 0;
+  }
+  .round-table th,
+  .round-table td {
+    padding: 8px 6px;
+    font-size: 9px;
+  }
+  .round-table small {
+    font-size: 9px;
+  }
+  .round-table strong,
+  .round-link {
+    font-size: 10px;
+  }
+  .round-table th:first-child {
+    width: 27%;
   }
 }

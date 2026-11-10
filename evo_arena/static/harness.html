@@ -4,8 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>EvoArena · Harness 竞技场</title>
-    <link rel="stylesheet" href="/harness.css?v=5" />
-    <script defer src="/harness.js?v=4"></script>
+    <link rel="stylesheet" href="/harness.css?v=6" />
+    <script defer src="/harness.js?v=6"></script>
   </head>
   <body>
     <header class="topbar">
@@ -53,17 +53,41 @@
       <div class="page-heading">
         <div>
           <p class="eyebrow">HARNESS × MODEL / 可验证的 Agent 竞技场</p>
-          <h1 id="title">Harness Arena</h1>
+          <h1 id="title">Harness 对战</h1>
         </div>
         <div class="toolbar">
           <select id="matches" aria-label="对局记录" disabled>
             <option>暂无对局</option></select
           ><button id="start-match" class="primary" disabled>
-            新建对局 ↗
+            发起挑战 ↗
           </button>
         </div>
       </div>
       <p id="error-message" class="error notice" role="alert" hidden></p>
+      <section class="card duel-card" aria-label="双方对战结果">
+        <div id="scoreboard" class="scoreboard" aria-label="对局比分"></div>
+        <div class="duel-rule">
+          <span id="verdict" role="status">等待对局结果</span
+          ><span>同题验收 · 每通过一题得 1 分</span>
+        </div>
+      </section>
+      <div
+        id="comparison-insights"
+        class="comparison-insights"
+        aria-label="双方差距"
+      ></div>
+      <section class="card round-card" aria-labelledby="round-title">
+        <header class="card-head">
+          <h2 id="round-title">逐题交锋</h2>
+          <span class="muted">点击任务，对照双方证据</span>
+        </header>
+        <div class="table-scroll">
+          <table class="round-table">
+            <thead id="round-head"></thead>
+            <tbody id="round-body"></tbody>
+          </table>
+        </div>
+      </section>
       <div class="arena-grid">
         <section class="card chart-card" aria-labelledby="chart-title">
           <header class="card-head">
@@ -79,9 +103,8 @@
           <div id="performance-chart" class="performance-chart"></div>
           <div class="chart-foot">
             <span id="chart-note">选择任务查看双方执行证据</span
-            ><span>每通过一题得 1 分</span>
+            ><span id="chart-legend"></span>
           </div>
-          <div id="scoreboard" class="scoreboard" aria-label="对局比分"></div>
         </section>
         <aside class="card activity-card" aria-labelledby="activity-title">
           <header class="card-head">
@@ -92,31 +115,9 @@
         </aside>
       </div>
       <div class="match-foot">
-        <p id="verdict" role="status">等待对局结果</p>
+        <p>效率比较基于共同通过的任务 · 仅代表当前对局</p>
         <p id="budget" class="muted"></p>
       </div>
-      <section class="card standings" aria-labelledby="standings-title">
-        <header class="card-head">
-          <h2 id="standings-title">本场成绩</h2>
-          <span class="muted">同模型 · 同题 · 同预算</span>
-        </header>
-        <div class="table-scroll">
-          <table>
-            <thead>
-              <tr>
-                <th>Harness</th>
-                <th>得分</th>
-                <th>验收完成</th>
-                <th>执行耗时</th>
-                <th>模型请求</th>
-                <th>Token 用量</th>
-                <th>执行异常</th>
-              </tr>
-            </thead>
-            <tbody id="standings-body"></tbody>
-          </table>
-        </div>
-      </section>
       <section class="card" id="evidence" aria-labelledby="evidence-title">
         <header class="card-head">
           <div>
@@ -149,11 +150,17 @@
         <header class="card-head">
           <div>
             <p class="eyebrow">NEW MATCH</p>
-            <h2 id="dialog-title">创建对局</h2>
+            <h2 id="dialog-title">发起挑战</h2>
           </div>
           <button type="button" id="close-dialog" aria-label="关闭">×</button>
         </header>
         <div class="dialog-content">
+          <label class="field"
+            >运行方式<select id="match-mode">
+              <option value="duel">双人对战</option>
+              <option value="solo">单项评测</option>
+            </select></label
+          >
           <label class="field"
             >模型连接<select id="match-model" required></select
           ></label>

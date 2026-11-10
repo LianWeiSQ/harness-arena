@@ -64,6 +64,11 @@ function taskResult(key, runners) {
   const runs = runners.map((runner) => runFor(key, runner));
   if (runs.some((run) => run?.status === "error")) return "执行异常";
   if (!runs.every((run) => judged.has(run?.status))) return "待验收";
+  if (
+    match?.comparison?.rounds.find((row) => row.task === key)?.verdict ===
+    "mismatch"
+  )
+    return "条件不一致";
   const winners = runs.filter((run) => run.status === "passed");
   if (runners.length === 1) return winners.length ? "验收通过" : "未通过";
   if (winners.length === 1) return `${shortName[winners[0].runner]} 胜`;
@@ -86,18 +91,22 @@ function drawOverview() {
   const key = records.map((row) => row.id + row.status).join("|");
   if ($("matches").dataset.records !== key) {
     $("matches").dataset.records = key;
+    const groups = [el("optgroup"), el("optgroup")];
+    groups[0].label = "双人对战";
+    groups[1].label = "单项评测";
+    for (const row of records) {
+      const roster = row.runners || ["dsh"];
+      const format = roster.map((id) => shortName[id] || id).join(" vs ");
+      const option = el(
+        "option",
+        `${dateFormat.format(new Date(row.created))} · ${format} · ${statusText[row.status]}`,
+      );
+      option.value = row.id;
+      groups[roster.length === 2 ? 0 : 1].append(option);
+    }
     $("matches").replaceChildren(
       ...(records.length
-        ? records.map((row) => {
-            const roster = row.runners || ["dsh"];
-            const format = roster.map((id) => shortName[id] || id).join(" vs ");
-            const option = el(
-              "option",
-              `${dateFormat.format(new Date(row.created))} · ${format} · ${statusText[row.status]}`,
-            );
-            option.value = row.id;
-            return option;
-          })
+        ? groups.filter((group) => group.children.length)
         : [el("option", "暂无记录")]),
     );
     $("matches").disabled = !records.length;
@@ -112,27 +121,15 @@ function draw() {
     (match?.mode === "dsh" ? ["dsh"] : Object.keys(overview.runners));
   const duel = runnerIds.length === 2;
   const keys = Object.keys(overview.tasks);
-  const scored = keys.filter((key) =>
-    runnerIds.every((runner) => judged.has(runFor(key, runner)?.status)),
-  );
-  const points = runnerIds.map(
-    (runner) =>
-      scored.filter((key) => runFor(key, runner).status === "passed").length,
-  );
-  const scoreAvailable = scored.length > 0;
-  const scoredLabel = `${duel ? "有效配对" : "完成验收"} ${scored.length} / ${keys.length} 题`;
-  const errorCount =
-    match?.runs.filter((run) => run.status === "error").length || 0;
-  const winner =
-    points[0] === points[1]
-      ? "本场平局"
-      : `${shortName[runnerIds[points[0] > points[1] ? 0 : 1]]} 获胜`;
+  const comparison = match?.comparison;
+  const scored = comparison?.valid_tasks || 0;
+  const points = runnerIds.map((runner) => comparison?.points[runner] || 0);
+  const scoreAvailable = scored > 0;
+  const scoredLabel = `${duel ? "有效配对" : "完成验收"} ${scored} / ${keys.length} 题`;
   $("scoreboard").classList.toggle("paired", duel);
   $("evidence-grid").classList.toggle("paired", duel);
-  $("title").textContent =
-    runnerIds.map((id) => shortName[id] || id).join(" vs ") +
-    (duel ? "" : " · 单项评测");
-  $("coverage").textContent = `${scored.length} / ${keys.length}`;
+  $("title").textContent = duel ? "Harness 对战" : "单项评测记录";
+  $("coverage").textContent = `${scored} / ${keys.length}`;
   const runs = match?.runs || [];
   $("total-calls").textContent = runs
     .reduce((sum, run) => sum + (run.usage?.calls || 0), 0)
@@ -142,32 +139,61 @@ function draw() {
     .toLocaleString();
   drawChart(runnerIds, keys);
   drawActivity();
-  drawStandings(runnerIds, points);
-  $("scoreboard").replaceChildren(
-    ...runnerIds.map((runner, index) => {
-      const panel = el("div", null, `score runner-${runner}`);
-      const version = match?.runs.find(
-        (run) => run.runner === runner && run.runtime_version,
-      )?.runtime_version;
-      panel.append(
-        el(
-          "small",
-          `选手 ${String(index + 1).padStart(2, "0")}${version ? ` · v${version}` : ""}`,
-        ),
-        el("h3", overview.runners[runner]),
-        el("span", scoreAvailable ? points[index] : "—", "score-value"),
-        el("small", duel ? "配对任务得分" : "有效任务通过数"),
-      );
-      return panel;
-    }),
+  drawComparison(runnerIds);
+  drawRounds(runnerIds, keys);
+  const panels = runnerIds.map((runner, index) => {
+    const panel = el("div", null, `fighter runner-${runner}`);
+    const version = match?.runs.find(
+      (run) => run.runner === runner && run.runtime_version,
+    )?.runtime_version;
+    const won =
+      comparison?.rounds.filter((row) => row.winner === runner).length || 0;
+    const lost =
+      comparison?.rounds.filter((row) => row.winner && row.winner !== runner)
+        .length || 0;
+    const drawn =
+      comparison?.rounds.filter((row) => row.verdict === "draw").length || 0;
+    panel.append(
+      el("small", `选手 ${index + 1}${version ? ` · v${version}` : ""}`),
+      el("h2", overview.runners[runner]),
+      el(
+        "p",
+        match?.model || overview.model || "等待选择模型",
+        "fighter-model",
+      ),
+      el(
+        "span",
+        duel
+          ? `逐题 ${won}胜 ${drawn}平 ${lost}负`
+          : `通过 ${points[index]} 题`,
+        "fighter-record",
+      ),
+    );
+    if (comparison?.winner === runner)
+      panel.append(el("strong", "本场获胜", "winner-badge"));
+    return panel;
+  });
+  const outcomeLabel = {
+    draw: "验收平局",
+    win: "验收决出胜负",
+    pending: "对战进行中",
+    incomplete: "对局未完成",
+    single: "单项评测",
+  };
+  const center = el("div", null, "duel-center");
+  const score = scoreAvailable ? points.join(" : ") : "— : —";
+  center.append(
+    el("small", duel ? "HEAD TO HEAD" : "SOLO"),
+    el("strong", duel ? score : points[0], "duel-score"),
+    el(
+      "span",
+      match ? outcomeLabel[comparison?.outcome] || "等待开始" : "等待开始",
+      "duel-outcome",
+    ),
   );
-  $("verdict").textContent = !match
-    ? "等待首场对局。"
-    : active.has(match.status)
-      ? `评测进行中 · ${scoredLabel}`
-      : match.status === "incomplete"
-        ? `${duel ? "本场未定胜负" : "单跑未完成"} · ${scoredLabel}${errorCount ? ` · ${errorCount} 次执行异常` : ""}`
-        : `${duel ? winner : "单跑结束"} · ${scoredLabel}`;
+  $("scoreboard").replaceChildren(panels[0], center, ...panels.slice(1));
+  $("verdict").textContent =
+    `${scoredLabel}${match?.status === "incomplete" ? " · 含异常，完整结果待确认" : ""}`;
 
   for (const button of $("evidence-tabs").children)
     button.setAttribute("aria-pressed", String(button.dataset.tab === tab));
@@ -281,7 +307,7 @@ async function refresh() {
     const records = recordsOf(nextOverview);
     const id =
       matchId ||
-      records.find((row) => row.mode === "arena")?.id ||
+      records.find((row) => row.runners?.length === 2)?.id ||
       records[0]?.id;
     const nextMatch = id
       ? await api("/api/harness/matches/" + encodeURIComponent(id))
@@ -315,16 +341,22 @@ $("evidence-tabs").onclick = (event) => {
 };
 function rosterChanged() {
   const count = $("runner-options").querySelectorAll("input:checked").length;
-  $("roster-hint").textContent =
-    count === 2
-      ? "2 位选手，同题对战。"
-      : count === 1
-        ? "1 位选手，运行单项评测。"
-        : "至少选择 1 位选手。";
-  $("launch-match").disabled = !count || !$("match-model").value || starting;
+  const duel = $("match-mode").value === "duel";
+  const valid = duel ? count === 2 : count === 1;
+  $("roster-hint").textContent = duel
+    ? valid
+      ? "双方同题对战，比验收结果、用时和 Token。"
+      : "双人对战需要选择 2 位选手。"
+    : valid
+      ? "单项评测会保存在独立的记录分组。"
+      : "单项评测请选择 1 位选手。";
+  $("launch-match").textContent = duel ? "开始对战 ↗" : "开始评测 ↗";
+  $("launch-match").disabled = !valid || !$("match-model").value || starting;
 }
+$("match-mode").onchange = rosterChanged;
 $("start-match").onclick = () => {
   const models = overview.models;
+  $("match-mode").value = "duel";
   $("match-model").replaceChildren(
     ...models.profiles.map((profile) => {
       const option = el("option", `${profile.name} · ${profile.model}`);
@@ -358,7 +390,7 @@ $("match-model").onchange = rosterChanged;
 $("close-dialog").onclick = () => $("match-dialog").close();
 $("match-form").onsubmit = async (event) => {
   event.preventDefault();
-  if (starting) return;
+  if (starting || $("launch-match").disabled) return;
   const payload = JSON.stringify({
     model_profile: $("match-model").value,
     runners: [...$("runner-options").querySelectorAll("input:checked")].map(
@@ -524,41 +556,130 @@ function drawActivity() {
       el("p", "启动对局后，工具调用与验收动态会出现在这里。", "empty"),
     );
 }
-function drawStandings(runners, points) {
-  $("standings-body").replaceChildren(
-    ...runners.map((runner, index) => {
-      const runs = (match?.runs || []).filter((run) => run.runner === runner);
-      const row = el("tr", null, `runner-${runner}`);
-      const name = el("td", overview.runners[runner], "runner-name");
-      const version = runs.find((run) => run.runtime_version)?.runtime_version;
-      if (version) name.append(el("span", `v${version}`, "table-version"));
-      const finished = runs.filter((run) => run.seconds != null);
-      const seconds = finished.reduce((sum, run) => sum + run.seconds, 0);
-      const usage = runs.filter((run) => run.usage);
-      row.append(
-        name,
-        el("td", points[index]),
+function formatMetric(value, key) {
+  if (value == null) return "—";
+  return key === "seconds" ? `${value.toFixed(1)}s` : value.toLocaleString();
+}
+function drawComparison(runners) {
+  const comparison = match?.comparison;
+  const container = $("comparison-insights");
+  const panels = [];
+  for (const [key, title] of [
+    ["seconds", "执行效率"],
+    ["tokens", "Token 效率"],
+  ]) {
+    const data = comparison?.metrics[key];
+    const panel = el("div", null, "insight");
+    panel.append(el("small", title));
+    if (runners.length !== 2 || !data?.tasks) {
+      panel.append(
         el(
-          "td",
-          `${runs.filter((run) => judged.has(run.status)).length} / ${Object.keys(overview.tasks).length}`,
+          "strong",
+          runners.length === 2 ? "暂无可比较的用量" : "选择双人对战查看差距",
         ),
-        el("td", finished.length ? `${seconds.toFixed(1)}s` : "—"),
-        el(
-          "td",
-          usage.length
-            ? usage.reduce((sum, run) => sum + run.usage.calls, 0)
-            : "—",
-        ),
-        el(
-          "td",
-          usage.length
-            ? usage
-                .reduce((sum, run) => sum + run.usage.tokens, 0)
-                .toLocaleString()
-            : "—",
-        ),
-        el("td", runs.filter((run) => run.status === "error").length),
       );
+    } else {
+      const label = data.lower
+        ? `${shortName[data.lower]} ${key === "seconds" ? "用时" : "用量"}少 ${data.reduction_pct}%`
+        : key === "seconds"
+          ? "双方耗时相同"
+          : "双方用量相同";
+      if (data.lower) panel.classList.add(`runner-${data.lower}`);
+      panel.append(
+        el("strong", label),
+        el(
+          "p",
+          runners
+            .map(
+              (runner) =>
+                `${shortName[runner]} ${formatMetric(data.values[runner], key)}`,
+            )
+            .join("  /  "),
+        ),
+        el("small", `同题配对 · 共同通过 ${data.tasks} 题`),
+      );
+    }
+    panels.push(panel);
+  }
+  container.replaceChildren(...panels);
+  $("chart-legend").replaceChildren(
+    ...runners.map((runner) =>
+      el("span", shortName[runner], `chart-key runner-${runner}`),
+    ),
+  );
+}
+function drawRounds(runners, keys) {
+  const header = el("tr");
+  header.append(
+    el("th", "任务"),
+    ...runners.map((runner) =>
+      el("th", overview.runners[runner], `runner-name runner-${runner}`),
+    ),
+    el("th", "对比结论"),
+  );
+  $("round-head").replaceChildren(header);
+  $("round-body").replaceChildren(
+    ...keys.map((key, index) => {
+      const row = el("tr");
+      row.classList.toggle("selected-round", key === task);
+      const taskCell = el("td");
+      const link = el(
+        "button",
+        `${String(index + 1).padStart(2, "0")}  ${overview.tasks[key].title} ↗`,
+        "round-link",
+      );
+      link.onclick = () => {
+        task = key;
+        draw();
+        $("evidence").scrollIntoView({ behavior: "smooth", block: "start" });
+      };
+      taskCell.append(link);
+      row.append(taskCell);
+      for (const runner of runners) {
+        const run = runFor(key, runner);
+        const cell = el("td");
+        const label =
+          run?.status === "passed"
+            ? "✓ 通过"
+            : run?.status === "failed"
+              ? "× 未通过"
+              : statusText[run?.status] || "等待执行";
+        cell.append(
+          el("strong", label, run?.status === "passed" ? "pass" : "muted"),
+        );
+        cell.append(
+          el(
+            "small",
+            `${formatMetric(run?.seconds, "seconds")} · ${formatMetric(run?.usage?.tokens, "tokens")} Token`,
+          ),
+        );
+        if (run?.stop_reason)
+          cell.append(el("small", "触发执行上限", "pending"));
+        row.append(cell);
+      }
+      const conclusion = el("td");
+      conclusion.append(el("strong", taskResult(key, runners)));
+      const runs = runners.map((runner) => runFor(key, runner));
+      const shared =
+        runners.length === 2 &&
+        runs.every((run) => run?.status === "passed") &&
+        match?.comparison?.rounds.find((round) => round.task === key)
+          ?.verdict === "draw";
+      if (shared && runs.every((run) => typeof run.seconds === "number")) {
+        const delta = Math.abs(runs[0].seconds - runs[1].seconds);
+        const quicker =
+          runs[0].seconds < runs[1].seconds ? runners[0] : runners[1];
+        conclusion.append(
+          el(
+            "small",
+            delta < 0.05
+              ? "双方耗时相同"
+              : `${shortName[quicker]} 少用 ${delta.toFixed(1)} 秒`,
+            `runner-name runner-${quicker}`,
+          ),
+        );
+      }
+      row.append(conclusion);
       return row;
     }),
   );

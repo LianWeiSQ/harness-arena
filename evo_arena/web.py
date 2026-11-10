@@ -7,7 +7,8 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
 from .arena import SeasonRunner
-from .harness import ACTIVE, HarnessMatch
+from .harness import ACTIVE, TASKS, HarnessMatch
+from .comparison import compare_match
 from .models import ModelProfiles
 from .provider import Budget, ResponsesClient
 from .scenario import build_image, docker
@@ -145,6 +146,8 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
                 return self.send_json(models.public())
             if path.startswith("/api/harness/matches/"):
                 match = store.get("harness_match", path.rsplit("/", 1)[-1])
+                if match:
+                    match["comparison"] = compare_match(match, TASKS)
                 return self.send_json(match or {"error": "not_found"}, 200 if match else 404)
             if path == "/api/overview":
                 return self.send_json({"seasons": store.list("season"), "versions": store.list("version"),
