@@ -53,6 +53,8 @@ class Store:
                 WHEN OLD.kind='evo_optimizer_output' BEGIN SELECT RAISE(ABORT,'immutable optimizer output'); END;
             CREATE TRIGGER IF NOT EXISTS immutable_evo_checkpoint BEFORE UPDATE ON objects
                 WHEN OLD.kind IN ('evo_intent','evo_checkpoint') BEGIN SELECT RAISE(ABORT,'immutable execution evidence'); END;
+            CREATE TRIGGER IF NOT EXISTS immutable_evo_delivery BEFORE UPDATE ON objects
+                WHEN OLD.kind IN ('evo_import','evo_project_change') BEGIN SELECT RAISE(ABORT,'immutable delivery evidence'); END;
         """)
 
     def close(self):

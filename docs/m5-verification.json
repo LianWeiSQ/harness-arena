@@ -1,0 +1,80 @@
+{
+  "milestone": "M5",
+  "date": "2026-11-10",
+  "scope": "Workspace and version delivery verified. This is not completion of Evo v0.2 or evidence of candidate quality improvement.",
+  "automated_checks": {
+    "tests_run": 78,
+    "passed": 77,
+    "skipped": 1,
+    "skip_reason": "Optional legacy Docker integration test is opt-in.",
+    "javascript_syntax": ["evo.js", "settings.js"],
+    "git_diff_check": "passed"
+  },
+  "portable_version": {
+    "source_version": "av-adcbb19519b4a526f770",
+    "archive_bytes": 2514,
+    "package_sha256": "490213a695906ad73db7576faa99fba4c52df1255acea7e4ce421e29fc4c409f",
+    "files": ["policy.md", "skills/order-recovery/SKILL.md"],
+    "downloaded_in_browser": true,
+    "imported_in_isolated_workspace": true,
+    "file_bytes_preserved": true,
+    "explicit_local_model_binding": true,
+    "imported_parent": null,
+    "inherited_evaluation_or_recommendation": false,
+    "configuration_credentials_exported": false
+  },
+  "report": {
+    "experiment": "ex-8163f70dac1d",
+    "downloaded_in_browser": true,
+    "content_digest_verified": true,
+    "outcome": "insufficient_evidence",
+    "valid_validation_trials": 10,
+    "planned_validation_trials": 24,
+    "calls": 134,
+    "known_tokens": 902450,
+    "unknown_calls": 1,
+    "pending_calls": 0,
+    "verified_version_loads": 17,
+    "structured_checks": 60,
+    "harbor_version": "0.22.0",
+    "image_id": "sha256:a57d62434aea2bd07377b526a43fda736352b343db661f08af55c4549c7c9b27",
+    "historical_protocol_sha256": null,
+    "provider_address_local_paths_credentials_and_raw_output_absent": true
+  },
+  "rollback": {
+    "scope": "Isolated controlled accepted-decision fixture; not a real-model promotion claim.",
+    "browser_flow_verified": true,
+    "revision_before": 1,
+    "revision_after": 2,
+    "initial_version_restored": true,
+    "historical_accepted_decision_preserved": true,
+    "main_workspace_project_revision": 0,
+    "main_workspace_recommendation_unchanged": true,
+    "transaction_failure_idempotency_stale_revision_and_inflight_finalize": "covered by tests/test_delivery.py"
+  },
+  "verifier_calibration": {
+    "cases": 18,
+    "correct_solutions_accepted": 18,
+    "empty_solutions_rejected": 18,
+    "incorrect_solutions_rejected": 18,
+    "model_calls": 0,
+    "scope": "Host-side independent verifier calibration, not Agent benchmark results."
+  },
+  "browser": {
+    "views": ["overview", "experiments", "versions", "tasks", "settings"],
+    "desktop_verified": true,
+    "narrow_viewport_px": 390,
+    "horizontal_overflow": false,
+    "per_case_evidence_navigation": true,
+    "empty_workspace_guidance": true,
+    "readonly_real_example": true,
+    "empty_workspace_version_experiment_budget_object_count_after_example": 0,
+    "overview_screenshot": "docs/images/evo-overview.png"
+  },
+  "outstanding": [
+    "M3: complete a real automatic improvement protocol without missing validation evidence",
+    "M6: independent clone and installation without adjacent workspaces",
+    "M6: frozen initial baseline, sealed evaluation and equal-search-budget no-feedback control",
+    "M6: final reproducibility report, CI, extension guide and interview documentation"
+  ]
+}

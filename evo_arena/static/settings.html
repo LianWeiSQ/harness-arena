@@ -3,18 +3,18 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>EvoArena · 模型设置</title>
+    <title>Evo · 设置</title>
     <link rel="stylesheet" href="/harness.css?v=5" />
+    <link rel="stylesheet" href="/evo.css?v=5" />
     <script defer src="/settings.js?v=3"></script>
   </head>
   <body>
     <header class="topbar">
       <a class="brand" href="/evo"
-        ><span class="brand-mark" aria-hidden="true">◇</span> Evo<b>Arena</b></a
+        ><span class="brand-mark" aria-hidden="true">◇</span> E<b>vo</b></a
       >
       <nav aria-label="页面导航">
-        <a href="/evo">实验工作台</a><a href="/harness">历史对比</a
-        ><a href="/settings" aria-current="page">模型设置</a>
+        <a href="/evo#overview">总览</a><a href="/evo#experiments">实验</a><a href="/evo#versions">版本</a><a href="/evo#tasks">任务集</a><a href="/settings" aria-current="page">设置</a>
       </nav>
       <div class="header-actions">
         <span class="system-status">本地配置</span
@@ -32,8 +32,7 @@
         <a href="/evo">返回实验工作台 ↗</a>
       </div>
       <p class="hint">
-        保存模型连接后，在新建对局中选择。一个对局内，所有 Harness
-        共用同一个模型。
+        模型连接用于创建可执行版本。自动改进可以单独选择诊断模型；基线与候选的执行模型保持一致。
       </p>
       <div class="settings-grid">
         <section class="card" aria-labelledby="profiles-title">
@@ -93,7 +92,7 @@
               ><input
                 id="profile-default"
                 type="checkbox"
-              />将此连接设为新对局的默认模型</label
+              />将此连接设为新版本的默认模型</label
             >
             <div class="form-actions">
               <button type="submit" id="save-model" class="primary">
@@ -110,12 +109,13 @@
           地址需与服务商配置一致。
         </p>
         <p>
-          启动配置来自服务启动参数，可直接用于对局。新增连接保存在本机
-          .evoarena/models.json。正在运行和已完成的对局保留启动时的模型信息。
+          启动配置来自服务启动参数。新增连接保存在本机 .evoarena/models.json。
+          版本固定模型身份；若修改连接的模型或地址，旧版本会拒绝静默切换，需恢复连接或创建新版本。
         </p>
       </div>
+      <div class="evo-system-grid"><section class="evo-panel"><div class="evo-inline"><h2>运行环境</h2><button id="inspect-system">检查依赖</button></div><p>检查本地 Docker、Harbor、任务镜像和校准环境，不调用模型。</p><div id="system-checks" role="status">点击检查，查看当前依赖状态和数据目录。</div></section><section class="evo-panel"><h2>默认预算与运行器能力</h2><div id="system-defaults"><p>检查依赖后展示当前配置。每场实验可在启动前设置更低或更高的预算。</p></div></section></div>
       <footer>
-        <span>EvoArena · 模型设置</span><span>配置 → 选择选手 → 开始对局</span>
+        <span>Evo · 本地设置</span><a href="/harness">历史竞技记录 ↗</a>
       </footer>
     </main>
   </body>

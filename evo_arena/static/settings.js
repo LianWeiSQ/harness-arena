@@ -102,7 +102,7 @@ function render() {
   );
   if (!profiles.profiles.length)
     $("profiles").append(
-      el("p", "添加第一个模型连接，就可以开始对局。", "empty"),
+      el("p", "添加第一个模型连接，再创建一个可执行版本。", "empty"),
     );
 }
 $("new-profile").onclick = () => {
@@ -126,7 +126,7 @@ $("model-form").onsubmit = async (event) => {
     profiles = result;
     edit(profiles.profiles.find((profile) => profile.id === result.id));
     render();
-    status("连接已保存，可以回到竞技场选择此模型。");
+    status("连接已保存，可以在创建版本或配置诊断模型时选择。");
   } catch (error) {
     status(error.message, true);
   } finally {
@@ -152,3 +152,17 @@ api("/api/models")
     render();
   })
   .catch((error) => status(error.message, true));
+
+$("inspect-system").onclick = async () => {
+  $("inspect-system").disabled = true;
+  $("system-checks").textContent = "正在检查本地依赖…";
+  try {
+    const data = await api("/api/evo/system");
+    $("system-checks").replaceChildren(...data.checks.map(c => el("p", `${c.ready ? "✓" : "×"} ${c.name} · ${c.detail}`, c.ready ? "evo-ok" : "evo-error")), el("p", `数据目录：${data.data_directory}`));
+    const labels = {improve:"自动改进",smoke:"开发冒烟",validation:"验证对比",report:"封存报告"};
+    const table = el("table");const head = el("tr");for(const label of ["实验","请求","Token","秒"])head.append(el("th",label));table.append(head);
+    for(const [name,value] of Object.entries(data.defaults)){const row=el("tr");for(const text of [labels[name],value.calls,value.tokens.toLocaleString('zh-CN'),value.seconds])row.append(el("td",text));table.append(row);}
+    $("system-defaults").replaceChildren(table,...Object.values(data.capabilities).map(c=>el("p",`${c.name} ${c.runtime_version} · ${c.skills ? "策略与原生 Skill" : "策略前缀；原生 Skill 未验证"}`)));
+  } catch(error) {$("system-checks").textContent=error.message;}
+  finally {$("inspect-system").disabled=false;}
+};
