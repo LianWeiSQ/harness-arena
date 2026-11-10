@@ -1,0 +1,140 @@
+# 历史 Arena 与 FixOps 原型
+
+这些入口保留旧实验和兼容用法。当前产品主线是 Harness 自改进工作台 Evo，首次使用请从 [项目首页](../README.md) 和 [独立安装](installation.md) 开始。以下赛季、席位和受限动作协议属于历史原型，不代表 Evo 的版本与业务任务协议。
+
+
+EvoArena 让工具型 Agent 在可验证任务中竞争，并根据执行反馈产生候选策略。比赛、策略差异、父子配对、晋级或拒绝都有持久记录。
+
+首个赛场 FixOps 的任务是恢复订单服务：真实 Docker 容器中运行网关和订单 API，Agent 通过受限工具检查配置、修改上游并探测健康；宿主机上的独立验证器检查健康、创建订单、查询一致性和依赖约束。
+
+## FixOps 策略进化原型
+
+首版已包含不可变策略版本、2 或 4 个席位、多轮比赛、真实模型生成 Child、配对准入、原子席位替换、事件回放、策略差异和本地观战页面。默认两个策略、两轮和一个候选，所有任务顺序运行。
+
+FixOps 页面可提交自己的策略，再从“自选策略”中选择 2 或 4 个不可变版本参赛。注册策略不发起模型请求，启动赛季后才执行比赛。FixOps 的参赛单位是提示词和操作流程。
+
+当前只有一个故障族，探索、准入和报告集采用不同服务端口变体。每个版本每轮只有一个任务实例，页面标为 SMOKE；结果用于验证闭环，不能据此声称泛化或统计显著提升。首版通过固定动作协议演化提示词与操作流程，暂不训练模型权重。
+
+## Harness 竞技场
+
+本地竞技场用 Harbor 运行 DeepSeek Harness 和 Pi。双方使用相同模型、题目和预算，各自在独立容器中执行。双方都有有效验收结果时，各自通过一题得一分。可以并排查看双方的独立验收、工具轨迹和补丁。维护任务取自桌面 Agent 项目的一次真实进程清理修复。故障场景会在测试账本写入成功后返回 HTTP 504，验收检查最终只写入一笔订单，以及 Agent 是否查询过状态。
+
+在 `/settings` 添加模型连接，填写连接名称、模型 ID、API 基础地址和 API Key。当前支持兼容 OpenAI Responses API 的服务，可保存多个连接，并设置新对局的默认选择。编辑时 API Key 留空会沿用原密钥。连接保存在本机 `.evoarena/models.json`，文件权限为 `0600`，浏览器读取配置时只得到密钥是否存在。
+
+在竞技场点击「发起挑战」，选择一个模型和参赛 Harness。默认双人对战需要两位选手，切换到「单项评测」后可只选一位。首页优先打开最新双人对战，单跑记录在历史下拉框中单独分组。对局保存启动时的模型和选手信息，后续编辑连接不影响已启动的对局。
+
+首屏展示双方比分、逐题胜平负以及耗时和 Token 差距。得分沿用独立验收结果，效率比较只汇总双方共同通过且用量完整的同题任务，以用量较高的一方为基准计算节省比例。逐题交锋表可直接跳到相应证据，条件不一致或执行异常的任务不参与配对结论。结果仅描述当前对局。
+
+旧 `/harness` 的进程清理题仍需要包含任务原始提交的桌面项目；Evo 的业务任务不需要它。两者使用同一公开 Harbor 依赖和本仓库适配器：
+
+```sh
+docker build -t evoarena-harbor:arena -f evo_arena/fixtures/harness/Dockerfile evo_arena/fixtures/harness
+uv run --extra harbor evo-arena serve --profile .evoarena/local-profile.json \
+  --harness-repo /path/to/legacy-task-source
+```
+
+打开 <http://127.0.0.1:8787/harness>。Harbor 原始记录保存在 `.evoarena/harbor/`。Agent 和验收容器采用 Docker 的离线网络模式，模型请求由宿主机中继到配置的网关。每位选手每题限时 240 秒，最多派发 12 次模型请求，达到 180,000 个供应商报告 token 后停止派发下一次请求。达到赛制上限时，如独立验收已运行，则按当时的产物计分。供应商或运行器异常会让该题退出配对计分。
+
+## 安装和模型配置
+
+需要 macOS 或 Linux、Python 3.12+、uv 和运行中的 Docker。首次构建默认拉取 `python:3.13-slim`。
+
+```sh
+uv sync --python 3.13
+```
+
+通过进程环境提供模型信息。密钥仅保存在环境或你自己的凭据管理器中；应用不自动读取 `.env`。
+
+```sh
+export ARENA_BASE_URL='https://your-provider.example/v1'
+export ARENA_MODEL='your-model'
+export ARENA_API_KEY='your-key'
+uv run evo-arena doctor --probe-model
+uv run evo-arena serve
+```
+
+打开 <http://127.0.0.1:8787>。支持提供 `/responses` 接口的模型服务；模型通过 JSON 动作协议使用工具，不依赖供应商原生工具调用格式。`doctor --probe-model` 会产生一次真实模型请求；不带该参数只检查配置和 Docker。
+
+可以显式导入已有 Harbor 配置和 DSH 凭据引用，无需复制密钥：
+
+```sh
+uv run evo-arena serve \
+  --import-config ../harbor-eval/configs/runtime.yaml \
+  --credentials ~/.dsh/.credentials.yaml
+```
+
+导入文件中的 `model.base_url`、`model.name` 和 `model.api_key_env` 会用来读取配置，凭据文件只读取对应的 `refs` 项。`ARENA_*` 环境变量优先。Harbor 和 DSH 都不是历史 FixOps 独立运行的必要依赖。
+
+常用的文件引用和基础镜像可以保存在本机 JSON profile 中，字段只接受 `import_config`、`credentials` 和 `base_image`，不保存密钥值。相对路径以 profile 所在目录解析。例如已配置本机 profile 时：
+
+```sh
+uv run evo-arena serve --profile .evoarena/local-profile.json
+```
+
+## 运行一个真实赛季
+
+先校准环境，再运行比赛：
+
+```sh
+uv run evo-arena calibrate
+uv run evo-arena demo --population 2 --rounds 2 --max-calls 32 --max-tokens 220000
+uv run evo-arena serve
+```
+
+网页上的开始赛季也会运行真实模型。轮次和种群变化时会调整页面展示的请求上限；CLI 增大种群时请显式设置预算。模型请求数是硬上限；token 按供应商报告累计，在新请求发起前检查，正在执行的一次请求可能使累计超过阈值。遇到用量未知的请求停止继续调用，不能把未知计为零。暂不估算货币费用。
+
+本地镜像拉取受限时，可以通过 `--base-image <可运行 python3 的本地镜像>` 构建同一个场景。环境收据会记录实际基础镜像、镜像 ID、架构和场景源码摘要。2026 年 11 月 3 日的首次实验使用已缓存的 `alexgshaw/openssl-selfsigned-cert:20251031`，架构为 amd64；只采用任务通过数决定晋级，不以该环境耗时声称性能提升。
+
+```sh
+uv run evo-arena calibrate --base-image alexgshaw/openssl-selfsigned-cert:20251031
+```
+
+命令均可接受 `--data-dir`，默认持久目录为 `.evoarena/`，已排除在 Git 之外。导出一个赛季：
+
+```sh
+uv run evo-arena export --season <season-id> --output .evoarena/reports/season.json
+```
+
+也可以在命令行注册策略并选择参赛版本。`--version` 重复两次或四次，版本 ID 来自注册输出：
+
+```sh
+uv run evo-arena register --name '我的策略' --policy-file ./my-policy.txt
+uv run evo-arena demo --version <version-a> --version <version-b>
+```
+
+## 比赛和进化规则
+
+每个任务获得新环境，运行记忆在任务间清空；策略通过不可变版本显式继承。同一赛季固定模型、三次动作预算和工具权限。动作包括检查、修改配置、健康探测和提交；最终通过与否由独立业务验证器决定。
+
+前两名轮换成为 Parent。进化器只读取探索任务反馈，生成新策略、修改理由和差异。Parent 和 Child 在同一准入端口变体上重跑，只有 Child 严格增加任务通过数、且没有配对实例退化时才晋级。平分会被拒绝；环境或供应商异常会使判定待评。Parent 和被替换的末位席位可以不同。
+
+最后一轮完成后才打开最终报告变体，比较初始版本与最终仍在席的版本。该结果不回流当前赛季选择。被拒绝的候选仍保留策略、轨迹和准入理由。
+
+## 系统边界
+
+```text
+本地浏览器 → HTTP 控制面 → SeasonRunner
+                            ├─ SQLite 版本、席位、决定、事件
+                            ├─ Responses 模型与候选生成
+                            └─ 受限动作工具 → Docker 网关和订单服务
+                                             ↑ 宿主机独立业务验收
+```
+
+Agent 的模型循环在宿主控制面运行，只能调用四个受限工具。API Key 不进入容器、事件或页面。容器只读根文件系统、移除 capabilities、限定 CPU/内存/PID，配置目录只读挂载；模型可以通过受限配置工具请求修改唯一的业务字段。宿主机运行 Docker，不向参赛 Agent 暴露其管理接口。
+
+SQLite 保存策略版本、赛季、运行、候选、准入和游标事件。晋级在同一事务中校验席位版本并落盘决定与事件；重复决定不会再次替换，过期席位写入会被拒绝。单个数据目录通过文件锁限制只有一个执行控制面。
+
+旧赛季在进程重启后标为 interrupted，需要新赛季重试；新的 `/evo` 实验按 [检查点恢复协议](execution-recovery.md) 核对资源与用量后显式继续。未知结果不自动重放。它是单机执行平台，尚不提供分布式 Worker 租约、运行中自动接管或多租户服务。
+
+## 验证
+
+```sh
+uv run python -m unittest discover -s tests -v
+uv run evo-arena calibrate
+EVOARENA_DOCKER_TESTS=1 uv run python -m unittest discover -s tests -v
+node --check evo_arena/static/app.js
+```
+
+测试覆盖不可变快照、晋级事务和重试、过期写入、父子配对覆盖、退化拒绝、预算、供应商错误与重定向、完整进化链，以及可选的真实 Docker 业务验证。测试中使用的可控 Agent 只存在于临时数据库，不会作为真实比赛记录进入页面。
+
+[首场真实实验](first-experiment.md) 保留实际结果及其解释；[面试演示说明](interview-demo.md) 组织讲解和技术边界；[长任务清单](../TASKS.md) 记录交付范围和后续工作。
