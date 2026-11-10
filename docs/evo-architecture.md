@@ -205,7 +205,7 @@
 | 交付 | ZIP 校验、绑定、报告白名单、导入事务 | delivery 测试、M5 浏览器 |
 | 安装 | 新目录与 wheel，无私有相邻依赖 | M6 实测和 CI |
 
-[FACT] 受控测试中的晋升是机制验证，不是实际模型收益。feedback-01 因响应异常及未知用量停止，验证有效覆盖 2/24，对照和封存未启动；[失败报告](studies/2026-11-10-feedback-01-result.json) 保留。新预登记 feedback-02 尚待完整结果，不能用通过的 CI 补上缺失质量证据。
+[FACT] 受控测试中的晋升是机制验证，不是实际模型收益。feedback-01 因响应异常及未知用量停止，验证有效覆盖 2/24，对照和封存未启动；[失败报告](studies/2026-11-10-feedback-01-result.json) 保留。feedback-02 也在 22/24 后因连接/读取异常停止，见 [停止报告](studies/2026-11-10-feedback-02-result.json)；新的完整研究仍待完成，不能用通过的 CI 补上缺失质量证据。
 
 [FACT] 605e5c1 增量修正把模型终止状态与费用确认分开：`response_protocol.py:44` 解码 SSE/JSON，`harness.py:138` 先结算用量再拒绝失败/未完成终止，`experiment_budget.py:87` 持久保存白名单响应摘要，`delivery.py:225` 导出再次过滤。已知用量的失败仍停止 Trial，未知用量仍不重放。旧实验缺少摘要，根因不能事后推定；参见 [处理与验证](provider-response-handling.md)。
 

@@ -4,7 +4,7 @@
 
 Evo 连接 **DSH / Pi、Harbor、模型配置、不可变版本和独立验收**。一次实验回答六个问题：为什么改、改了什么、是否实际加载、哪些题改善或退化、花了多少预算、为什么接受或拒绝。
 
-**状态：v0.2 正在验收。** 版本加载、业务任务、预算、恢复、资产交付和独立安装已有真实证据；完整自动改进、反馈对照与封存报告仍在运行。当前不宣称进化带来质量提升。进度见 [TASKS](TASKS.md) 和 [逐项验收台账](docs/v02-acceptance.md)。
+**状态：v0.2 正在验收。** 版本加载、业务任务、预算、恢复、资产交付和独立安装已有真实证据；完整自动改进、反馈对照与封存报告仍待验收。当前不宣称进化带来质量提升。进度见 [TASKS](TASKS.md) 和 [逐项验收台账](docs/v02-acceptance.md)。
 
 ![Evo 总览：真实候选已生成，验证因用量未知而停止，当前推荐未变](docs/images/evo-overview.png)
 
@@ -85,7 +85,7 @@ uv run --frozen --extra harbor evo-arena serve
 - **真实加载：** Pi 的策略与 Skill、DSH 的指令前缀已经验证；独立安装的四次加载检查全部通过。[M1](docs/version-loading-check.md) · [M6 安装记录](docs/m6-installation-verification.json)
 - **崩溃恢复：** 首题检查点保存后强制终止控制进程，恢复完成其余五题，首题未重跑、原预算截止时间保留。[M4 演练](docs/execution-recovery.md)
 - **资产交付：** 页面导出真实 Skill，在独立目录绑定模型后导入，文件逐字一致；推荐回滚保留原判定历史。[M5 验证](docs/delivery-and-workspace.md)
-- **自动改进：** 已由模型生成并实际加载新 Skill。早前两轮在 10/24 和 2/24 次有效验证后因模型响应异常停止；失败记录保留。独立登记的 `feedback-02` 尚待完整结果。[自动改进](docs/automatic-improvement.md) · [反馈对照与报告核对](docs/feedback-control.md)
+- **自动改进：** 已由模型生成并实际加载新 Skill。早前两轮在 10/24 和 2/24 次有效验证后因模型响应异常停止；失败记录保留。独立登记的 `feedback-02` 也在 22/24 后因连接/读取异常停止，尚无完整质量结论。[自动改进](docs/automatic-improvement.md) · [反馈对照与报告核对](docs/feedback-control.md)
 
 测试中的可控 Agent 只写临时数据库，不作为真实模型成绩进入工作台。CI 检查锁定安装、Harbor 契约、事务与恢复、报告一致性、业务校准、前端语法和仓库外 wheel；不付费调用模型，也不替代真实研究。
 

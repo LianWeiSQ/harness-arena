@@ -24,7 +24,7 @@ from .store import now
 from .versions import InputEvidence, file_hashes, materialize_version
 from .business import BusinessService
 from .store import digest
-from .response_protocol import decode_response, public_summary, MESSAGES
+from .response_protocol import decode_response, read_response, public_summary, MESSAGES, READ_ERRORS
 
 
 FIXTURES = Path(__file__).with_name("fixtures") / "harness"
@@ -127,12 +127,14 @@ class TrialGateway:
             headers={"Authorization": "Bearer " + self.settings.api_key, "Content-Type": "application/json"})
         summary = {"category": "transport_error", "usage_state": "unknown"}
         usage = None
+        started = time.monotonic()
         try:
             timeout = min(75, max(.1, self.experiment_budget.remaining_seconds())) if self.experiment_budget else 75
             with self.opener.open(req, timeout=timeout) as response:
                 content_type = response.headers.get("Content-Type", "application/json")
-                body = response.read(6_000_001)
+                body, reading = read_response(response, content_type, deadline=started + timeout)
             completed, summary = decode_response(body, content_type)
+            summary.update(reading, elapsed_ms=round((time.monotonic() - started) * 1000))
             usage = (completed or {}).get("usage")
             if self.experiment_budget:
                 self.experiment_budget.settle(ledger_call_id, usage, response_summary=summary)
@@ -151,10 +153,16 @@ class TrialGateway:
         except urllib.error.HTTPError as error:
             summary = {"category": "http_error", "http_status": error.code, "usage_state": "unknown"}
         except TimeoutError:
-            summary = {"category": "timeout", "usage_state": "unknown"}
-        except (OSError, http.client.HTTPException, ValueError, ProviderError, KeyError, TypeError, AttributeError):
+            summary = {"category": "timeout", "usage_state": "unknown", "error_type": "TimeoutError"}
+        except (OSError, http.client.HTTPException, ValueError, ProviderError, KeyError, TypeError, AttributeError) as error:
+            kind = type(error).__name__
+            if kind in READ_ERRORS:
+                summary["error_type"] = kind
+            if isinstance(getattr(error, "reason", None), TimeoutError):
+                summary["category"] = "timeout"
             if summary["category"] == "ok":
                 summary["category"] = "invalid_response"
+        summary["elapsed_ms"] = round((time.monotonic() - started) * 1000)
         self.failure_detail = public_summary(summary)
         self.failure = MESSAGES[self.failure_detail["category"]]
         if self.failure_detail.get("http_status"):

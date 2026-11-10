@@ -48,4 +48,4 @@ uv run --frozen --extra harbor python tests/manual_feedback_report.py \
 
 `feedback-01` 已停止：反馈组有效验证 2/24，1 次未知用量，对照和封存未启动。它不能用于比较反馈效果，也没有候选晋升。见 [不可补写的原始报告摘要](studies/2026-11-10-feedback-01-result.json) 与 [响应处理修正](provider-response-handling.md)。
 
-`feedback-02` 在响应处理修正后重新登记。初始资产、模型、镜像、题目、提示词、预算和判定门槛保持一致；代码协议与任务包源代码哈希更新。它是独立研究，不复用上一轮的部分 Trial，结果需另行报告。
+`feedback-02` 在响应处理修正后重新登记。初始资产、模型、镜像、题目、提示词、预算和判定门槛保持一致；代码协议与任务包源代码哈希更新。它是独立研究，不复用上一轮的部分 Trial，结果见 [feedback-02 停止记录](studies/2026-11-10-feedback-02-result.json)：开发 6/6、有效验证 22/24，228 次调用、1,538,016 已知 Token、1 次未知。最后一道题第二次基线执行发生连接/读取异常，未替换候选或补跑样本；对照与封存未启动。

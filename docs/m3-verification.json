@@ -561,5 +561,19 @@
         }
       ]
     }
+  ],
+  "additional_studies": [
+    {
+      "study": "2026-11-10-feedback-01",
+      "report": "studies/2026-11-10-feedback-01-result.json",
+      "valid_validation_trials": 2,
+      "complete": false
+    },
+    {
+      "study": "2026-11-10-feedback-02",
+      "report": "studies/2026-11-10-feedback-02-result.json",
+      "valid_validation_trials": 22,
+      "complete": false
+    }
   ]
 }

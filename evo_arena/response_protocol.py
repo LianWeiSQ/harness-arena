@@ -6,7 +6,13 @@ have billable usage. A [DONE] marker alone never proves successful completion.
 from __future__ import annotations
 
 import hashlib
+import http.client
 import json
+import time
+
+
+READ_ERRORS = {"TimeoutError", "URLError", "IncompleteRead", "RemoteDisconnected", "ConnectionResetError",
+               "ConnectionAbortedError", "BrokenPipeError", "SSLError", "OSError", "HTTPException"}
 
 
 TERMINALS = {"response.completed": "completed", "response.failed": "failed",
@@ -29,16 +35,59 @@ def public_summary(value):
     category = value.get("category")
     result = {"category": category if isinstance(category, str) and category in CATEGORIES else "invalid_response"}
     for key, choices in (("transport", {"json", "sse"}), ("terminal", {*TERMINALS.values(), "missing", "conflict"}),
-                         ("usage_state", {"known", "unknown"})):
+                         ("usage_state", {"known", "unknown"}), ("read_termination", {"terminal", "eof", "error", "limit"}),
+                         ("error_type", READ_ERRORS)):
         if isinstance(value.get(key), str) and value[key] in choices:
             result[key] = value[key]
     for key in ("bytes", "event_count", "http_status"):
         if type(value.get(key)) is int and 0 <= value[key] <= 6_000_001:
             result[key] = value[key]
+    if type(value.get("elapsed_ms")) is int and 0 <= value["elapsed_ms"] <= 43_200_000:
+        result["elapsed_ms"] = value["elapsed_ms"]
     sha = value.get("sha256")
     if isinstance(sha, str) and len(sha) == 64 and all(c in "0123456789abcdef" for c in sha):
         result["sha256"] = sha
     return result
+
+
+def read_response(response, content_type, *, deadline):
+    """Stop HTTP SSE at its terminal event, not at an eventual socket EOF.
+
+    The socket still has an inactivity timeout. A streaming deadline is checked
+    between reads; it is not a hard cancellation of a currently blocked read.
+    Partial transport data is retained for diagnosis and accounting, not replay.
+    """
+    chunks, size, data = [], 0, []
+    try:
+        if "text/event-stream" not in content_type.lower():
+            return response.read(6_000_001), {"read_termination": "eof"}
+        while size <= 6_000_000:
+            if time.monotonic() >= deadline:
+                raise TimeoutError()
+            line = response.readline(6_000_001 - size)
+            if not line:
+                return b"".join(chunks), {"read_termination": "eof"}
+            chunks.append(line); size += len(line)
+            line = line.rstrip(b"\r\n")
+            if not line:
+                try:
+                    event = json.loads(b"\n".join(data)) if data else None
+                except (ValueError, UnicodeError):
+                    event = None
+                data = []
+                if isinstance(event, dict) and isinstance(event.get("type"), str) and event["type"] in TERMINALS:
+                    return b"".join(chunks), {"read_termination": "terminal"}
+            elif line.startswith(b"data:"):
+                data.append(line[5:].removeprefix(b" "))
+        return b"".join(chunks), {"read_termination": "limit"}
+    except (OSError, http.client.HTTPException) as error:
+        partial = getattr(error, "partial", b"")
+        if isinstance(partial, bytes):
+            chunks.append(partial[:max(0, 6_000_001 - size)])
+        kind = type(error).__name__
+        timeout = isinstance(error, TimeoutError) or isinstance(getattr(error, "reason", None), TimeoutError)
+        return b"".join(chunks), {"read_termination": "error", "category": "timeout" if timeout else "transport_error",
+                                  "error_type": kind if kind in READ_ERRORS else "OSError"}
 
 
 def decode_response(body: bytes, content_type: str):

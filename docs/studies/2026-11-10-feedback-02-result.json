@@ -1,0 +1,4980 @@
+{
+  "schema": "evo-feedback-study-result-v1",
+  "study": "2026-11-10-feedback-02",
+  "status": "stopped_incomplete",
+  "full_protocol_verified": false,
+  "control_status": "not_started",
+  "sealed_status": "not_started",
+  "recommendation_changed": false,
+  "failed_trial": {
+    "id": "tr-de040ca530",
+    "failure_category": "transport_error",
+    "unknown_model_call_seconds": 195.881455,
+    "cause": "Connection or response-read failure. Existing receipt does not distinguish the exact transport exception. No retry or retrospective completion."
+  },
+  "feedback_report": {
+    "schema": "evo-experiment-report-v1",
+    "exported": "2026-11-10T11:26:31.069072+00:00",
+    "experiment": {
+      "id": "ex-306d6835a050",
+      "mode": "improve",
+      "feedback_mode": "development",
+      "status": "incomplete",
+      "phase": "decided",
+      "created": "2026-11-10T10:44:55.273685+00:00",
+      "finished": "2026-11-10T11:26:27.955846+00:00",
+      "baseline": "av-7627401ce21c6a7fe48a",
+      "candidate": "av-c4bfae5e61f18fa49a40",
+      "initial_version": "av-7627401ce21c6a7fe48a",
+      "task_pack": "tp-b09f5d0cc4216d235f9c",
+      "target": "skills/order-recovery/SKILL.md",
+      "epoch": 1
+    },
+    "optimization": {
+      "feedback_mode": "development",
+      "input_schema": "development-evidence-v1",
+      "input_sha256": "bc155cb62e921b01afb5f1c283f1cacc404815c9021cd895ea73b85293f5a5e9",
+      "policy": {
+        "max_diagnosis_attempts": 2,
+        "max_proposal_attempts": 1
+      },
+      "model": "gpt-5.6-sol"
+    },
+    "versions": [
+      {
+        "id": "av-7627401ce21c6a7fe48a",
+        "parent": null,
+        "manifest_sha256": "27e6fd018693341618ea3397b70ca601e1e3ada1981442709ae19336a54799c8",
+        "runner": "pi",
+        "runtime_version": "0.82.1",
+        "model": "gpt-5.6-sol",
+        "files": {
+          "policy.md": "9c8fe62fcabd402545f2f3f2ba37d08c901404f90f5d3756dbbd4669c0fbf03c",
+          "skills/order-recovery/SKILL.md": "a6c0c48a9c186851eba4113296346a2f923914397ea5270e32f4a631db580ec6"
+        }
+      },
+      {
+        "id": "av-c4bfae5e61f18fa49a40",
+        "parent": "av-7627401ce21c6a7fe48a",
+        "manifest_sha256": "f63860c25278e0129f2105e36e6dc877cbd01ecc161d91ec1bc7d176a53934b3",
+        "runner": "pi",
+        "runtime_version": "0.82.1",
+        "model": "gpt-5.6-sol",
+        "files": {
+          "policy.md": "9c8fe62fcabd402545f2f3f2ba37d08c901404f90f5d3756dbbd4669c0fbf03c",
+          "skills/order-recovery/SKILL.md": "640e3cddcf0618e2f5e7fb9b665518adc176b5fbc4f8b51e6341cc9130a1f165"
+        }
+      }
+    ],
+    "plan": {
+      "automatic_promotion": false,
+      "experiment_limits": {
+        "calls": 363,
+        "seconds": 14400,
+        "tokens": 3000000
+      },
+      "limits_per_trial": {
+        "calls": 12,
+        "seconds": 240,
+        "tokens": 180000
+      },
+      "mode": "validation",
+      "quality_gate": "complete coverage; no per-case success-count regression; total strictly higher; zero critical violations",
+      "repeats": 2,
+      "seed": null,
+      "seed_support": "provider_not_declared",
+      "sha256": "5386853a22cb70b1a599212863841ce3bdb6eabac7fe06bb95e14750d45bab5a",
+      "task_pack": "tp-b09f5d0cc4216d235f9c",
+      "trials": [
+        {
+          "case_checksum": "aa93e16e4b9533fcc4bfa914c1b99e6e46ac8df16006e3f99f964094178fb11d",
+          "family": "receipt",
+          "key": "receipt-validation-1:0:baseline",
+          "repeat": 0,
+          "role": "baseline",
+          "split": "validation",
+          "task": "receipt-validation-1",
+          "version_id": "av-7627401ce21c6a7fe48a"
+        },
+        {
+          "case_checksum": "aa93e16e4b9533fcc4bfa914c1b99e6e46ac8df16006e3f99f964094178fb11d",
+          "family": "receipt",
+          "key": "receipt-validation-1:0:candidate",
+          "repeat": 0,
+          "role": "candidate",
+          "split": "validation",
+          "task": "receipt-validation-1",
+          "version_id": "av-c4bfae5e61f18fa49a40"
+        },
+        {
+          "case_checksum": "aa93e16e4b9533fcc4bfa914c1b99e6e46ac8df16006e3f99f964094178fb11d",
+          "family": "receipt",
+          "key": "receipt-validation-1:1:candidate",
+          "repeat": 1,
+          "role": "candidate",
+          "split": "validation",
+          "task": "receipt-validation-1",
+          "version_id": "av-c4bfae5e61f18fa49a40"
+        },
+        {
+          "case_checksum": "aa93e16e4b9533fcc4bfa914c1b99e6e46ac8df16006e3f99f964094178fb11d",
+          "family": "receipt",
+          "key": "receipt-validation-1:1:baseline",
+          "repeat": 1,
+          "role": "baseline",
+          "split": "validation",
+          "task": "receipt-validation-1",
+          "version_id": "av-7627401ce21c6a7fe48a"
+        },
+        {
+          "case_checksum": "2f4f5e66f111462c27bf8530c5b95bcfd6f393f10e79874fec3d9e61a0e85a00",
+          "family": "receipt",
+          "key": "receipt-validation-2:0:candidate",
+          "repeat": 0,
+          "role": "candidate",
+          "split": "validation",
+          "task": "receipt-validation-2",
+          "version_id": "av-c4bfae5e61f18fa49a40"
+        },
+        {
+          "case_checksum": "2f4f5e66f111462c27bf8530c5b95bcfd6f393f10e79874fec3d9e61a0e85a00",
+          "family": "receipt",
+          "key": "receipt-validation-2:0:baseline",
+          "repeat": 0,
+          "role": "baseline",
+          "split": "validation",
+          "task": "receipt-validation-2",
+          "version_id": "av-7627401ce21c6a7fe48a"
+        },
+        {
+          "case_checksum": "2f4f5e66f111462c27bf8530c5b95bcfd6f393f10e79874fec3d9e61a0e85a00",
+          "family": "receipt",
+          "key": "receipt-validation-2:1:baseline",
+          "repeat": 1,
+          "role": "baseline",
+          "split": "validation",
+          "task": "receipt-validation-2",
+          "version_id": "av-7627401ce21c6a7fe48a"
+        },
+        {
+          "case_checksum": "2f4f5e66f111462c27bf8530c5b95bcfd6f393f10e79874fec3d9e61a0e85a00",
+          "family": "receipt",
+          "key": "receipt-validation-2:1:candidate",
+          "repeat": 1,
+          "role": "candidate",
+          "split": "validation",
+          "task": "receipt-validation-2",
+          "version_id": "av-c4bfae5e61f18fa49a40"
+        },
+        {
+          "case_checksum": "beeb330d15ce423f7070c60d1112699ffd26a0dba753e5de83c6e1fd91863de6",
+          "family": "listing",
+          "key": "listing-validation-1:0:baseline",
+          "repeat": 0,
+          "role": "baseline",
+          "split": "validation",
+          "task": "listing-validation-1",
+          "version_id": "av-7627401ce21c6a7fe48a"
+        },
+        {
+          "case_checksum": "beeb330d15ce423f7070c60d1112699ffd26a0dba753e5de83c6e1fd91863de6",
+          "family": "listing",
+          "key": "listing-validation-1:0:candidate",
+          "repeat": 0,
+          "role": "candidate",
+          "split": "validation",
+          "task": "listing-validation-1",
+          "version_id": "av-c4bfae5e61f18fa49a40"
+        },
+        {
+          "case_checksum": "beeb330d15ce423f7070c60d1112699ffd26a0dba753e5de83c6e1fd91863de6",
+          "family": "listing",
+          "key": "listing-validation-1:1:candidate",
+          "repeat": 1,
+          "role": "candidate",
+          "split": "validation",
+          "task": "listing-validation-1",
+          "version_id": "av-c4bfae5e61f18fa49a40"
+        },
+        {
+          "case_checksum": "beeb330d15ce423f7070c60d1112699ffd26a0dba753e5de83c6e1fd91863de6",
+          "family": "listing",
+          "key": "listing-validation-1:1:baseline",
+          "repeat": 1,
+          "role": "baseline",
+          "split": "validation",
+          "task": "listing-validation-1",
+          "version_id": "av-7627401ce21c6a7fe48a"
+        },
+        {
+          "case_checksum": "fe80d8e8cc0139849954371c797242a3f2b38b04fa29d234a104dca489e10b7d",
+          "family": "listing",
+          "key": "listing-validation-2:0:candidate",
+          "repeat": 0,
+          "role": "candidate",
+          "split": "validation",
+          "task": "listing-validation-2",
+          "version_id": "av-c4bfae5e61f18fa49a40"
+        },
+        {
+          "case_checksum": "fe80d8e8cc0139849954371c797242a3f2b38b04fa29d234a104dca489e10b7d",
+          "family": "listing",
+          "key": "listing-validation-2:0:baseline",
+          "repeat": 0,
+          "role": "baseline",
+          "split": "validation",
+          "task": "listing-validation-2",
+          "version_id": "av-7627401ce21c6a7fe48a"
+        },
+        {
+          "case_checksum": "fe80d8e8cc0139849954371c797242a3f2b38b04fa29d234a104dca489e10b7d",
+          "family": "listing",
+          "key": "listing-validation-2:1:baseline",
+          "repeat": 1,
+          "role": "baseline",
+          "split": "validation",
+          "task": "listing-validation-2",
+          "version_id": "av-7627401ce21c6a7fe48a"
+        },
+        {
+          "case_checksum": "fe80d8e8cc0139849954371c797242a3f2b38b04fa29d234a104dca489e10b7d",
+          "family": "listing",
+          "key": "listing-validation-2:1:candidate",
+          "repeat": 1,
+          "role": "candidate",
+          "split": "validation",
+          "task": "listing-validation-2",
+          "version_id": "av-c4bfae5e61f18fa49a40"
+        },
+        {
+          "case_checksum": "c65f07cceada19df087a90421b53325d4b6d8fd8c4cbcbb2371bcf7bbc741d21",
+          "family": "workflow",
+          "key": "workflow-validation-1:0:baseline",
+          "repeat": 0,
+          "role": "baseline",
+          "split": "validation",
+          "task": "workflow-validation-1",
+          "version_id": "av-7627401ce21c6a7fe48a"
+        },
+        {
+          "case_checksum": "c65f07cceada19df087a90421b53325d4b6d8fd8c4cbcbb2371bcf7bbc741d21",
+          "family": "workflow",
+          "key": "workflow-validation-1:0:candidate",
+          "repeat": 0,
+          "role": "candidate",
+          "split": "validation",
+          "task": "workflow-validation-1",
+          "version_id": "av-c4bfae5e61f18fa49a40"
+        },
+        {
+          "case_checksum": "c65f07cceada19df087a90421b53325d4b6d8fd8c4cbcbb2371bcf7bbc741d21",
+          "family": "workflow",
+          "key": "workflow-validation-1:1:candidate",
+          "repeat": 1,
+          "role": "candidate",
+          "split": "validation",
+          "task": "workflow-validation-1",
+          "version_id": "av-c4bfae5e61f18fa49a40"
+        },
+        {
+          "case_checksum": "c65f07cceada19df087a90421b53325d4b6d8fd8c4cbcbb2371bcf7bbc741d21",
+          "family": "workflow",
+          "key": "workflow-validation-1:1:baseline",
+          "repeat": 1,
+          "role": "baseline",
+          "split": "validation",
+          "task": "workflow-validation-1",
+          "version_id": "av-7627401ce21c6a7fe48a"
+        },
+        {
+          "case_checksum": "fb354735a19718c158088c74c6ff711239e0a96e8a5b864c666ae05ac8129def",
+          "family": "workflow",
+          "key": "workflow-validation-2:0:candidate",
+          "repeat": 0,
+          "role": "candidate",
+          "split": "validation",
+          "task": "workflow-validation-2",
+          "version_id": "av-c4bfae5e61f18fa49a40"
+        },
+        {
+          "case_checksum": "fb354735a19718c158088c74c6ff711239e0a96e8a5b864c666ae05ac8129def",
+          "family": "workflow",
+          "key": "workflow-validation-2:0:baseline",
+          "repeat": 0,
+          "role": "baseline",
+          "split": "validation",
+          "task": "workflow-validation-2",
+          "version_id": "av-7627401ce21c6a7fe48a"
+        },
+        {
+          "case_checksum": "fb354735a19718c158088c74c6ff711239e0a96e8a5b864c666ae05ac8129def",
+          "family": "workflow",
+          "key": "workflow-validation-2:1:baseline",
+          "repeat": 1,
+          "role": "baseline",
+          "split": "validation",
+          "task": "workflow-validation-2",
+          "version_id": "av-7627401ce21c6a7fe48a"
+        },
+        {
+          "case_checksum": "fb354735a19718c158088c74c6ff711239e0a96e8a5b864c666ae05ac8129def",
+          "family": "workflow",
+          "key": "workflow-validation-2:1:candidate",
+          "repeat": 1,
+          "role": "candidate",
+          "split": "validation",
+          "task": "workflow-validation-2",
+          "version_id": "av-c4bfae5e61f18fa49a40"
+        }
+      ]
+    },
+    "evaluation": {
+      "automatic_promotion": false,
+      "complete": false,
+      "critical_violations": 0,
+      "duplicates": [],
+      "gate_eligible": false,
+      "invalid": [
+        "workflow-validation-2:1:baseline"
+      ],
+      "missing": [
+        "workflow-validation-2:1:baseline",
+        "workflow-validation-2:1:candidate"
+      ],
+      "outcome": "insufficient_evidence",
+      "per_case": {
+        "listing-validation-1": {
+          "baseline": 2,
+          "baseline_completed": 2,
+          "candidate": 2,
+          "candidate_completed": 2
+        },
+        "listing-validation-2": {
+          "baseline": 2,
+          "baseline_completed": 2,
+          "candidate": 2,
+          "candidate_completed": 2
+        },
+        "receipt-validation-1": {
+          "baseline": 2,
+          "baseline_completed": 2,
+          "candidate": 2,
+          "candidate_completed": 2
+        },
+        "receipt-validation-2": {
+          "baseline": 2,
+          "baseline_completed": 2,
+          "candidate": 2,
+          "candidate_completed": 2
+        },
+        "workflow-validation-1": {
+          "baseline": 2,
+          "baseline_completed": 2,
+          "candidate": 2,
+          "candidate_completed": 2
+        },
+        "workflow-validation-2": {
+          "baseline": 1,
+          "baseline_completed": 1,
+          "candidate": 1,
+          "candidate_completed": 1
+        }
+      },
+      "planned_trials": 24,
+      "statistical_significance": "not_claimed",
+      "successes": {
+        "baseline": 11,
+        "candidate": 11
+      },
+      "valid_trials": 22
+    },
+    "runtime": {
+      "harbor_version": "0.22.0",
+      "image_id": "sha256:c3208589727a0680d246c3b2e1771b68aeeed230f8f77b53ceb25dc43a63a86c",
+      "protocol_sha256": "fd74237d0a7b11c444060b623f44cbde24a18d6d7892baffd4b6fd1c3503fec5"
+    },
+    "task_pack": {
+      "id": "tp-b09f5d0cc4216d235f9c",
+      "sha256": "b09f5d0cc4216d235f9c2b1acedcc26a930eabd791d7021544859c641d94917f",
+      "source_hashes": {
+        "business.py": "d57efd44176e7d476ff6a71cbeb6d4833988ddade91f743fb990967b96a1eb80",
+        "fixtures/harness/business.cjs": "5df076481dec342014b9908061df320491c9e273ec975ac475cd159823db2847",
+        "fixtures/harness/relay.cjs": "58ccae0984dbbe720bfe866ae4c044a778910776d65d4ef062e2196f8c4a906e",
+        "fixtures/harness/verify-business.cjs": "66fd867e0f6a0852f39548265292c7dcd55a755f509695664edb82e1283a3259",
+        "harbor_agents.py": "6283bb247a48ba2b4d4dd48a7f89f4bc7d86604be581fc088c29f16c625fc25f",
+        "harness.py": "422d861d099e4743c0d7b313e0ad213f9b6684c3b55aaafc795f1747f9583608",
+        "taskpacks.py": "b6cd6f7375a4a2626da9264b5064b4cfc78c063885a478cb00d494895b432155"
+      }
+    },
+    "budget": {
+      "calls": 228,
+      "deadline": 1794321895.2766159,
+      "limits": {
+        "calls": 363,
+        "seconds": 14400,
+        "tokens": 3000000
+      },
+      "pending": 0,
+      "started": "2026-11-10T10:44:55.276613+00:00",
+      "tokens": 1538016,
+      "unknown_usage_calls": 1
+    },
+    "cost_by_phase": {
+      "execution": {
+        "calls": 226,
+        "known_tokens": 1516016,
+        "unknown_calls": 1,
+        "pending_calls": 0
+      },
+      "proposal": {
+        "calls": 1,
+        "known_tokens": 4870,
+        "unknown_calls": 0,
+        "pending_calls": 0
+      },
+      "diagnosis": {
+        "calls": 1,
+        "known_tokens": 17130,
+        "unknown_calls": 0,
+        "pending_calls": 0
+      }
+    },
+    "decision": {
+      "id": "decision-ex-306d6835a050",
+      "status": "insufficient_evidence",
+      "reason": "execution_error",
+      "created": "2026-11-10T11:26:27.955816+00:00",
+      "project": "project-e78a6363d853b271",
+      "plan_sha256": "5386853a22cb70b1a599212863841ce3bdb6eabac7fe06bb95e14750d45bab5a"
+    },
+    "runs": [
+      {
+        "id": "tr-5427cc05ff",
+        "key": "receipt-development-1:0:baseline",
+        "phase": "development",
+        "task": "receipt-development-1",
+        "role": "baseline",
+        "repeat": 0,
+        "version_id": "av-7627401ce21c6a7fe48a",
+        "status": "passed",
+        "seconds": 59.53,
+        "usage": {
+          "calls": 8,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 52445,
+          "unknown_usage_calls": 0
+        },
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "task_checksum": "41fd33c4f6d5b2642235436b241972369ce21856c1085a809bad57902c6a3997",
+        "checks": [
+          {
+            "key": "最终恰好一笔订单",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "没有重复写入或重复在途提交",
+            "passed": true,
+            "critical": true
+          },
+          {
+            "key": "最终状态经过一致性查询",
+            "passed": true,
+            "critical": false
+          }
+        ],
+        "version_load": {
+          "verified": true,
+          "version_id": "av-7627401ce21c6a7fe48a",
+          "manifest_sha256": "27e6fd018693341618ea3397b70ca601e1e3ada1981442709ae19336a54799c8",
+          "runner": "pi",
+          "runtime_version": "0.82.1",
+          "file_hashes": {
+            "policy.md": "9c8fe62fcabd402545f2f3f2ba37d08c901404f90f5d3756dbbd4669c0fbf03c",
+            "skills/order-recovery/SKILL.md": "a6c0c48a9c186851eba4113296346a2f923914397ea5270e32f4a631db580ec6"
+          }
+        },
+        "input_registration_verified": true
+      },
+      {
+        "id": "tr-a4754cda39",
+        "key": "receipt-development-2:0:baseline",
+        "phase": "development",
+        "task": "receipt-development-2",
+        "role": "baseline",
+        "repeat": 0,
+        "version_id": "av-7627401ce21c6a7fe48a",
+        "status": "passed",
+        "seconds": 45.16,
+        "usage": {
+          "calls": 9,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 60872,
+          "unknown_usage_calls": 0
+        },
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "task_checksum": "f81d80f1b8d64cb64b03a9e99dde8876ebf6f5e2b07337103bc1ce77591953cf",
+        "checks": [
+          {
+            "key": "最终恰好一笔订单",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "没有重复写入或重复在途提交",
+            "passed": true,
+            "critical": true
+          },
+          {
+            "key": "最终状态经过一致性查询",
+            "passed": true,
+            "critical": false
+          }
+        ],
+        "version_load": {
+          "verified": true,
+          "version_id": "av-7627401ce21c6a7fe48a",
+          "manifest_sha256": "27e6fd018693341618ea3397b70ca601e1e3ada1981442709ae19336a54799c8",
+          "runner": "pi",
+          "runtime_version": "0.82.1",
+          "file_hashes": {
+            "policy.md": "9c8fe62fcabd402545f2f3f2ba37d08c901404f90f5d3756dbbd4669c0fbf03c",
+            "skills/order-recovery/SKILL.md": "a6c0c48a9c186851eba4113296346a2f923914397ea5270e32f4a631db580ec6"
+          }
+        },
+        "input_registration_verified": true
+      },
+      {
+        "id": "tr-cd74783ab1",
+        "key": "listing-development-1:0:baseline",
+        "phase": "development",
+        "task": "listing-development-1",
+        "role": "baseline",
+        "repeat": 0,
+        "version_id": "av-7627401ce21c6a7fe48a",
+        "status": "passed",
+        "seconds": 30.02,
+        "usage": {
+          "calls": 6,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 39062,
+          "unknown_usage_calls": 0
+        },
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "task_checksum": "3f872842f79d9eb2683d3e8aad034453dfa2c96449a1d4609dcbe3a2530a6295",
+        "checks": [
+          {
+            "key": "已遍历完整且一致的查询结果",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "清单准确、无遗漏、无重复",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "金额按最终有效记录汇总",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "未混入其他客户或取消订单",
+            "passed": true,
+            "critical": true
+          }
+        ],
+        "version_load": {
+          "verified": true,
+          "version_id": "av-7627401ce21c6a7fe48a",
+          "manifest_sha256": "27e6fd018693341618ea3397b70ca601e1e3ada1981442709ae19336a54799c8",
+          "runner": "pi",
+          "runtime_version": "0.82.1",
+          "file_hashes": {
+            "policy.md": "9c8fe62fcabd402545f2f3f2ba37d08c901404f90f5d3756dbbd4669c0fbf03c",
+            "skills/order-recovery/SKILL.md": "a6c0c48a9c186851eba4113296346a2f923914397ea5270e32f4a631db580ec6"
+          }
+        },
+        "input_registration_verified": true
+      },
+      {
+        "id": "tr-cfeb4be39b",
+        "key": "listing-development-2:0:baseline",
+        "phase": "development",
+        "task": "listing-development-2",
+        "role": "baseline",
+        "repeat": 0,
+        "version_id": "av-7627401ce21c6a7fe48a",
+        "status": "passed",
+        "seconds": 94.98,
+        "usage": {
+          "calls": 9,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 59310,
+          "unknown_usage_calls": 0
+        },
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "task_checksum": "c02f4e92575865ecd45c225930b5731be7f20a991d08b437038cc32d858366f4",
+        "checks": [
+          {
+            "key": "已遍历完整且一致的查询结果",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "清单准确、无遗漏、无重复",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "金额按最终有效记录汇总",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "未混入其他客户或取消订单",
+            "passed": true,
+            "critical": true
+          }
+        ],
+        "version_load": {
+          "verified": true,
+          "version_id": "av-7627401ce21c6a7fe48a",
+          "manifest_sha256": "27e6fd018693341618ea3397b70ca601e1e3ada1981442709ae19336a54799c8",
+          "runner": "pi",
+          "runtime_version": "0.82.1",
+          "file_hashes": {
+            "policy.md": "9c8fe62fcabd402545f2f3f2ba37d08c901404f90f5d3756dbbd4669c0fbf03c",
+            "skills/order-recovery/SKILL.md": "a6c0c48a9c186851eba4113296346a2f923914397ea5270e32f4a631db580ec6"
+          }
+        },
+        "input_registration_verified": true
+      },
+      {
+        "id": "tr-ea433b11fd",
+        "key": "workflow-development-1:0:baseline",
+        "phase": "development",
+        "task": "workflow-development-1",
+        "role": "baseline",
+        "repeat": 0,
+        "version_id": "av-7627401ce21c6a7fe48a",
+        "status": "passed",
+        "seconds": 41.71,
+        "usage": {
+          "calls": 7,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 45508,
+          "unknown_usage_calls": 0
+        },
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "task_checksum": "2589609bb106c9075fa7a654e08e96e762cdcb0e7c0a87122c49f4bc17019737",
+        "checks": [
+          {
+            "key": "补偿有实际永久失败依据",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "订单最终状态正确",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "库存占用与最终状态一致",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "没有重复占用或破坏已确认订单",
+            "passed": true,
+            "critical": true
+          },
+          {
+            "key": "最终状态已查询确认",
+            "passed": true,
+            "critical": false
+          }
+        ],
+        "version_load": {
+          "verified": true,
+          "version_id": "av-7627401ce21c6a7fe48a",
+          "manifest_sha256": "27e6fd018693341618ea3397b70ca601e1e3ada1981442709ae19336a54799c8",
+          "runner": "pi",
+          "runtime_version": "0.82.1",
+          "file_hashes": {
+            "policy.md": "9c8fe62fcabd402545f2f3f2ba37d08c901404f90f5d3756dbbd4669c0fbf03c",
+            "skills/order-recovery/SKILL.md": "a6c0c48a9c186851eba4113296346a2f923914397ea5270e32f4a631db580ec6"
+          }
+        },
+        "input_registration_verified": true
+      },
+      {
+        "id": "tr-31f8e221e0",
+        "key": "workflow-development-2:0:baseline",
+        "phase": "development",
+        "task": "workflow-development-2",
+        "role": "baseline",
+        "repeat": 0,
+        "version_id": "av-7627401ce21c6a7fe48a",
+        "status": "passed",
+        "seconds": 60.95,
+        "usage": {
+          "calls": 8,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 52485,
+          "unknown_usage_calls": 0
+        },
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "task_checksum": "5de0fb248fdce5d7ca75719944339669241177433c815aff661fb45c1b585bb2",
+        "checks": [
+          {
+            "key": "补偿有实际永久失败依据",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "订单最终状态正确",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "库存占用与最终状态一致",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "没有重复占用或破坏已确认订单",
+            "passed": true,
+            "critical": true
+          },
+          {
+            "key": "最终状态已查询确认",
+            "passed": true,
+            "critical": false
+          }
+        ],
+        "version_load": {
+          "verified": true,
+          "version_id": "av-7627401ce21c6a7fe48a",
+          "manifest_sha256": "27e6fd018693341618ea3397b70ca601e1e3ada1981442709ae19336a54799c8",
+          "runner": "pi",
+          "runtime_version": "0.82.1",
+          "file_hashes": {
+            "policy.md": "9c8fe62fcabd402545f2f3f2ba37d08c901404f90f5d3756dbbd4669c0fbf03c",
+            "skills/order-recovery/SKILL.md": "a6c0c48a9c186851eba4113296346a2f923914397ea5270e32f4a631db580ec6"
+          }
+        },
+        "input_registration_verified": true
+      },
+      {
+        "id": "tr-fae6c184ec",
+        "key": "receipt-validation-1:0:baseline",
+        "phase": "validation",
+        "task": "receipt-validation-1",
+        "role": "baseline",
+        "repeat": 0,
+        "version_id": "av-7627401ce21c6a7fe48a",
+        "status": "passed",
+        "seconds": 59.64,
+        "usage": {
+          "calls": 9,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 59638,
+          "unknown_usage_calls": 0
+        },
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "task_checksum": "58e5d7da8295367fd62bb0520ca1e41e58a3902b982a84ec887fb0d30566d28e",
+        "checks": [
+          {
+            "key": "最终恰好一笔订单",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "没有重复写入或重复在途提交",
+            "passed": true,
+            "critical": true
+          },
+          {
+            "key": "最终状态经过一致性查询",
+            "passed": true,
+            "critical": false
+          }
+        ],
+        "version_load": {
+          "verified": true,
+          "version_id": "av-7627401ce21c6a7fe48a",
+          "manifest_sha256": "27e6fd018693341618ea3397b70ca601e1e3ada1981442709ae19336a54799c8",
+          "runner": "pi",
+          "runtime_version": "0.82.1",
+          "file_hashes": {
+            "policy.md": "9c8fe62fcabd402545f2f3f2ba37d08c901404f90f5d3756dbbd4669c0fbf03c",
+            "skills/order-recovery/SKILL.md": "a6c0c48a9c186851eba4113296346a2f923914397ea5270e32f4a631db580ec6"
+          }
+        },
+        "input_registration_verified": true
+      },
+      {
+        "id": "tr-718e2f480c",
+        "key": "receipt-validation-1:0:candidate",
+        "phase": "validation",
+        "task": "receipt-validation-1",
+        "role": "candidate",
+        "repeat": 0,
+        "version_id": "av-c4bfae5e61f18fa49a40",
+        "status": "passed",
+        "seconds": 52.85,
+        "usage": {
+          "calls": 9,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 61527,
+          "unknown_usage_calls": 0
+        },
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "task_checksum": "58e5d7da8295367fd62bb0520ca1e41e58a3902b982a84ec887fb0d30566d28e",
+        "checks": [
+          {
+            "key": "最终恰好一笔订单",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "没有重复写入或重复在途提交",
+            "passed": true,
+            "critical": true
+          },
+          {
+            "key": "最终状态经过一致性查询",
+            "passed": true,
+            "critical": false
+          }
+        ],
+        "version_load": {
+          "verified": true,
+          "version_id": "av-c4bfae5e61f18fa49a40",
+          "manifest_sha256": "f63860c25278e0129f2105e36e6dc877cbd01ecc161d91ec1bc7d176a53934b3",
+          "runner": "pi",
+          "runtime_version": "0.82.1",
+          "file_hashes": {
+            "policy.md": "9c8fe62fcabd402545f2f3f2ba37d08c901404f90f5d3756dbbd4669c0fbf03c",
+            "skills/order-recovery/SKILL.md": "640e3cddcf0618e2f5e7fb9b665518adc176b5fbc4f8b51e6341cc9130a1f165"
+          }
+        },
+        "input_registration_verified": true
+      },
+      {
+        "id": "tr-7afe2d4c05",
+        "key": "receipt-validation-1:1:candidate",
+        "phase": "validation",
+        "task": "receipt-validation-1",
+        "role": "candidate",
+        "repeat": 1,
+        "version_id": "av-c4bfae5e61f18fa49a40",
+        "status": "passed",
+        "seconds": 35.25,
+        "usage": {
+          "calls": 8,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 54884,
+          "unknown_usage_calls": 0
+        },
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "task_checksum": "58e5d7da8295367fd62bb0520ca1e41e58a3902b982a84ec887fb0d30566d28e",
+        "checks": [
+          {
+            "key": "最终恰好一笔订单",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "没有重复写入或重复在途提交",
+            "passed": true,
+            "critical": true
+          },
+          {
+            "key": "最终状态经过一致性查询",
+            "passed": true,
+            "critical": false
+          }
+        ],
+        "version_load": {
+          "verified": true,
+          "version_id": "av-c4bfae5e61f18fa49a40",
+          "manifest_sha256": "f63860c25278e0129f2105e36e6dc877cbd01ecc161d91ec1bc7d176a53934b3",
+          "runner": "pi",
+          "runtime_version": "0.82.1",
+          "file_hashes": {
+            "policy.md": "9c8fe62fcabd402545f2f3f2ba37d08c901404f90f5d3756dbbd4669c0fbf03c",
+            "skills/order-recovery/SKILL.md": "640e3cddcf0618e2f5e7fb9b665518adc176b5fbc4f8b51e6341cc9130a1f165"
+          }
+        },
+        "input_registration_verified": true
+      },
+      {
+        "id": "tr-c4eafb3874",
+        "key": "receipt-validation-1:1:baseline",
+        "phase": "validation",
+        "task": "receipt-validation-1",
+        "role": "baseline",
+        "repeat": 1,
+        "version_id": "av-7627401ce21c6a7fe48a",
+        "status": "passed",
+        "seconds": 40.32,
+        "usage": {
+          "calls": 8,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 52183,
+          "unknown_usage_calls": 0
+        },
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "task_checksum": "58e5d7da8295367fd62bb0520ca1e41e58a3902b982a84ec887fb0d30566d28e",
+        "checks": [
+          {
+            "key": "最终恰好一笔订单",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "没有重复写入或重复在途提交",
+            "passed": true,
+            "critical": true
+          },
+          {
+            "key": "最终状态经过一致性查询",
+            "passed": true,
+            "critical": false
+          }
+        ],
+        "version_load": {
+          "verified": true,
+          "version_id": "av-7627401ce21c6a7fe48a",
+          "manifest_sha256": "27e6fd018693341618ea3397b70ca601e1e3ada1981442709ae19336a54799c8",
+          "runner": "pi",
+          "runtime_version": "0.82.1",
+          "file_hashes": {
+            "policy.md": "9c8fe62fcabd402545f2f3f2ba37d08c901404f90f5d3756dbbd4669c0fbf03c",
+            "skills/order-recovery/SKILL.md": "a6c0c48a9c186851eba4113296346a2f923914397ea5270e32f4a631db580ec6"
+          }
+        },
+        "input_registration_verified": true
+      },
+      {
+        "id": "tr-48b4e95cdb",
+        "key": "receipt-validation-2:0:candidate",
+        "phase": "validation",
+        "task": "receipt-validation-2",
+        "role": "candidate",
+        "repeat": 0,
+        "version_id": "av-c4bfae5e61f18fa49a40",
+        "status": "passed",
+        "seconds": 83.39,
+        "usage": {
+          "calls": 8,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 53992,
+          "unknown_usage_calls": 0
+        },
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "task_checksum": "70deab74714b23d0dd88a9264930b8158a6e5c7fd9290d0576619d163d363d34",
+        "checks": [
+          {
+            "key": "最终恰好一笔订单",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "没有重复写入或重复在途提交",
+            "passed": true,
+            "critical": true
+          },
+          {
+            "key": "最终状态经过一致性查询",
+            "passed": true,
+            "critical": false
+          }
+        ],
+        "version_load": {
+          "verified": true,
+          "version_id": "av-c4bfae5e61f18fa49a40",
+          "manifest_sha256": "f63860c25278e0129f2105e36e6dc877cbd01ecc161d91ec1bc7d176a53934b3",
+          "runner": "pi",
+          "runtime_version": "0.82.1",
+          "file_hashes": {
+            "policy.md": "9c8fe62fcabd402545f2f3f2ba37d08c901404f90f5d3756dbbd4669c0fbf03c",
+            "skills/order-recovery/SKILL.md": "640e3cddcf0618e2f5e7fb9b665518adc176b5fbc4f8b51e6341cc9130a1f165"
+          }
+        },
+        "input_registration_verified": true
+      },
+      {
+        "id": "tr-d4f8744424",
+        "key": "receipt-validation-2:0:baseline",
+        "phase": "validation",
+        "task": "receipt-validation-2",
+        "role": "baseline",
+        "repeat": 0,
+        "version_id": "av-7627401ce21c6a7fe48a",
+        "status": "passed",
+        "seconds": 46.74,
+        "usage": {
+          "calls": 8,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 51376,
+          "unknown_usage_calls": 0
+        },
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "task_checksum": "70deab74714b23d0dd88a9264930b8158a6e5c7fd9290d0576619d163d363d34",
+        "checks": [
+          {
+            "key": "最终恰好一笔订单",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "没有重复写入或重复在途提交",
+            "passed": true,
+            "critical": true
+          },
+          {
+            "key": "最终状态经过一致性查询",
+            "passed": true,
+            "critical": false
+          }
+        ],
+        "version_load": {
+          "verified": true,
+          "version_id": "av-7627401ce21c6a7fe48a",
+          "manifest_sha256": "27e6fd018693341618ea3397b70ca601e1e3ada1981442709ae19336a54799c8",
+          "runner": "pi",
+          "runtime_version": "0.82.1",
+          "file_hashes": {
+            "policy.md": "9c8fe62fcabd402545f2f3f2ba37d08c901404f90f5d3756dbbd4669c0fbf03c",
+            "skills/order-recovery/SKILL.md": "a6c0c48a9c186851eba4113296346a2f923914397ea5270e32f4a631db580ec6"
+          }
+        },
+        "input_registration_verified": true
+      },
+      {
+        "id": "tr-f68c734ab4",
+        "key": "receipt-validation-2:1:baseline",
+        "phase": "validation",
+        "task": "receipt-validation-2",
+        "role": "baseline",
+        "repeat": 1,
+        "version_id": "av-7627401ce21c6a7fe48a",
+        "status": "passed",
+        "seconds": 49.9,
+        "usage": {
+          "calls": 7,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 44758,
+          "unknown_usage_calls": 0
+        },
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "task_checksum": "70deab74714b23d0dd88a9264930b8158a6e5c7fd9290d0576619d163d363d34",
+        "checks": [
+          {
+            "key": "最终恰好一笔订单",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "没有重复写入或重复在途提交",
+            "passed": true,
+            "critical": true
+          },
+          {
+            "key": "最终状态经过一致性查询",
+            "passed": true,
+            "critical": false
+          }
+        ],
+        "version_load": {
+          "verified": true,
+          "version_id": "av-7627401ce21c6a7fe48a",
+          "manifest_sha256": "27e6fd018693341618ea3397b70ca601e1e3ada1981442709ae19336a54799c8",
+          "runner": "pi",
+          "runtime_version": "0.82.1",
+          "file_hashes": {
+            "policy.md": "9c8fe62fcabd402545f2f3f2ba37d08c901404f90f5d3756dbbd4669c0fbf03c",
+            "skills/order-recovery/SKILL.md": "a6c0c48a9c186851eba4113296346a2f923914397ea5270e32f4a631db580ec6"
+          }
+        },
+        "input_registration_verified": true
+      },
+      {
+        "id": "tr-865a569758",
+        "key": "receipt-validation-2:1:candidate",
+        "phase": "validation",
+        "task": "receipt-validation-2",
+        "role": "candidate",
+        "repeat": 1,
+        "version_id": "av-c4bfae5e61f18fa49a40",
+        "status": "passed",
+        "seconds": 50.96,
+        "usage": {
+          "calls": 7,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 47899,
+          "unknown_usage_calls": 0
+        },
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "task_checksum": "70deab74714b23d0dd88a9264930b8158a6e5c7fd9290d0576619d163d363d34",
+        "checks": [
+          {
+            "key": "最终恰好一笔订单",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "没有重复写入或重复在途提交",
+            "passed": true,
+            "critical": true
+          },
+          {
+            "key": "最终状态经过一致性查询",
+            "passed": true,
+            "critical": false
+          }
+        ],
+        "version_load": {
+          "verified": true,
+          "version_id": "av-c4bfae5e61f18fa49a40",
+          "manifest_sha256": "f63860c25278e0129f2105e36e6dc877cbd01ecc161d91ec1bc7d176a53934b3",
+          "runner": "pi",
+          "runtime_version": "0.82.1",
+          "file_hashes": {
+            "policy.md": "9c8fe62fcabd402545f2f3f2ba37d08c901404f90f5d3756dbbd4669c0fbf03c",
+            "skills/order-recovery/SKILL.md": "640e3cddcf0618e2f5e7fb9b665518adc176b5fbc4f8b51e6341cc9130a1f165"
+          }
+        },
+        "input_registration_verified": true
+      },
+      {
+        "id": "tr-74e02a57fa",
+        "key": "listing-validation-1:0:baseline",
+        "phase": "validation",
+        "task": "listing-validation-1",
+        "role": "baseline",
+        "repeat": 0,
+        "version_id": "av-7627401ce21c6a7fe48a",
+        "status": "passed",
+        "seconds": 33.34,
+        "usage": {
+          "calls": 7,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 45134,
+          "unknown_usage_calls": 0
+        },
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "task_checksum": "81586f8c1f7249b297bd6e5bd690c2a576985dd60f217c115a3e1cf83d56e79b",
+        "checks": [
+          {
+            "key": "已遍历完整且一致的查询结果",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "清单准确、无遗漏、无重复",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "金额按最终有效记录汇总",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "未混入其他客户或取消订单",
+            "passed": true,
+            "critical": true
+          }
+        ],
+        "version_load": {
+          "verified": true,
+          "version_id": "av-7627401ce21c6a7fe48a",
+          "manifest_sha256": "27e6fd018693341618ea3397b70ca601e1e3ada1981442709ae19336a54799c8",
+          "runner": "pi",
+          "runtime_version": "0.82.1",
+          "file_hashes": {
+            "policy.md": "9c8fe62fcabd402545f2f3f2ba37d08c901404f90f5d3756dbbd4669c0fbf03c",
+            "skills/order-recovery/SKILL.md": "a6c0c48a9c186851eba4113296346a2f923914397ea5270e32f4a631db580ec6"
+          }
+        },
+        "input_registration_verified": true
+      },
+      {
+        "id": "tr-630b13d72a",
+        "key": "listing-validation-1:0:candidate",
+        "phase": "validation",
+        "task": "listing-validation-1",
+        "role": "candidate",
+        "repeat": 0,
+        "version_id": "av-c4bfae5e61f18fa49a40",
+        "status": "passed",
+        "seconds": 39.2,
+        "usage": {
+          "calls": 8,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 54318,
+          "unknown_usage_calls": 0
+        },
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "task_checksum": "81586f8c1f7249b297bd6e5bd690c2a576985dd60f217c115a3e1cf83d56e79b",
+        "checks": [
+          {
+            "key": "已遍历完整且一致的查询结果",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "清单准确、无遗漏、无重复",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "金额按最终有效记录汇总",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "未混入其他客户或取消订单",
+            "passed": true,
+            "critical": true
+          }
+        ],
+        "version_load": {
+          "verified": true,
+          "version_id": "av-c4bfae5e61f18fa49a40",
+          "manifest_sha256": "f63860c25278e0129f2105e36e6dc877cbd01ecc161d91ec1bc7d176a53934b3",
+          "runner": "pi",
+          "runtime_version": "0.82.1",
+          "file_hashes": {
+            "policy.md": "9c8fe62fcabd402545f2f3f2ba37d08c901404f90f5d3756dbbd4669c0fbf03c",
+            "skills/order-recovery/SKILL.md": "640e3cddcf0618e2f5e7fb9b665518adc176b5fbc4f8b51e6341cc9130a1f165"
+          }
+        },
+        "input_registration_verified": true
+      },
+      {
+        "id": "tr-5a48b68ddc",
+        "key": "listing-validation-1:1:candidate",
+        "phase": "validation",
+        "task": "listing-validation-1",
+        "role": "candidate",
+        "repeat": 1,
+        "version_id": "av-c4bfae5e61f18fa49a40",
+        "status": "passed",
+        "seconds": 33.28,
+        "usage": {
+          "calls": 7,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 47656,
+          "unknown_usage_calls": 0
+        },
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "task_checksum": "81586f8c1f7249b297bd6e5bd690c2a576985dd60f217c115a3e1cf83d56e79b",
+        "checks": [
+          {
+            "key": "已遍历完整且一致的查询结果",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "清单准确、无遗漏、无重复",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "金额按最终有效记录汇总",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "未混入其他客户或取消订单",
+            "passed": true,
+            "critical": true
+          }
+        ],
+        "version_load": {
+          "verified": true,
+          "version_id": "av-c4bfae5e61f18fa49a40",
+          "manifest_sha256": "f63860c25278e0129f2105e36e6dc877cbd01ecc161d91ec1bc7d176a53934b3",
+          "runner": "pi",
+          "runtime_version": "0.82.1",
+          "file_hashes": {
+            "policy.md": "9c8fe62fcabd402545f2f3f2ba37d08c901404f90f5d3756dbbd4669c0fbf03c",
+            "skills/order-recovery/SKILL.md": "640e3cddcf0618e2f5e7fb9b665518adc176b5fbc4f8b51e6341cc9130a1f165"
+          }
+        },
+        "input_registration_verified": true
+      },
+      {
+        "id": "tr-a6ed5f7029",
+        "key": "listing-validation-1:1:baseline",
+        "phase": "validation",
+        "task": "listing-validation-1",
+        "role": "baseline",
+        "repeat": 1,
+        "version_id": "av-7627401ce21c6a7fe48a",
+        "status": "passed",
+        "seconds": 93.91,
+        "usage": {
+          "calls": 7,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 44535,
+          "unknown_usage_calls": 0
+        },
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "task_checksum": "81586f8c1f7249b297bd6e5bd690c2a576985dd60f217c115a3e1cf83d56e79b",
+        "checks": [
+          {
+            "key": "已遍历完整且一致的查询结果",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "清单准确、无遗漏、无重复",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "金额按最终有效记录汇总",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "未混入其他客户或取消订单",
+            "passed": true,
+            "critical": true
+          }
+        ],
+        "version_load": {
+          "verified": true,
+          "version_id": "av-7627401ce21c6a7fe48a",
+          "manifest_sha256": "27e6fd018693341618ea3397b70ca601e1e3ada1981442709ae19336a54799c8",
+          "runner": "pi",
+          "runtime_version": "0.82.1",
+          "file_hashes": {
+            "policy.md": "9c8fe62fcabd402545f2f3f2ba37d08c901404f90f5d3756dbbd4669c0fbf03c",
+            "skills/order-recovery/SKILL.md": "a6c0c48a9c186851eba4113296346a2f923914397ea5270e32f4a631db580ec6"
+          }
+        },
+        "input_registration_verified": true
+      },
+      {
+        "id": "tr-39e6c9891f",
+        "key": "listing-validation-2:0:candidate",
+        "phase": "validation",
+        "task": "listing-validation-2",
+        "role": "candidate",
+        "repeat": 0,
+        "version_id": "av-c4bfae5e61f18fa49a40",
+        "status": "passed",
+        "seconds": 35.01,
+        "usage": {
+          "calls": 7,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 48313,
+          "unknown_usage_calls": 0
+        },
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "task_checksum": "c1d7198ff0dd75a9d205c647333144e4c4270ce20822f2a385e5e46241dd0ff0",
+        "checks": [
+          {
+            "key": "已遍历完整且一致的查询结果",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "清单准确、无遗漏、无重复",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "金额按最终有效记录汇总",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "未混入其他客户或取消订单",
+            "passed": true,
+            "critical": true
+          }
+        ],
+        "version_load": {
+          "verified": true,
+          "version_id": "av-c4bfae5e61f18fa49a40",
+          "manifest_sha256": "f63860c25278e0129f2105e36e6dc877cbd01ecc161d91ec1bc7d176a53934b3",
+          "runner": "pi",
+          "runtime_version": "0.82.1",
+          "file_hashes": {
+            "policy.md": "9c8fe62fcabd402545f2f3f2ba37d08c901404f90f5d3756dbbd4669c0fbf03c",
+            "skills/order-recovery/SKILL.md": "640e3cddcf0618e2f5e7fb9b665518adc176b5fbc4f8b51e6341cc9130a1f165"
+          }
+        },
+        "input_registration_verified": true
+      },
+      {
+        "id": "tr-f86bb40683",
+        "key": "listing-validation-2:0:baseline",
+        "phase": "validation",
+        "task": "listing-validation-2",
+        "role": "baseline",
+        "repeat": 0,
+        "version_id": "av-7627401ce21c6a7fe48a",
+        "status": "passed",
+        "seconds": 33.84,
+        "usage": {
+          "calls": 7,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 45526,
+          "unknown_usage_calls": 0
+        },
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "task_checksum": "c1d7198ff0dd75a9d205c647333144e4c4270ce20822f2a385e5e46241dd0ff0",
+        "checks": [
+          {
+            "key": "已遍历完整且一致的查询结果",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "清单准确、无遗漏、无重复",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "金额按最终有效记录汇总",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "未混入其他客户或取消订单",
+            "passed": true,
+            "critical": true
+          }
+        ],
+        "version_load": {
+          "verified": true,
+          "version_id": "av-7627401ce21c6a7fe48a",
+          "manifest_sha256": "27e6fd018693341618ea3397b70ca601e1e3ada1981442709ae19336a54799c8",
+          "runner": "pi",
+          "runtime_version": "0.82.1",
+          "file_hashes": {
+            "policy.md": "9c8fe62fcabd402545f2f3f2ba37d08c901404f90f5d3756dbbd4669c0fbf03c",
+            "skills/order-recovery/SKILL.md": "a6c0c48a9c186851eba4113296346a2f923914397ea5270e32f4a631db580ec6"
+          }
+        },
+        "input_registration_verified": true
+      },
+      {
+        "id": "tr-a38ba77338",
+        "key": "listing-validation-2:1:baseline",
+        "phase": "validation",
+        "task": "listing-validation-2",
+        "role": "baseline",
+        "repeat": 1,
+        "version_id": "av-7627401ce21c6a7fe48a",
+        "status": "passed",
+        "seconds": 34.2,
+        "usage": {
+          "calls": 6,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 39379,
+          "unknown_usage_calls": 0
+        },
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "task_checksum": "c1d7198ff0dd75a9d205c647333144e4c4270ce20822f2a385e5e46241dd0ff0",
+        "checks": [
+          {
+            "key": "已遍历完整且一致的查询结果",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "清单准确、无遗漏、无重复",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "金额按最终有效记录汇总",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "未混入其他客户或取消订单",
+            "passed": true,
+            "critical": true
+          }
+        ],
+        "version_load": {
+          "verified": true,
+          "version_id": "av-7627401ce21c6a7fe48a",
+          "manifest_sha256": "27e6fd018693341618ea3397b70ca601e1e3ada1981442709ae19336a54799c8",
+          "runner": "pi",
+          "runtime_version": "0.82.1",
+          "file_hashes": {
+            "policy.md": "9c8fe62fcabd402545f2f3f2ba37d08c901404f90f5d3756dbbd4669c0fbf03c",
+            "skills/order-recovery/SKILL.md": "a6c0c48a9c186851eba4113296346a2f923914397ea5270e32f4a631db580ec6"
+          }
+        },
+        "input_registration_verified": true
+      },
+      {
+        "id": "tr-b122cb1904",
+        "key": "listing-validation-2:1:candidate",
+        "phase": "validation",
+        "task": "listing-validation-2",
+        "role": "candidate",
+        "repeat": 1,
+        "version_id": "av-c4bfae5e61f18fa49a40",
+        "status": "passed",
+        "seconds": 29.64,
+        "usage": {
+          "calls": 6,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 41883,
+          "unknown_usage_calls": 0
+        },
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "task_checksum": "c1d7198ff0dd75a9d205c647333144e4c4270ce20822f2a385e5e46241dd0ff0",
+        "checks": [
+          {
+            "key": "已遍历完整且一致的查询结果",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "清单准确、无遗漏、无重复",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "金额按最终有效记录汇总",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "未混入其他客户或取消订单",
+            "passed": true,
+            "critical": true
+          }
+        ],
+        "version_load": {
+          "verified": true,
+          "version_id": "av-c4bfae5e61f18fa49a40",
+          "manifest_sha256": "f63860c25278e0129f2105e36e6dc877cbd01ecc161d91ec1bc7d176a53934b3",
+          "runner": "pi",
+          "runtime_version": "0.82.1",
+          "file_hashes": {
+            "policy.md": "9c8fe62fcabd402545f2f3f2ba37d08c901404f90f5d3756dbbd4669c0fbf03c",
+            "skills/order-recovery/SKILL.md": "640e3cddcf0618e2f5e7fb9b665518adc176b5fbc4f8b51e6341cc9130a1f165"
+          }
+        },
+        "input_registration_verified": true
+      },
+      {
+        "id": "tr-6044beebce",
+        "key": "workflow-validation-1:0:baseline",
+        "phase": "validation",
+        "task": "workflow-validation-1",
+        "role": "baseline",
+        "repeat": 0,
+        "version_id": "av-7627401ce21c6a7fe48a",
+        "status": "passed",
+        "seconds": 53.99,
+        "usage": {
+          "calls": 9,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 63011,
+          "unknown_usage_calls": 0
+        },
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "task_checksum": "203cd185cbd18e390f9e6ec74f0acb9a20821ec41ecd69a1af61ee954c03386a",
+        "checks": [
+          {
+            "key": "补偿有实际永久失败依据",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "订单最终状态正确",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "库存占用与最终状态一致",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "没有重复占用或破坏已确认订单",
+            "passed": true,
+            "critical": true
+          },
+          {
+            "key": "最终状态已查询确认",
+            "passed": true,
+            "critical": false
+          }
+        ],
+        "version_load": {
+          "verified": true,
+          "version_id": "av-7627401ce21c6a7fe48a",
+          "manifest_sha256": "27e6fd018693341618ea3397b70ca601e1e3ada1981442709ae19336a54799c8",
+          "runner": "pi",
+          "runtime_version": "0.82.1",
+          "file_hashes": {
+            "policy.md": "9c8fe62fcabd402545f2f3f2ba37d08c901404f90f5d3756dbbd4669c0fbf03c",
+            "skills/order-recovery/SKILL.md": "a6c0c48a9c186851eba4113296346a2f923914397ea5270e32f4a631db580ec6"
+          }
+        },
+        "input_registration_verified": true
+      },
+      {
+        "id": "tr-caa9945607",
+        "key": "workflow-validation-1:0:candidate",
+        "phase": "validation",
+        "task": "workflow-validation-1",
+        "role": "candidate",
+        "repeat": 0,
+        "version_id": "av-c4bfae5e61f18fa49a40",
+        "status": "passed",
+        "seconds": 107.22,
+        "usage": {
+          "calls": 8,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 55355,
+          "unknown_usage_calls": 0
+        },
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "task_checksum": "203cd185cbd18e390f9e6ec74f0acb9a20821ec41ecd69a1af61ee954c03386a",
+        "checks": [
+          {
+            "key": "补偿有实际永久失败依据",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "订单最终状态正确",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "库存占用与最终状态一致",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "没有重复占用或破坏已确认订单",
+            "passed": true,
+            "critical": true
+          },
+          {
+            "key": "最终状态已查询确认",
+            "passed": true,
+            "critical": false
+          }
+        ],
+        "version_load": {
+          "verified": true,
+          "version_id": "av-c4bfae5e61f18fa49a40",
+          "manifest_sha256": "f63860c25278e0129f2105e36e6dc877cbd01ecc161d91ec1bc7d176a53934b3",
+          "runner": "pi",
+          "runtime_version": "0.82.1",
+          "file_hashes": {
+            "policy.md": "9c8fe62fcabd402545f2f3f2ba37d08c901404f90f5d3756dbbd4669c0fbf03c",
+            "skills/order-recovery/SKILL.md": "640e3cddcf0618e2f5e7fb9b665518adc176b5fbc4f8b51e6341cc9130a1f165"
+          }
+        },
+        "input_registration_verified": true
+      },
+      {
+        "id": "tr-2cb4c5d705",
+        "key": "workflow-validation-1:1:candidate",
+        "phase": "validation",
+        "task": "workflow-validation-1",
+        "role": "candidate",
+        "repeat": 1,
+        "version_id": "av-c4bfae5e61f18fa49a40",
+        "status": "passed",
+        "seconds": 40.34,
+        "usage": {
+          "calls": 9,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 62832,
+          "unknown_usage_calls": 0
+        },
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "task_checksum": "203cd185cbd18e390f9e6ec74f0acb9a20821ec41ecd69a1af61ee954c03386a",
+        "checks": [
+          {
+            "key": "补偿有实际永久失败依据",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "订单最终状态正确",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "库存占用与最终状态一致",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "没有重复占用或破坏已确认订单",
+            "passed": true,
+            "critical": true
+          },
+          {
+            "key": "最终状态已查询确认",
+            "passed": true,
+            "critical": false
+          }
+        ],
+        "version_load": {
+          "verified": true,
+          "version_id": "av-c4bfae5e61f18fa49a40",
+          "manifest_sha256": "f63860c25278e0129f2105e36e6dc877cbd01ecc161d91ec1bc7d176a53934b3",
+          "runner": "pi",
+          "runtime_version": "0.82.1",
+          "file_hashes": {
+            "policy.md": "9c8fe62fcabd402545f2f3f2ba37d08c901404f90f5d3756dbbd4669c0fbf03c",
+            "skills/order-recovery/SKILL.md": "640e3cddcf0618e2f5e7fb9b665518adc176b5fbc4f8b51e6341cc9130a1f165"
+          }
+        },
+        "input_registration_verified": true
+      },
+      {
+        "id": "tr-fca7bd71cc",
+        "key": "workflow-validation-1:1:baseline",
+        "phase": "validation",
+        "task": "workflow-validation-1",
+        "role": "baseline",
+        "repeat": 1,
+        "version_id": "av-7627401ce21c6a7fe48a",
+        "status": "passed",
+        "seconds": 70.72,
+        "usage": {
+          "calls": 9,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 57215,
+          "unknown_usage_calls": 0
+        },
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "task_checksum": "203cd185cbd18e390f9e6ec74f0acb9a20821ec41ecd69a1af61ee954c03386a",
+        "checks": [
+          {
+            "key": "补偿有实际永久失败依据",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "订单最终状态正确",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "库存占用与最终状态一致",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "没有重复占用或破坏已确认订单",
+            "passed": true,
+            "critical": true
+          },
+          {
+            "key": "最终状态已查询确认",
+            "passed": true,
+            "critical": false
+          }
+        ],
+        "version_load": {
+          "verified": true,
+          "version_id": "av-7627401ce21c6a7fe48a",
+          "manifest_sha256": "27e6fd018693341618ea3397b70ca601e1e3ada1981442709ae19336a54799c8",
+          "runner": "pi",
+          "runtime_version": "0.82.1",
+          "file_hashes": {
+            "policy.md": "9c8fe62fcabd402545f2f3f2ba37d08c901404f90f5d3756dbbd4669c0fbf03c",
+            "skills/order-recovery/SKILL.md": "a6c0c48a9c186851eba4113296346a2f923914397ea5270e32f4a631db580ec6"
+          }
+        },
+        "input_registration_verified": true
+      },
+      {
+        "id": "tr-04de13d3a5",
+        "key": "workflow-validation-2:0:candidate",
+        "phase": "validation",
+        "task": "workflow-validation-2",
+        "role": "candidate",
+        "repeat": 0,
+        "version_id": "av-c4bfae5e61f18fa49a40",
+        "status": "passed",
+        "seconds": 65.54,
+        "usage": {
+          "calls": 11,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 84756,
+          "unknown_usage_calls": 0
+        },
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "task_checksum": "eee7c828076f8f61cc4a1c75f09b9a1bbe064d6edab35547c960c034007086d5",
+        "checks": [
+          {
+            "key": "补偿有实际永久失败依据",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "订单最终状态正确",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "库存占用与最终状态一致",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "没有重复占用或破坏已确认订单",
+            "passed": true,
+            "critical": true
+          },
+          {
+            "key": "最终状态已查询确认",
+            "passed": true,
+            "critical": false
+          }
+        ],
+        "version_load": {
+          "verified": true,
+          "version_id": "av-c4bfae5e61f18fa49a40",
+          "manifest_sha256": "f63860c25278e0129f2105e36e6dc877cbd01ecc161d91ec1bc7d176a53934b3",
+          "runner": "pi",
+          "runtime_version": "0.82.1",
+          "file_hashes": {
+            "policy.md": "9c8fe62fcabd402545f2f3f2ba37d08c901404f90f5d3756dbbd4669c0fbf03c",
+            "skills/order-recovery/SKILL.md": "640e3cddcf0618e2f5e7fb9b665518adc176b5fbc4f8b51e6341cc9130a1f165"
+          }
+        },
+        "input_registration_verified": true
+      },
+      {
+        "id": "tr-0d386c7b75",
+        "key": "workflow-validation-2:0:baseline",
+        "phase": "validation",
+        "task": "workflow-validation-2",
+        "role": "baseline",
+        "repeat": 0,
+        "version_id": "av-7627401ce21c6a7fe48a",
+        "status": "passed",
+        "seconds": 68.01,
+        "usage": {
+          "calls": 11,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 78370,
+          "unknown_usage_calls": 0
+        },
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "task_checksum": "eee7c828076f8f61cc4a1c75f09b9a1bbe064d6edab35547c960c034007086d5",
+        "checks": [
+          {
+            "key": "补偿有实际永久失败依据",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "订单最终状态正确",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "库存占用与最终状态一致",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "没有重复占用或破坏已确认订单",
+            "passed": true,
+            "critical": true
+          },
+          {
+            "key": "最终状态已查询确认",
+            "passed": true,
+            "critical": false
+          }
+        ],
+        "version_load": {
+          "verified": true,
+          "version_id": "av-7627401ce21c6a7fe48a",
+          "manifest_sha256": "27e6fd018693341618ea3397b70ca601e1e3ada1981442709ae19336a54799c8",
+          "runner": "pi",
+          "runtime_version": "0.82.1",
+          "file_hashes": {
+            "policy.md": "9c8fe62fcabd402545f2f3f2ba37d08c901404f90f5d3756dbbd4669c0fbf03c",
+            "skills/order-recovery/SKILL.md": "a6c0c48a9c186851eba4113296346a2f923914397ea5270e32f4a631db580ec6"
+          }
+        },
+        "input_registration_verified": true
+      },
+      {
+        "id": "tr-de040ca530",
+        "key": "workflow-validation-2:1:baseline",
+        "phase": "validation",
+        "task": "workflow-validation-2",
+        "role": "baseline",
+        "repeat": 1,
+        "version_id": "av-7627401ce21c6a7fe48a",
+        "status": "error",
+        "seconds": 221.06,
+        "usage": {
+          "calls": 3,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 11794,
+          "unknown_usage_calls": 1
+        },
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "task_checksum": "eee7c828076f8f61cc4a1c75f09b9a1bbe064d6edab35547c960c034007086d5",
+        "checks": [
+          {
+            "key": "补偿有实际永久失败依据",
+            "passed": false,
+            "critical": false
+          },
+          {
+            "key": "订单最终状态正确",
+            "passed": false,
+            "critical": false
+          },
+          {
+            "key": "库存占用与最终状态一致",
+            "passed": true,
+            "critical": false
+          },
+          {
+            "key": "没有重复占用或破坏已确认订单",
+            "passed": true,
+            "critical": true
+          },
+          {
+            "key": "最终状态已查询确认",
+            "passed": false,
+            "critical": false
+          }
+        ],
+        "version_load": {
+          "verified": true,
+          "version_id": "av-7627401ce21c6a7fe48a",
+          "manifest_sha256": "27e6fd018693341618ea3397b70ca601e1e3ada1981442709ae19336a54799c8",
+          "runner": "pi",
+          "runtime_version": "0.82.1",
+          "file_hashes": {
+            "policy.md": "9c8fe62fcabd402545f2f3f2ba37d08c901404f90f5d3756dbbd4669c0fbf03c",
+            "skills/order-recovery/SKILL.md": "a6c0c48a9c186851eba4113296346a2f923914397ea5270e32f4a631db580ec6"
+          }
+        },
+        "input_registration_verified": true
+      }
+    ],
+    "scope": "Model-reported known usage only; unknown and pending calls are not zero cost. Raw traces, generated text, file contents and connection configuration are excluded. Exporting a running experiment is an interim snapshot.",
+    "model_responses": [
+      {
+        "call": "call-d8d98205243042cdbb36b79d52d4a7be",
+        "trial": "tr-de040ca530",
+        "summary": {
+          "category": "transport_error",
+          "usage_state": "unknown"
+        }
+      },
+      {
+        "call": "call-daf6098f88f848af8e1ea02ceed33191",
+        "trial": "tr-de040ca530",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 100858,
+          "event_count": 15,
+          "sha256": "91e1ee19030c5eea4da98bd02b94eede2b7da40065faf52c5baca52734418b7c"
+        }
+      },
+      {
+        "call": "call-5c02f647202f46018215babb9e60246e",
+        "trial": "tr-de040ca530",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 121742,
+          "event_count": 93,
+          "sha256": "0b7cceb36f4e1125498c67b5137d14337985eb7918812aa6c4b712cb2af7f6e2"
+        }
+      },
+      {
+        "call": "call-953005b5278b4ef8adeb4faa3d458554",
+        "trial": "tr-0d386c7b75",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 132635,
+          "event_count": 119,
+          "sha256": "c379eb4ca2077b05966c738f4e5c8b8477c15a51070d1a48dfaa1258ae52baa4"
+        }
+      },
+      {
+        "call": "call-51ea52b7405e41119ee1a8c135f2807b",
+        "trial": "tr-0d386c7b75",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 110384,
+          "event_count": 21,
+          "sha256": "4444f3607a473a7e872bcac651eeee0086e9685ff979ef48c330af720d06215c"
+        }
+      },
+      {
+        "call": "call-706fdbbffc21466e9e9d4490e4b80165",
+        "trial": "tr-0d386c7b75",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 107006,
+          "event_count": 21,
+          "sha256": "9028925c3c546811c687ef307fd276fd4056aab81f7282e37baaf13c93daa3e9"
+        }
+      },
+      {
+        "call": "call-2da06752e9644c1c9e774ab754181e9f",
+        "trial": "tr-0d386c7b75",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 124680,
+          "event_count": 70,
+          "sha256": "6a1bd07d3e9542bda329998574a98620fd70f70b131b5b98045cf735446a3e10"
+        }
+      },
+      {
+        "call": "call-62efcfeb9afe4ddb9f55a95aab1ce569",
+        "trial": "tr-0d386c7b75",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 120685,
+          "event_count": 70,
+          "sha256": "32836852cd2c47c0a5191abc0075bbc2809222f116f178cb8ea9dc7bfc217ad7"
+        }
+      },
+      {
+        "call": "call-82469cca2038484f89cd2e38dc984e64",
+        "trial": "tr-0d386c7b75",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 105101,
+          "event_count": 21,
+          "sha256": "f0297e3df9094ff17b8996f673fa5c045262ec0efb775bc61ec7f682d025367c"
+        }
+      },
+      {
+        "call": "call-ef0b2ac770d24a7c930175c2e943f61b",
+        "trial": "tr-0d386c7b75",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 121813,
+          "event_count": 76,
+          "sha256": "7766882bbdcc9052adf9d784fcb3658708ddf391c26b976464d4a71ea3d25c1f"
+        }
+      },
+      {
+        "call": "call-4c8b5bd066ec4d9f863e8a72af67d8ef",
+        "trial": "tr-0d386c7b75",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 104003,
+          "event_count": 21,
+          "sha256": "f054c1fa169295808014825962b721f9ef759e81110a534a3c55ca97492a0943"
+        }
+      },
+      {
+        "call": "call-d1ec610a346e4d9fbf54c460eb1933cc",
+        "trial": "tr-0d386c7b75",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 130621,
+          "event_count": 100,
+          "sha256": "201d47d3f005db2a89a85266df218f5f859de0c83906f5c894650cb285d2d189"
+        }
+      },
+      {
+        "call": "call-9dbf41a5d14441b0bb6cbf1aef48ce31",
+        "trial": "tr-0d386c7b75",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 101242,
+          "event_count": 15,
+          "sha256": "b33f6a1b740d7322e6d9580e31c2165e3fd8823da100e12606d06f87594c3cc0"
+        }
+      },
+      {
+        "call": "call-ae31954bf59547c385d4bd00887b2067",
+        "trial": "tr-0d386c7b75",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 119180,
+          "event_count": 85,
+          "sha256": "0ad138b9136fee6b3cc784a59f285b06cadb468019ac8900e2c87d34d84b798d"
+        }
+      },
+      {
+        "call": "call-70e905e740004664bd5bd93e990612b9",
+        "trial": "tr-04de13d3a5",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 139565,
+          "event_count": 140,
+          "sha256": "49e1864b8baa0c987510fa3a51162de1cf1c1efc53df15d0f7dae6ce4470c9a7"
+        }
+      },
+      {
+        "call": "call-264b611b8b7a46aeaa40bdc969e97c37",
+        "trial": "tr-04de13d3a5",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 108092,
+          "event_count": 21,
+          "sha256": "cbfb56753f908a09c3fbeded5115a84d7f1dd21d8f8e68f71e3f940de48ebf0a"
+        }
+      },
+      {
+        "call": "call-574cab2ec600489bb704da3d5ee7ce54",
+        "trial": "tr-04de13d3a5",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 123405,
+          "event_count": 73,
+          "sha256": "7687f7ed8c833c7371a7e78aba53db7063d0102ff1501dcb3c4985b187b226d3"
+        }
+      },
+      {
+        "call": "call-b92ab1fd3d4641d5af81d5c369876504",
+        "trial": "tr-04de13d3a5",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 106870,
+          "event_count": 21,
+          "sha256": "d29b2e335cbe4e32c5591a46edc62f5e9037689312f2492b931d0803e48dc67e"
+        }
+      },
+      {
+        "call": "call-f31a58512ad146e4b9c0e9484011dd9d",
+        "trial": "tr-04de13d3a5",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 128460,
+          "event_count": 87,
+          "sha256": "60520f2f52500c24a5c88919be52e0c4c6f016039e13073919c62eb4adec166d"
+        }
+      },
+      {
+        "call": "call-ff1dd56434454af587c2187fae6c613a",
+        "trial": "tr-04de13d3a5",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 123874,
+          "event_count": 81,
+          "sha256": "e1e03288da1383b18ead2bd5db6e36a97ea382c07eb889a402c2ab0599d6e063"
+        }
+      },
+      {
+        "call": "call-2f1bda78556e4deab778e4e0eb1f9d5f",
+        "trial": "tr-04de13d3a5",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 104915,
+          "event_count": 21,
+          "sha256": "2f08ffb15c648a136a83f289d159c3985072f32c04272c3d1f864261d18ebe4c"
+        }
+      },
+      {
+        "call": "call-66a6e9ec919846139b31b858cd9a3601",
+        "trial": "tr-04de13d3a5",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 122173,
+          "event_count": 79,
+          "sha256": "15e568d6970fb342c7349dbedeffbc73e86d8ef1a47391816d9ce5c0681a3359"
+        }
+      },
+      {
+        "call": "call-ed5da28a2caf499c85df4965883a910f",
+        "trial": "tr-04de13d3a5",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 103931,
+          "event_count": 21,
+          "sha256": "94f98c9a0c3ffad6a89fcc6e5af1306c1859e1ad5105a2e929ecb21d3b1908b1"
+        }
+      },
+      {
+        "call": "call-75b95d56e31d409c8080515e941cf91a",
+        "trial": "tr-04de13d3a5",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 125972,
+          "event_count": 86,
+          "sha256": "ba0edd01e7b3667f8310dbd8a5ffc2608e1299567b08e2fd15395bfab60f606d"
+        }
+      },
+      {
+        "call": "call-26b94ae09a7e4203bf7ab18d69b4539f",
+        "trial": "tr-04de13d3a5",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 117270,
+          "event_count": 70,
+          "sha256": "9cd24a4455e3dd7eca17db8bf46a0cbd6afffe88f979698c475cd3b98efc0439"
+        }
+      },
+      {
+        "call": "call-a0d10773d2664c71a679ba2b1742e7ce",
+        "trial": "tr-fca7bd71cc",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 124524,
+          "event_count": 104,
+          "sha256": "82745bac54130aacd747f0e36295e2339d616dd4cf2af56e74db8ee83c604fb3"
+        }
+      },
+      {
+        "call": "call-4ca06d45271b4a5c9384ee005acf0bcb",
+        "trial": "tr-fca7bd71cc",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 124267,
+          "event_count": 67,
+          "sha256": "b03ac67fa35cba24ea2098a54214583c92bcc4428be499dd9ef958d32abd8797"
+        }
+      },
+      {
+        "call": "call-eb78160b4a6c4b3685f6e724adf5b668",
+        "trial": "tr-fca7bd71cc",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 103230,
+          "event_count": 21,
+          "sha256": "7a613807f05a684cf64cab4689d227c74868e562f8699e067a6037f88385d0e9"
+        }
+      },
+      {
+        "call": "call-8bf8a9fb6efe49fb821ac39d7e1c2290",
+        "trial": "tr-fca7bd71cc",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 116892,
+          "event_count": 67,
+          "sha256": "b3d69e2442861c953447b6bf5ed726fae139d809e1159f89884078480b5d9b1a"
+        }
+      },
+      {
+        "call": "call-e1edb3200d7643ebaa849b0f50b79d95",
+        "trial": "tr-fca7bd71cc",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 102639,
+          "event_count": 21,
+          "sha256": "3aa0e9fba38375344ed99e8e60a98eef9b41f02601f89bb77001ec6095826d26"
+        }
+      },
+      {
+        "call": "call-c2a96599a41447bba846f48e707857bf",
+        "trial": "tr-fca7bd71cc",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 119376,
+          "event_count": 78,
+          "sha256": "27c590034ea395d1204a31b03db12c3e345023671b0594934b5ebef02048f31e"
+        }
+      },
+      {
+        "call": "call-88671a10373844dcae529ff79b74ac85",
+        "trial": "tr-fca7bd71cc",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 94779,
+          "event_count": 19,
+          "sha256": "0e62a6007a836f69dc7d0b2397c411f0c134b379e6aa60bfdb9a8d0cc1a2e8e0"
+        }
+      },
+      {
+        "call": "call-074eab1ce24545498c55050dbcd0d3d8",
+        "trial": "tr-fca7bd71cc",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 101293,
+          "event_count": 21,
+          "sha256": "78dd63c77b886be40113e531e6ad751a509cd3e134c5d1cff3f958d6f0ee444d"
+        }
+      },
+      {
+        "call": "call-638a77f2b1b145a393aa365878c83bf9",
+        "trial": "tr-fca7bd71cc",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 117544,
+          "event_count": 79,
+          "sha256": "d4ae22271350b1927403677169dfecd8ec02805c57ceddd5ca7b122146aa8fc5"
+        }
+      },
+      {
+        "call": "call-d8fa5042b0fa49ce810b0d0c689ae922",
+        "trial": "tr-2cb4c5d705",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 133281,
+          "event_count": 131,
+          "sha256": "ba6db06c25bf90a9145f4e4160031c5227f509debc4464d19203bb2e4bc96571"
+        }
+      },
+      {
+        "call": "call-191da50ecba14539a062994830fc516b",
+        "trial": "tr-2cb4c5d705",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 105011,
+          "event_count": 21,
+          "sha256": "182724b1a1b919ba6a2932e99b8a6f55c12bd38194aa80724816bb538ffe2b12"
+        }
+      },
+      {
+        "call": "call-4d3bba1de646452a972761c1fa2cbff0",
+        "trial": "tr-2cb4c5d705",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 119779,
+          "event_count": 72,
+          "sha256": "7c217a3d9203234ffcca422e05049c7065e34a9649701ef3d9aaaa284a3a7728"
+        }
+      },
+      {
+        "call": "call-90c0326ef108488aab49e102b44f04d0",
+        "trial": "tr-2cb4c5d705",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 116606,
+          "event_count": 64,
+          "sha256": "d62542c2efcd796d8d89ed72bbf6364cccde4181fbb963d35ff3f97f83cb5287"
+        }
+      },
+      {
+        "call": "call-b1af4fa0a87840c39604cd5dfa7283aa",
+        "trial": "tr-2cb4c5d705",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 122616,
+          "event_count": 85,
+          "sha256": "2465cf9f79b1b78e7b00a4ac26a6ebb383dd6083a37394232eb18a3389adea4c"
+        }
+      },
+      {
+        "call": "call-c0d18b4395af48839b108746e1189da2",
+        "trial": "tr-2cb4c5d705",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 102714,
+          "event_count": 21,
+          "sha256": "58c09e93cc75ccc77cef68d6a3805c19d85367453e25f50c654cb94bf63861da"
+        }
+      },
+      {
+        "call": "call-8b49416deb90484fa9921cd3fb89a6e5",
+        "trial": "tr-2cb4c5d705",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 122810,
+          "event_count": 87,
+          "sha256": "0fa1f2c6d4899acae162c1d3b5ec00c52c3afde5c7bfdc3209d6499fb22bf0ae"
+        }
+      },
+      {
+        "call": "call-462390c7fd0142d69becf8cf43060ddf",
+        "trial": "tr-2cb4c5d705",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 99293,
+          "event_count": 12,
+          "sha256": "7f254b0e105f8c391542c9076fc6b5b95dec4c7d3a14adec9e6342adc849f04c"
+        }
+      },
+      {
+        "call": "call-921ffba75c6c4eb6880cc34d4c1625b2",
+        "trial": "tr-2cb4c5d705",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 120852,
+          "event_count": 91,
+          "sha256": "43e2d383f8daa2796bb7710230c36aff59464c6442aebfe1de63d678cf504bd1"
+        }
+      },
+      {
+        "call": "call-d288c94c03c4466e941e3f95f12068ba",
+        "trial": "tr-caa9945607",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 130987,
+          "event_count": 124,
+          "sha256": "2c29f2e1b070848f4b2a6b43f6216437740e077e7d5ff8876b02993df46474c1"
+        }
+      },
+      {
+        "call": "call-f20b17d5569d4753a253e6b6a08cca85",
+        "trial": "tr-caa9945607",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 104551,
+          "event_count": 21,
+          "sha256": "4a07981af93d2fc743fe9c5fe603dad162266c9abf32049f07cca059e81c0678"
+        }
+      },
+      {
+        "call": "call-8b5eeb7ef5674d8ab2a1381e586606c6",
+        "trial": "tr-caa9945607",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 118676,
+          "event_count": 69,
+          "sha256": "9a7b2a313cab8094391a3e3a3fd96b35a375d5493f9210bb747fa26318dfeb62"
+        }
+      },
+      {
+        "call": "call-ecbe99a933e54178b477be0b17be36ef",
+        "trial": "tr-caa9945607",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 115335,
+          "event_count": 60,
+          "sha256": "903791ccbfda29309a5bdce7dac29b6a1bf7ebe0531baec543e59d0d080f15c2"
+        }
+      },
+      {
+        "call": "call-064ab30a613b4cabb9b6962df97e6932",
+        "trial": "tr-caa9945607",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 122353,
+          "event_count": 83,
+          "sha256": "bb1ded208f2c693db1d80ae19f10a2472193cb29cd1c909c712af9a765a94075"
+        }
+      },
+      {
+        "call": "call-be7905d0de5744df9ea02574c10441d0",
+        "trial": "tr-caa9945607",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 120429,
+          "event_count": 82,
+          "sha256": "d44f4e56622b4e467941b916389f9462da0ad68308fd1d8947936d38cf4c3916"
+        }
+      },
+      {
+        "call": "call-9475b51d832946f3874a179a0a3e2c39",
+        "trial": "tr-caa9945607",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 93904,
+          "event_count": 13,
+          "sha256": "bcca127209e91a489a025dbd905113b0c9f69e3ad578d22691127d2a992be273"
+        }
+      },
+      {
+        "call": "call-57553663bb8546df95b2df8c66c79311",
+        "trial": "tr-caa9945607",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 119174,
+          "event_count": 85,
+          "sha256": "f253d676c4b4fe948cadeac12e38b2f4ee01ad496fcaab1a06f2e51e94869fe7"
+        }
+      },
+      {
+        "call": "call-a4b2ad7c7c8c49aea3daeec7ea1c9411",
+        "trial": "tr-6044beebce",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 132466,
+          "event_count": 122,
+          "sha256": "dd308916b67e781196b2297e24a0462a926c28459d988c055df82b59bd27911f"
+        }
+      },
+      {
+        "call": "call-539b993628c34d2ea1a5d01e98feaf6b",
+        "trial": "tr-6044beebce",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 109254,
+          "event_count": 21,
+          "sha256": "705b7ffd44b5c0bd842f27333d2a2aabbc71ada67522712f11e4440ced17fdff"
+        }
+      },
+      {
+        "call": "call-a477e7180af94eabaec69ea1d21e8a9c",
+        "trial": "tr-6044beebce",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 123781,
+          "event_count": 78,
+          "sha256": "a51feb288abf5c04a2c8c3b343cf743d82811bd93059fc6eb3488122e3bf32e4"
+        }
+      },
+      {
+        "call": "call-b509b27d589745f1ad96c0a7bdd0336e",
+        "trial": "tr-6044beebce",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 117806,
+          "event_count": 62,
+          "sha256": "2f3ddd611ad821f368b2c11752e98d0186706159654f8b1963d5679991dd3a83"
+        }
+      },
+      {
+        "call": "call-a21c2e0b5827493289253bd1fdf23a1a",
+        "trial": "tr-6044beebce",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 126004,
+          "event_count": 84,
+          "sha256": "85f279b438489525eda682cdb8bc27182086aff40777b607566f121956eb7fe0"
+        }
+      },
+      {
+        "call": "call-e9496beddd6f4b0a91c28b38f3061776",
+        "trial": "tr-6044beebce",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 104040,
+          "event_count": 21,
+          "sha256": "9d85286cfc83c3db4cbe91fc21bb900324f4d1382bf3a546f36afdb9f2916e1f"
+        }
+      },
+      {
+        "call": "call-44ef6e52c701494ebfb7ae374de4734f",
+        "trial": "tr-6044beebce",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 126374,
+          "event_count": 87,
+          "sha256": "93939e27fcfd353a75e84e27143666b1d95fe2e5414d07ea3ee54091b0d60ee1"
+        }
+      },
+      {
+        "call": "call-efd333387503493e87356fdba00bf04f",
+        "trial": "tr-6044beebce",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 100736,
+          "event_count": 15,
+          "sha256": "a6cf9f4cfb7d66da44b22135a9354d16e031e2f306c872452a2c3f5ddcd4322c"
+        }
+      },
+      {
+        "call": "call-d2a98031da784c22a84c24072a200e58",
+        "trial": "tr-6044beebce",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 122521,
+          "event_count": 96,
+          "sha256": "c1d8e33678b7df50c3b1534caed5c6a53b8557cbdcd3a4599faf98ce6210339c"
+        }
+      },
+      {
+        "call": "call-43b84affb8a24a68ac922aac28222277",
+        "trial": "tr-b122cb1904",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 127918,
+          "event_count": 118,
+          "sha256": "479ad427275ace840880bce582d5f0cb050ac8b3822725b55bf444061098e65f"
+        }
+      },
+      {
+        "call": "call-7b894fb38e8c45f98c7f4f257d70d3a3",
+        "trial": "tr-b122cb1904",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 133509,
+          "event_count": 119,
+          "sha256": "50de0bc3883159bd28a454e7c361bfb316ff90a9220ef7b8b5ccdd1d0a509e21"
+        }
+      },
+      {
+        "call": "call-542d8f9c7e9346cabdce816ca8682d02",
+        "trial": "tr-b122cb1904",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 104761,
+          "event_count": 29,
+          "sha256": "91792532d0d81503736154c8845f77d934be39e5455463a593d8305af69c4031"
+        }
+      },
+      {
+        "call": "call-f82c271087b6444a9d1b242d62b5e4d5",
+        "trial": "tr-b122cb1904",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 104319,
+          "event_count": 29,
+          "sha256": "20ef06fc1ae7126145c3aefa24720e2307acd6e0f6680e41d75c0a1d22d75184"
+        }
+      },
+      {
+        "call": "call-12accf9e403e4737bb68d353f91b15da",
+        "trial": "tr-b122cb1904",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 122263,
+          "event_count": 88,
+          "sha256": "d50dc429925aaaec3212711cf5161089b93d300d3cd34bad75ed51e4ec8d5511"
+        }
+      },
+      {
+        "call": "call-e99ba703e48c43899412c930c1f54634",
+        "trial": "tr-b122cb1904",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 116438,
+          "event_count": 67,
+          "sha256": "efd6b110ac1ba9e72bd06194056bc0eb36b89828e5f10112d812ac96a5012994"
+        }
+      },
+      {
+        "call": "call-99e0579066204840b4e7f7efeb22085a",
+        "trial": "tr-a38ba77338",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 129925,
+          "event_count": 105,
+          "sha256": "5cd5618d47069195f200141e852cffd267bd07ddec8187b658cad9de8a84b4cb"
+        }
+      },
+      {
+        "call": "call-fad8974d40d747059f3a67b3088a0f3f",
+        "trial": "tr-a38ba77338",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 139250,
+          "event_count": 118,
+          "sha256": "3fa53b077c9bf99669440226a995c59012b2aed4b1781aa20f027e49f40deae5"
+        }
+      },
+      {
+        "call": "call-f5095bfb85c04caea51959fbaed075c9",
+        "trial": "tr-a38ba77338",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 123185,
+          "event_count": 90,
+          "sha256": "5f6ac00b4606de3245bb9e963e3fb2983bc68be320cd17ae9922d9c034b091d2"
+        }
+      },
+      {
+        "call": "call-734172df60f849428975523b8afe6859",
+        "trial": "tr-a38ba77338",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 104468,
+          "event_count": 29,
+          "sha256": "4dd9e994c2964dbc5456020fb1fd6ac2b378072db0291001749f4560cae12f98"
+        }
+      },
+      {
+        "call": "call-302c3273e05f4c0a9b0ea3bf3f081252",
+        "trial": "tr-a38ba77338",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 120887,
+          "event_count": 84,
+          "sha256": "d4012fb3a216e6a8bd1f717ff6a42835ac6881953e91e9cd555a4e2dfa75a47c"
+        }
+      },
+      {
+        "call": "call-2c5480cf400245cba30fe7187538a79f",
+        "trial": "tr-a38ba77338",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 119271,
+          "event_count": 78,
+          "sha256": "937f5285b613e51b9d84157a844707697962fc31e34381021f29f8865f2ebf55"
+        }
+      },
+      {
+        "call": "call-615d4a395626435480acd7e546fcdf5e",
+        "trial": "tr-f86bb40683",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 130079,
+          "event_count": 103,
+          "sha256": "fd660c1826491a1b6b9e46d52c21ff8e326a144c1a6ea6503b56921f917dda27"
+        }
+      },
+      {
+        "call": "call-14b24e2fda694f1a945b96637ac1bb72",
+        "trial": "tr-f86bb40683",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 132860,
+          "event_count": 115,
+          "sha256": "e41a32f1be2bd4bd2ca00e4a09bf4dcf70244328c795ccd1b6c3d8bbfc732367"
+        }
+      },
+      {
+        "call": "call-c7f0e28a8edb492d9381cca75c94d79f",
+        "trial": "tr-f86bb40683",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 121627,
+          "event_count": 83,
+          "sha256": "026e7f029578a5aa5f0bdf5526f1ee626b54c035cbc68785d0e46b81f4fba055"
+        }
+      },
+      {
+        "call": "call-aea55f54d7a044cf8556ed139db20c86",
+        "trial": "tr-f86bb40683",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 104584,
+          "event_count": 29,
+          "sha256": "259c24a1baf7add2dc569f5015fbe21723a474581841667e5d5b374f1faa4c28"
+        }
+      },
+      {
+        "call": "call-fce6ec8e426a4b699d40064299a244bf",
+        "trial": "tr-f86bb40683",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 122533,
+          "event_count": 87,
+          "sha256": "4874748426fae575ee011af692b5f3d048a28093ed389f1d492c5b89dd307d77"
+        }
+      },
+      {
+        "call": "call-fc3db08b14b34b4a82216e8b6d93826f",
+        "trial": "tr-f86bb40683",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 100085,
+          "event_count": 15,
+          "sha256": "063c5a1289b6d1fab505622e2497027dc28b00c6669103b2ba5b140a2388e03e"
+        }
+      },
+      {
+        "call": "call-dff8df4cfceb4f038c5bfaa1c98783a9",
+        "trial": "tr-f86bb40683",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 116880,
+          "event_count": 77,
+          "sha256": "25f8da835635fc17c296ec1ab9a2f47eb7b8fad172567a1b9dde8f43657f142f"
+        }
+      },
+      {
+        "call": "call-b5b8d50b35a4463eadd8af27db476f8f",
+        "trial": "tr-39e6c9891f",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 122712,
+          "event_count": 100,
+          "sha256": "7c1e456e3612f9b3c7fc9113a18db7178e969d89ece1891ff8752d075bb14b33"
+        }
+      },
+      {
+        "call": "call-9e1aa5e15508407d933e35addce4613b",
+        "trial": "tr-39e6c9891f",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 130186,
+          "event_count": 107,
+          "sha256": "9651a2caa4a176e1656f494932c31651014d097635c96966c88c43dd24b74f94"
+        }
+      },
+      {
+        "call": "call-f2ecf2de06ba4048add1644957494c43",
+        "trial": "tr-39e6c9891f",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 120654,
+          "event_count": 80,
+          "sha256": "4e834cabcb38a573ecfe5cabe59661c8d26cdffc7510e29cc46ffafb5b2edc55"
+        }
+      },
+      {
+        "call": "call-57befa0c7abb4d43b31680248cb6fcf8",
+        "trial": "tr-39e6c9891f",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 104376,
+          "event_count": 29,
+          "sha256": "25d21291a1ca7deca5dcba34375731fb36a367d6b44e3849af64df0aa0887ab7"
+        }
+      },
+      {
+        "call": "call-6f7ad2b132bc46178cb577007ec681a9",
+        "trial": "tr-39e6c9891f",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 119596,
+          "event_count": 80,
+          "sha256": "d1f4e73ce7681251b84f8b4cb6ad1fc793c0d406bca730a280a0e551d9731601"
+        }
+      },
+      {
+        "call": "call-cbdbf6eb07f147e6a12708e5ecce11db",
+        "trial": "tr-39e6c9891f",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 93902,
+          "event_count": 13,
+          "sha256": "47e96956040493349063e681bf17f269ed93b2e31d76fd010c464d73f3f4edca"
+        }
+      },
+      {
+        "call": "call-ba6d8efa3ef947eaae1cfade70c9233e",
+        "trial": "tr-39e6c9891f",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 118686,
+          "event_count": 83,
+          "sha256": "a63ccf2cb0cc7e31c38757f0a507bc7b930a6786c68301be9b76940f1b7909d6"
+        }
+      },
+      {
+        "call": "call-1c35034ee58d4f6eb1afd31dc0a79805",
+        "trial": "tr-a6ed5f7029",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 119936,
+          "event_count": 93,
+          "sha256": "bfa7e1bfeff16ad53052d7c31b7c642ef848a24b6824816df33c131173c70182"
+        }
+      },
+      {
+        "call": "call-b3f7e8b278314e44b97f4b49998fb77e",
+        "trial": "tr-a6ed5f7029",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 136225,
+          "event_count": 120,
+          "sha256": "2053d759391b38ffbfa4ad3a1bb290b4ff45deb31dd87bdbc4cad0cb53631b10"
+        }
+      },
+      {
+        "call": "call-3bfc9bc3f4904b11ad39f6adcb3e4730",
+        "trial": "tr-a6ed5f7029",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 98581,
+          "event_count": 28,
+          "sha256": "4afeca8118c8bd14580deeac45f57cf32f885ccf01b98c208601a6484d75e997"
+        }
+      },
+      {
+        "call": "call-95fa15e8b1d648df806349d7e060eacf",
+        "trial": "tr-a6ed5f7029",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 104338,
+          "event_count": 30,
+          "sha256": "577a9efbcb62541921dc722404ce666adeecf8139706fef67f2e4684b6ce8138"
+        }
+      },
+      {
+        "call": "call-a39123809d2943c99ed317f5eeff9a39",
+        "trial": "tr-a6ed5f7029",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 117691,
+          "event_count": 74,
+          "sha256": "51c4b95cba72f4a027702ccc4fb9d671a2824051bc1c46bf8a59c63333d53f62"
+        }
+      },
+      {
+        "call": "call-d6894831008046619f591fc745b20962",
+        "trial": "tr-a6ed5f7029",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 92586,
+          "event_count": 10,
+          "sha256": "b75a17693afd4e22e118309fc661c24d721b85d979399528bda60a54daae0323"
+        }
+      },
+      {
+        "call": "call-963920e47a004cf89e245682234f374d",
+        "trial": "tr-a6ed5f7029",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 116782,
+          "event_count": 77,
+          "sha256": "6cdef7996d21977d32b9067dc982357ae00744e6a8bec9bebabb83e0dada7471"
+        }
+      },
+      {
+        "call": "call-f5290f44712041bea3c2ae2740d8dff6",
+        "trial": "tr-5a48b68ddc",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 122614,
+          "event_count": 102,
+          "sha256": "ee83c36f5e74f82c0d6bc0075d25178481f8bff5aa472a384e01af2f23125b29"
+        }
+      },
+      {
+        "call": "call-3c971e4e49b64458847c8f40af4cbb23",
+        "trial": "tr-5a48b68ddc",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 135947,
+          "event_count": 127,
+          "sha256": "bb4e3bdd93ae55446cad2ac2ee621cc7e9d63879217c50bd38be10bdfa9dfebf"
+        }
+      },
+      {
+        "call": "call-88e4c300d4e54956bfb25f8de43a0287",
+        "trial": "tr-5a48b68ddc",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 98719,
+          "event_count": 28,
+          "sha256": "6ee17abee1a1931185dd2d9f17cc0bd63c6f5306e24c59042edd86a5bf58edb2"
+        }
+      },
+      {
+        "call": "call-a960e4c9088a446ea2f9935507ca40e9",
+        "trial": "tr-5a48b68ddc",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 104476,
+          "event_count": 30,
+          "sha256": "8b61f9440fe0e4d5483723d387daa98937d1f5f960e0ec6dee6350991a6dd8b3"
+        }
+      },
+      {
+        "call": "call-94107ce98d4f4effb5ee98505e5445c4",
+        "trial": "tr-5a48b68ddc",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 120785,
+          "event_count": 84,
+          "sha256": "088865242d8ec6a5c21598a29605957ff77b5a845b73a5232591ddd1390c7a4f"
+        }
+      },
+      {
+        "call": "call-d304fea4742a49c6a09ce4ae5dbb233d",
+        "trial": "tr-5a48b68ddc",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 99099,
+          "event_count": 12,
+          "sha256": "a45e7a4f0ec1475496e0c168739fff10e80b97ec2d50610eae1e0058ffa30fbf"
+        }
+      },
+      {
+        "call": "call-b697b35b82fc4f8c9c508e799947df13",
+        "trial": "tr-5a48b68ddc",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 119262,
+          "event_count": 85,
+          "sha256": "b04f120f1eeb33c5f46bc7f677de05245d9b4d6d1571a5ef6027ff6176f1e2b7"
+        }
+      },
+      {
+        "call": "call-7c1b0a0f3c6f44849211cdb48f995589",
+        "trial": "tr-630b13d72a",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 121767,
+          "event_count": 99,
+          "sha256": "dda232c7b069eed04efe00702c1bcca48c931efbbcd6033567df787dfc9951ec"
+        }
+      },
+      {
+        "call": "call-c0ef84034b7745218d3a9b14bb00e505",
+        "trial": "tr-630b13d72a",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 138379,
+          "event_count": 135,
+          "sha256": "d4803d449f3f23d5749dc7b3eafcdef747573666e8e099d0def481af11125547"
+        }
+      },
+      {
+        "call": "call-4ae2f6b76e39461793744ec443dcc781",
+        "trial": "tr-630b13d72a",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 98696,
+          "event_count": 28,
+          "sha256": "d131ea3c943fd9884304f9bfe98d9ffa53d3c3b52771c0365296d5dbcad67ad1"
+        }
+      },
+      {
+        "call": "call-bb42667207eb4e22be841f94b965cc08",
+        "trial": "tr-630b13d72a",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 104344,
+          "event_count": 30,
+          "sha256": "58af31290935a42b6d36d83ff4e3652b4365320e992a3eb0671af24f1142dc97"
+        }
+      },
+      {
+        "call": "call-4156a62d64cb4ea28c226e34a3690025",
+        "trial": "tr-630b13d72a",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 123234,
+          "event_count": 92,
+          "sha256": "411e224e2464e8e669ce99b9fce83f3f3c0b286524c5d158c3c39a5b9b98b04f"
+        }
+      },
+      {
+        "call": "call-e9ec09e50ba6434b80f681f7145f6849",
+        "trial": "tr-630b13d72a",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 94781,
+          "event_count": 19,
+          "sha256": "a6017ceec90f2c5db44d18b379bc79c81170c099c11c73b7e2518964d3b0ba1b"
+        }
+      },
+      {
+        "call": "call-a2e1693c2e6548a49ec3105ee6d4da1a",
+        "trial": "tr-630b13d72a",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 101547,
+          "event_count": 21,
+          "sha256": "22ad5febd8796b937687ca7f540c7c1e4152401a807ce7847c395f17e50714f3"
+        }
+      },
+      {
+        "call": "call-0825a84298f24ce2b15e2db0ee717a1c",
+        "trial": "tr-630b13d72a",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 122076,
+          "event_count": 95,
+          "sha256": "c479b08814c9c1de4ce3319d4dc4700ce4c36ec42f3f74027ac6d59d48e9fbd5"
+        }
+      },
+      {
+        "call": "call-1ea76edef77b48628a291c0c0c4ca958",
+        "trial": "tr-74e02a57fa",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 117863,
+          "event_count": 85,
+          "sha256": "7675381a3cb33a9e67383bc1edf5c433863fa0739bbcd46d9c7a03ef9779c6a4"
+        }
+      },
+      {
+        "call": "call-628d256e82ad43408f1db3ac1fa4f41b",
+        "trial": "tr-74e02a57fa",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 138985,
+          "event_count": 136,
+          "sha256": "3b772b8aaa8b86f14811711923d4d46c50e2f00151f99af7b80369ec576da35f"
+        }
+      },
+      {
+        "call": "call-2bd6321295e24461953c60da26c73c76",
+        "trial": "tr-74e02a57fa",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 98945,
+          "event_count": 28,
+          "sha256": "7bb2984b5ea0b87055c20d159aeb606b46df7d37b48d498200144938b7839976"
+        }
+      },
+      {
+        "call": "call-51f0ddbc5edb457f8b68807e2ffade0b",
+        "trial": "tr-74e02a57fa",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 104628,
+          "event_count": 30,
+          "sha256": "b3d867a0475098211155fe621915aebcc9f5ba2f560f0144f89df7ca348f37dc"
+        }
+      },
+      {
+        "call": "call-d00697cbb3cf447ebee316ddce3fdb49",
+        "trial": "tr-74e02a57fa",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 122289,
+          "event_count": 88,
+          "sha256": "5b24bd80b5ad7c449dbd45d863201d3843b0c5d8e0ad6d47e1014f98c8afca69"
+        }
+      },
+      {
+        "call": "call-509117435a70434a9d05f6e19d2b9f4a",
+        "trial": "tr-74e02a57fa",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 93898,
+          "event_count": 13,
+          "sha256": "d7e130e9374f5c51c17e1beb5e4a1c7867d81dd166a06665dc57ea91de13800b"
+        }
+      },
+      {
+        "call": "call-0ba3c7ba4da844d98830eda5e27bc83c",
+        "trial": "tr-74e02a57fa",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 118871,
+          "event_count": 84,
+          "sha256": "52654d8839697a6688917ae0a24f634a7dad2d7d2162a15022928eea7356faaa"
+        }
+      },
+      {
+        "call": "call-d3ff9871eccc4e529edad074d0ec2282",
+        "trial": "tr-865a569758",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 136326,
+          "event_count": 122,
+          "sha256": "7f0bdc42a25566e869238225f31f79b3d56b946bae40ec2e93d500092801c1b8"
+        }
+      },
+      {
+        "call": "call-a4b626943b934ad59787c5f1396f5133",
+        "trial": "tr-865a569758",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 115677,
+          "event_count": 59,
+          "sha256": "a16c45458a80ee6c873e9710c052923c3b8b21bd0fc9064bcca54139536c55b0"
+        }
+      },
+      {
+        "call": "call-1200acec353746c68d8305e8dbb28310",
+        "trial": "tr-865a569758",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 116383,
+          "event_count": 64,
+          "sha256": "c37b1acd2011847975c8591f683a96fc30ec5d8546f8551c2d051f971a598670"
+        }
+      },
+      {
+        "call": "call-2d98f86866734b81bcb2f6dc28501edf",
+        "trial": "tr-865a569758",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 117629,
+          "event_count": 70,
+          "sha256": "825d2eecd28c38ddd792e0259d0276589bb1e48012015db00932cf0041d52f90"
+        }
+      },
+      {
+        "call": "call-ad8922a0f3714d6f81b9082425515b35",
+        "trial": "tr-865a569758",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 126915,
+          "event_count": 101,
+          "sha256": "179493cdd8340cfdea51454b9d7f9e86e95780d447fc268f2d4f633c5504363c"
+        }
+      },
+      {
+        "call": "call-ded0a6eaf2684ffc9b9f785411d7f812",
+        "trial": "tr-865a569758",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 93902,
+          "event_count": 13,
+          "sha256": "ff0d3818438538803bbb03fd681e250e62cf8e2febee8b740a153b970e95ace8"
+        }
+      },
+      {
+        "call": "call-42b7dd7ebad54009a52a3e1469df540d",
+        "trial": "tr-865a569758",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 119756,
+          "event_count": 87,
+          "sha256": "2a91cff77471fde80faa8745c67276412edbaa2b0af94dd9379dc28f98a3c9a3"
+        }
+      },
+      {
+        "call": "call-c8a722f702cd47c8b7795d05bbf932e2",
+        "trial": "tr-f68c734ab4",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 137137,
+          "event_count": 111,
+          "sha256": "6d7dd21dcce0e21f6c6b69bc4a4b6234fd09fabe593d829ba6ff592f55511899"
+        }
+      },
+      {
+        "call": "call-f58978abef02434fab767185513b2ffa",
+        "trial": "tr-f68c734ab4",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 116916,
+          "event_count": 63,
+          "sha256": "29528f275f1fd00ecc46689756e6d376e4b2ab84267a0ed4c7ff4b16937f4c0f"
+        }
+      },
+      {
+        "call": "call-77cf3be222e54572afa43cd422381bd7",
+        "trial": "tr-f68c734ab4",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 119341,
+          "event_count": 74,
+          "sha256": "24e623659a6745918dc8e724141b9fe7169989386ac2428b66f01e54af3dd576"
+        }
+      },
+      {
+        "call": "call-9406ffb347ba4561aaf5a71e8df2ef6f",
+        "trial": "tr-f68c734ab4",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 120086,
+          "event_count": 78,
+          "sha256": "4cf031bcd3e69d3d569a6d523ef04f665dc121ffc86bdc73c17d869b211f8272"
+        }
+      },
+      {
+        "call": "call-bc1de82c2a6e4366b334db72ec26cf48",
+        "trial": "tr-f68c734ab4",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 124293,
+          "event_count": 90,
+          "sha256": "26ea9d19caa3eeaeb9e022d2a647042978f86a82a3411b00140a0ad59c8944dc"
+        }
+      },
+      {
+        "call": "call-d61de8168e8445eb892fbabd8e04b52e",
+        "trial": "tr-f68c734ab4",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 99037,
+          "event_count": 12,
+          "sha256": "e950acea6e693cedaafeb0f2f1da3180e5a6b6a83ebbf478cacc43233f1be83a"
+        }
+      },
+      {
+        "call": "call-cb4e767cbd2e4557a71fc14389ad671c",
+        "trial": "tr-f68c734ab4",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 121395,
+          "event_count": 92,
+          "sha256": "fa05e7065191bab3343ea7e82bdd02dd8a27a47973e9c0a91d13fa970daff7b1"
+        }
+      },
+      {
+        "call": "call-4203c1a619d44e0fb1165bbc21a1ee96",
+        "trial": "tr-d4f8744424",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 134814,
+          "event_count": 108,
+          "sha256": "e06529709e5e48651ca5f89796f1be7d4474f67b68f65be2f0b2be9ba23cfefc"
+        }
+      },
+      {
+        "call": "call-aa376de9c027440896bd3ed66c2aa0dd",
+        "trial": "tr-d4f8744424",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 103813,
+          "event_count": 21,
+          "sha256": "3fb85563c845528a48552623242abb5e652b6c72dbec7c64ff92d39b92ddf01d"
+        }
+      },
+      {
+        "call": "call-fc3c6e95f97347ac886a6ab947eb711b",
+        "trial": "tr-d4f8744424",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 115852,
+          "event_count": 62,
+          "sha256": "bc0868ae8f02f5afcdcc38cb72122b5f8c187f65c76863db1e7ffd9840ca97d6"
+        }
+      },
+      {
+        "call": "call-94968c19e1604e399b9816f3541e9e7d",
+        "trial": "tr-d4f8744424",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 127805,
+          "event_count": 96,
+          "sha256": "fb3657b115d633522b8d7eededccaf110bad806755e71c9a8b37c21f7491503a"
+        }
+      },
+      {
+        "call": "call-c106ad20a98d441fb281de05955ed820",
+        "trial": "tr-d4f8744424",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 123250,
+          "event_count": 84,
+          "sha256": "86528b2779886ed04bf977c8e987b873cdc7c87a17d33c1ed6776f736a81e477"
+        }
+      },
+      {
+        "call": "call-384b204c059e4edda93b32b34d551945",
+        "trial": "tr-d4f8744424",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 94771,
+          "event_count": 19,
+          "sha256": "ffc2774cde386aaf181ab6775a5ee62da72162a44d570106d5fde35a637eeef2"
+        }
+      },
+      {
+        "call": "call-c76716642c4247d5abf70a9009e63ae5",
+        "trial": "tr-d4f8744424",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 102311,
+          "event_count": 21,
+          "sha256": "14eb3d2f3a11c3693c83c47e360394d79f831e98a3a991b0faac1c84c1781618"
+        }
+      },
+      {
+        "call": "call-384505e36675477f84da188a7866b39a",
+        "trial": "tr-d4f8744424",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 119786,
+          "event_count": 85,
+          "sha256": "f8ea9d5155be2c675d8aa56d33f39c52eaa141af0aeca8d3dffe5837e8ea21b3"
+        }
+      },
+      {
+        "call": "call-c79a67264d0b4774b10c01c26a27d310",
+        "trial": "tr-48b4e95cdb",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 138401,
+          "event_count": 127,
+          "sha256": "e5d8b9f43175e1ae809a9ca2ec08e8c2fb78526c33b65ac1ad057f41d485b06a"
+        }
+      },
+      {
+        "call": "call-83388ef9c6c34fa1af3339084847cb01",
+        "trial": "tr-48b4e95cdb",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 118146,
+          "event_count": 69,
+          "sha256": "db9a5169693a247517ef9fc8b34db54356b0d93ac1f3dad5f054ea9fce2ebf4c"
+        }
+      },
+      {
+        "call": "call-661b737424d6451f93b2e81fa57401bc",
+        "trial": "tr-48b4e95cdb",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 102721,
+          "event_count": 21,
+          "sha256": "4d840fd0efcf07f7f372e8592e52a5cc4028c05694f5e84343f3fbdce44e98c7"
+        }
+      },
+      {
+        "call": "call-40f72365186845eb883ac00c9447b888",
+        "trial": "tr-48b4e95cdb",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 120538,
+          "event_count": 80,
+          "sha256": "b6785a477c3dadaf12cafe1a6c20d8577bf1ebe9b94b1d74f1c35c5d73414c58"
+        }
+      },
+      {
+        "call": "call-5d96937dbfab455ba853583e3fac86ba",
+        "trial": "tr-48b4e95cdb",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 123706,
+          "event_count": 91,
+          "sha256": "9f0645d305af5f506c642128009475a90807fae1c188b135433aa964009da317"
+        }
+      },
+      {
+        "call": "call-34f5bf04a84846219fa6b661a3be74ac",
+        "trial": "tr-48b4e95cdb",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 94771,
+          "event_count": 19,
+          "sha256": "ce34cd2e47a5d212ace1af4ab62d96fc63de768dee0516a40bf88352d2bad36a"
+        }
+      },
+      {
+        "call": "call-19920b97fe4248aa85ae78a812ccd930",
+        "trial": "tr-48b4e95cdb",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 101869,
+          "event_count": 21,
+          "sha256": "5c26d8168e5754357eecffe05f67768bda846ea183603101aa07e038c12d18c0"
+        }
+      },
+      {
+        "call": "call-c750abdc07ef4618abb0aa076139313f",
+        "trial": "tr-48b4e95cdb",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 118061,
+          "event_count": 80,
+          "sha256": "1d0980423ac161a5ff30a26143fd0187701e927346931e4254463f2e497b6c87"
+        }
+      },
+      {
+        "call": "call-afa886ae485b4e628a2728d3dce7f2ae",
+        "trial": "tr-c4eafb3874",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 138694,
+          "event_count": 119,
+          "sha256": "bbe7c612cb57e8eb71150d22066b2d9f7379e853436307ce186adb720981ad8b"
+        }
+      },
+      {
+        "call": "call-8ff2ede9e5d84acf95ee55a7612f569a",
+        "trial": "tr-c4eafb3874",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 117798,
+          "event_count": 63,
+          "sha256": "1e1399d8aee2d236443e5c6f47c32634938d8be49b660db8fd582f152b98e918"
+        }
+      },
+      {
+        "call": "call-e03a1f2c6bbb4c39b5abe1d92082b402",
+        "trial": "tr-c4eafb3874",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 123907,
+          "event_count": 76,
+          "sha256": "08991725bbd3647d46a395b78b4ae82c27bae9c259e3f74d2e3fa5c15ae979b9"
+        }
+      },
+      {
+        "call": "call-9db4dce082614da29ed3800f962849c3",
+        "trial": "tr-c4eafb3874",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 119065,
+          "event_count": 72,
+          "sha256": "2e9e314e06d626d6bbbd089cf1c5b784eaf8b5a267e1912dd2b6a4f9b56f7d79"
+        }
+      },
+      {
+        "call": "call-2fd5c44aef5a4000a702d39605438de4",
+        "trial": "tr-c4eafb3874",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 118095,
+          "event_count": 71,
+          "sha256": "c765d22f436ea5fe71b2f5a6ef49f304b5cc087555f5e8044db1c4155450b698"
+        }
+      },
+      {
+        "call": "call-e920cea16d31450f9f7d6f53c2d9bcba",
+        "trial": "tr-c4eafb3874",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 123403,
+          "event_count": 89,
+          "sha256": "db904adbdb9a74980bbe568e57df4bd2cbf5862bae843921facff6fc2062c992"
+        }
+      },
+      {
+        "call": "call-395db9b308da4546afe2c418ddc01a67",
+        "trial": "tr-c4eafb3874",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 100412,
+          "event_count": 15,
+          "sha256": "510d7a94e42ee9f38b293bf965b6e97ea4b7a203852a3f0fe257f0d5a550b8d9"
+        }
+      },
+      {
+        "call": "call-e26fff296b1d4b378cbf0d5a89ffa5d4",
+        "trial": "tr-c4eafb3874",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 117621,
+          "event_count": 80,
+          "sha256": "9137f6161cc9e4f521bbcd3de7ed710a59e8919b45f660ff3eb98b784ff83ee5"
+        }
+      },
+      {
+        "call": "call-8d0bb83b88d946eb9b1089459a2efe6c",
+        "trial": "tr-7afe2d4c05",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 127056,
+          "event_count": 112,
+          "sha256": "c5bc256b4c1b5f2fd32877a26d395c7c82d552035bdc71cf3d024380614fb086"
+        }
+      },
+      {
+        "call": "call-02c8574fb8c64b28907fa99ba9c576f8",
+        "trial": "tr-7afe2d4c05",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 104107,
+          "event_count": 21,
+          "sha256": "eafa329fdbc13a805dfa26b0e01c03051e44f66476360922ce13ac7841da78e6"
+        }
+      },
+      {
+        "call": "call-3c4f1bb618474996b109fbc34a6f535a",
+        "trial": "tr-7afe2d4c05",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 125540,
+          "event_count": 85,
+          "sha256": "7c6a23bcdb0385443a60bf514158dce04fded81ade0ad0d6348d07e71d9532a9"
+        }
+      },
+      {
+        "call": "call-32388d08a5e64898ad1e530668cb1f25",
+        "trial": "tr-7afe2d4c05",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 116894,
+          "event_count": 67,
+          "sha256": "11480e6fe828ef57b675f8ae678256d481b15c30bf9ed4d4ca070b8b06a82469"
+        }
+      },
+      {
+        "call": "call-d6258c60521c429e854514f8758b26a7",
+        "trial": "tr-7afe2d4c05",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 120420,
+          "event_count": 80,
+          "sha256": "338eb7699df81331585a462118632cf227c088333e351af5b974b5dc37e92d97"
+        }
+      },
+      {
+        "call": "call-f0a5a4e0469a47ef92130624ef1fe7f3",
+        "trial": "tr-7afe2d4c05",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 123370,
+          "event_count": 88,
+          "sha256": "7b9c768f638eaaa721e26067d11a2008a5675e035b8835040227d18185676db9"
+        }
+      },
+      {
+        "call": "call-27d9588c406d4371a995d07a77faba70",
+        "trial": "tr-7afe2d4c05",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 92588,
+          "event_count": 10,
+          "sha256": "325be17458b8e2573ef289f12de837284d886167f4444cc0fa9ac4f6a35eeceb"
+        }
+      },
+      {
+        "call": "call-db9a09f74ba240499440b27fac33ccf5",
+        "trial": "tr-7afe2d4c05",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 120695,
+          "event_count": 90,
+          "sha256": "6512520af87e68522c0098d244fa4bccf9addf233ddf5dbc83d55e56d9027795"
+        }
+      },
+      {
+        "call": "call-e18aa7a146c04eee910c6606d6105a0d",
+        "trial": "tr-718e2f480c",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 142652,
+          "event_count": 140,
+          "sha256": "2a94eba188ab68199f74be287a5cb5ca9cc47f9c89738cc2c0476790972c667f"
+        }
+      },
+      {
+        "call": "call-2a77aeaeb16448a9aeb3ad8ded635191",
+        "trial": "tr-718e2f480c",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 104503,
+          "event_count": 21,
+          "sha256": "5114272240ed8440ace07ce38b24f7087732e33f44ccc01a2f5981717411665e"
+        }
+      },
+      {
+        "call": "call-ae89e43418164f739a4da1433de10073",
+        "trial": "tr-718e2f480c",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 123550,
+          "event_count": 80,
+          "sha256": "6b67df869a9717c11b3b616975b3e6bf7a19ff65f4462c4d79f39e9424d53cd2"
+        }
+      },
+      {
+        "call": "call-80f4a271c0654eacb15c6c00c08b795e",
+        "trial": "tr-718e2f480c",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 118859,
+          "event_count": 73,
+          "sha256": "fceb6dd08a452f3a48a352b3c660fc765a0a06a3784ee84b67850760a5903b66"
+        }
+      },
+      {
+        "call": "call-0b5719ef75644bac9b50076b89f7ff73",
+        "trial": "tr-718e2f480c",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 117571,
+          "event_count": 69,
+          "sha256": "27e87a87bfcecb9fa20cd67977e01d01460813353e94b1782d025ddb8c5a6330"
+        }
+      },
+      {
+        "call": "call-87569edc83e94922b2f87e4b1e5f6acb",
+        "trial": "tr-718e2f480c",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 123867,
+          "event_count": 93,
+          "sha256": "571279aa2b800c8109a1814d52fdc5418de308a37f3ec0f196e6226f93a1bc9a"
+        }
+      },
+      {
+        "call": "call-20c1e2095696403db9c77961334fd9cf",
+        "trial": "tr-718e2f480c",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 94781,
+          "event_count": 19,
+          "sha256": "dc88c8a9a1659f2fc29c88562a5567eb62c184fd9f39d8098b90750afcd76403"
+        }
+      },
+      {
+        "call": "call-780b0b5b35b14d13b2aef72c928216ae",
+        "trial": "tr-718e2f480c",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 101797,
+          "event_count": 21,
+          "sha256": "c593ab3bfdfb1f99e743acb53615675ed3b14a42ecbc399a09e8662846daec9c"
+        }
+      },
+      {
+        "call": "call-b1a5c5e3ccfc477ba5c005d364e0e1b1",
+        "trial": "tr-718e2f480c",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 120175,
+          "event_count": 88,
+          "sha256": "cf5cfccbebe36843f138de9f45b67108abaffc3b87ec644143f5f93ef3b09596"
+        }
+      },
+      {
+        "call": "call-8493a009d38d48dd8cd28dd296c1740b",
+        "trial": "tr-fae6c184ec",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 125348,
+          "event_count": 103,
+          "sha256": "304ea55bcc8c0ba666631f621903e038150d833253846cfc3977a3f01c18848f"
+        }
+      },
+      {
+        "call": "call-927aeaadf2ff4a4f894f290bb7eef2d2",
+        "trial": "tr-fae6c184ec",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 119753,
+          "event_count": 68,
+          "sha256": "f2f4d626c3854ea47b7e431c413bd94592ae70f8e6f6da26c04209c076bbe958"
+        }
+      },
+      {
+        "call": "call-fe887fff38274d9bbba7980dc6d7326f",
+        "trial": "tr-fae6c184ec",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 125603,
+          "event_count": 82,
+          "sha256": "1358af441c830ac206048ccb33715192c25059333956e9d1551b7b4ea8d2d6f8"
+        }
+      },
+      {
+        "call": "call-769f1031a9ee4c6ab71e4bd5870c1b28",
+        "trial": "tr-fae6c184ec",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 118295,
+          "event_count": 68,
+          "sha256": "5f1e5fd4e25104a2dae14354804bc44752250f52dc888823b1a76e8143f09baf"
+        }
+      },
+      {
+        "call": "call-94ff2cc6b94c45299fa6ba8fa3076c99",
+        "trial": "tr-fae6c184ec",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 124016,
+          "event_count": 88,
+          "sha256": "7ee68cf512d6f517caeb30f4201396ab89c695ebc760d8801ca02df031c28e0a"
+        }
+      },
+      {
+        "call": "call-420dea87a69d4b349c24cd1278ed0c78",
+        "trial": "tr-fae6c184ec",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 119303,
+          "event_count": 76,
+          "sha256": "71d2114773d4675164b3d5f787dfff0deb6b6e10ce6fb0f5407830fec5f18cf7"
+        }
+      },
+      {
+        "call": "call-41a3388c43f2450393f7eb51d737b07c",
+        "trial": "tr-fae6c184ec",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 129525,
+          "event_count": 106,
+          "sha256": "7f332a780b2f2dbcfeef39b78f9c758291f8fba49ff3450f81f54cefe5cd7aa5"
+        }
+      },
+      {
+        "call": "call-de0acb5bee18457c835e5f28a108916d",
+        "trial": "tr-fae6c184ec",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 99481,
+          "event_count": 12,
+          "sha256": "28ba1fe3ccb2966bd7f2567a684d7bebc17790bea82b4d91ad8517f1917b667c"
+        }
+      },
+      {
+        "call": "call-de1629a3a50a415aba85a97e345650cd",
+        "trial": "tr-fae6c184ec",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 122208,
+          "event_count": 95,
+          "sha256": "fae5899d80928be1ad3d6a95cbeb2830f4f05f3344fecec7601ca3a9ee733dab"
+        }
+      },
+      {
+        "call": "call-03e0a8dee8c94e678794830d4690c200",
+        "trial": "tr-31f8e221e0",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 129771,
+          "event_count": 119,
+          "sha256": "5c81f8293b51b2bf1a2aaad9b58ac31e467cccea7c6bee765ebc7ef3deb5bba5"
+        }
+      },
+      {
+        "call": "call-821c0eb003084e80aa53c838a43f0fe2",
+        "trial": "tr-31f8e221e0",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 118891,
+          "event_count": 63,
+          "sha256": "d8468a354fc3c81b6c1c8af2134dfac07f221b19999ee615cff383304fb210c9"
+        }
+      },
+      {
+        "call": "call-72a5efdc0880408bbb1294354a962ca4",
+        "trial": "tr-31f8e221e0",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 104048,
+          "event_count": 21,
+          "sha256": "1d0a00bf591b023adfa5df5c6b1f6416e74542f30788a15b8bd1201f9d975be4"
+        }
+      },
+      {
+        "call": "call-dd48d3d2356a41979dcc09655cab9831",
+        "trial": "tr-31f8e221e0",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 121831,
+          "event_count": 74,
+          "sha256": "77de47383d9525572bad5f3c9ea06474b15ff203332e6a687d3a940325ba1476"
+        }
+      },
+      {
+        "call": "call-3254439c9d04413691d98da5ba6fd604",
+        "trial": "tr-31f8e221e0",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 114194,
+          "event_count": 58,
+          "sha256": "9c9b78f92d2d1bb0764fe5e7850384a9a537ca785f28d8b55b952149e9de8f81"
+        }
+      },
+      {
+        "call": "call-f7c7ec0c12574d558cbf5cf9525adcb1",
+        "trial": "tr-31f8e221e0",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 120713,
+          "event_count": 79,
+          "sha256": "849d3c91877329c737f737ae879f3541c23ddfb5d2878e2398fea9b24f323af1"
+        }
+      },
+      {
+        "call": "call-d92a4934a99443898cbff2cb3f9f8c2f",
+        "trial": "tr-31f8e221e0",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 124996,
+          "event_count": 96,
+          "sha256": "a45874f4a745a0e4da034222d866c76b757737d42c0a71d121e209c38653e4c0"
+        }
+      },
+      {
+        "call": "call-865a74ca159f464aa86a8de1a5d0e17b",
+        "trial": "tr-31f8e221e0",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 113197,
+          "event_count": 58,
+          "sha256": "bb15edc898dfc149c0e4237083b69eb5cf1ee1cb93ccfdbb1abb6d79d4136b13"
+        }
+      },
+      {
+        "call": "call-4afc253b6f1e4f0b9c6357ee829239e9",
+        "trial": "tr-ea433b11fd",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 127202,
+          "event_count": 114,
+          "sha256": "4fcf80cc55bde95e716c581b923839b5f305f6116e522d94f4c398d4684bf303"
+        }
+      },
+      {
+        "call": "call-d34a751a2a5b4f2f989a26fe79bff673",
+        "trial": "tr-ea433b11fd",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 108388,
+          "event_count": 21,
+          "sha256": "6eb4b0feed1acefb1b06afcc03979d0df2f3dc6fc50a0cffcb29509080640997"
+        }
+      },
+      {
+        "call": "call-461a0086ac2f4cffa738c888a03bbee2",
+        "trial": "tr-ea433b11fd",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 124399,
+          "event_count": 90,
+          "sha256": "9e48a60e083e5869765d2020e04f63032b636c76de4f0fef8ef0c07b75e1a62c"
+        }
+      },
+      {
+        "call": "call-0cbdbf831b8844508a5574426ba5ea0f",
+        "trial": "tr-ea433b11fd",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 102668,
+          "event_count": 21,
+          "sha256": "657411062a210c87588179ee766f8e131e604acf78dbff2cac8b842e5215d03c"
+        }
+      },
+      {
+        "call": "call-78efdebbe1ae4be68209f6fb3f28824c",
+        "trial": "tr-ea433b11fd",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 122724,
+          "event_count": 85,
+          "sha256": "6fa62633c70842ecdee8f60a43b070174a06e74d8f221becdc66c6b948318124"
+        }
+      },
+      {
+        "call": "call-a4a74f9ccad649a99c5156d3dfbade72",
+        "trial": "tr-ea433b11fd",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 100474,
+          "event_count": 15,
+          "sha256": "21c7bfb44d2a2afd84e74e509688e960b8b34f3034a37605f15aaed60c48f45f"
+        }
+      },
+      {
+        "call": "call-f7e1f41c334e409d93badc0c1121ede1",
+        "trial": "tr-ea433b11fd",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 120111,
+          "event_count": 88,
+          "sha256": "587162bfde158c49a7cdf3f2ae66f4e3f7fee43cd592d55b50e300e29b82cf10"
+        }
+      },
+      {
+        "call": "call-9c0f2b0681e14f7abcb86e33c4e6359e",
+        "trial": "tr-cfeb4be39b",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 134397,
+          "event_count": 116,
+          "sha256": "d927ec22746ed51b2cc4167ac303e97c5c69b71c990dfccb7d7091fe57190b96"
+        }
+      },
+      {
+        "call": "call-9b81153d00b04ecd834c73c8732932d2",
+        "trial": "tr-cfeb4be39b",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 137486,
+          "event_count": 121,
+          "sha256": "4cf4c920a02046f2ab75beebdb41cc8a2700e26861dc4a41a011979205b3e732"
+        }
+      },
+      {
+        "call": "call-027e37eb5a614615bb567c8bc99a4562",
+        "trial": "tr-cfeb4be39b",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 124271,
+          "event_count": 89,
+          "sha256": "9e2cf3cfd77b68002f852464529d765d3a9d77d3e50b175e608f10288406a97b"
+        }
+      },
+      {
+        "call": "call-5684960f8059403d9ec2c11265f68772",
+        "trial": "tr-cfeb4be39b",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 105446,
+          "event_count": 29,
+          "sha256": "aeee3f85a693e8992bfa8edf0c5f53a792c118fe3a1e45c1d6b111d56276a2aa"
+        }
+      },
+      {
+        "call": "call-c5a71493201f4b7185562ac0332d3a3c",
+        "trial": "tr-cfeb4be39b",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 104342,
+          "event_count": 25,
+          "sha256": "157c391925bc933838f2f35d29efef9ce307e4894bc9eeb4c0cac8f0b207884b"
+        }
+      },
+      {
+        "call": "call-440a28dadc884d3abe18043a0b4d4f69",
+        "trial": "tr-cfeb4be39b",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 121912,
+          "event_count": 82,
+          "sha256": "bc1fa49104c7ff2cd3dfa39a8be2c4ae9f3e9db1afcfdc6028cfbd9ba37dd56d"
+        }
+      },
+      {
+        "call": "call-0fec611fd7d245348ce920044893b8be",
+        "trial": "tr-cfeb4be39b",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 121829,
+          "event_count": 87,
+          "sha256": "b6bb85da5042c9138440af55fd05c80cf43c555820164c23670f6c11b2bcaf80"
+        }
+      },
+      {
+        "call": "call-e6b776413247400cabeb718d588c2f77",
+        "trial": "tr-cfeb4be39b",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 100118,
+          "event_count": 12,
+          "sha256": "2b969f0ac1bb8f666fed396e01fd2cb1219e0d4b03b200f90dab9428ac29707e"
+        }
+      },
+      {
+        "call": "call-9380cf341cb043758261067e96eee551",
+        "trial": "tr-cfeb4be39b",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 119766,
+          "event_count": 87,
+          "sha256": "00fc051b149827522fc05736693bb9ff5fcea518d6b45e2ba756c826c22b168f"
+        }
+      },
+      {
+        "call": "call-c2a25feca16041e19f8a9098a5a4d40c",
+        "trial": "tr-cd74783ab1",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 125909,
+          "event_count": 112,
+          "sha256": "efc644eb52c3cd5ea63006ad9191203ba6b8e71a7d81f92c7cd04c93773166af"
+        }
+      },
+      {
+        "call": "call-7425f4c32d334ced9e245c62f6ee79c0",
+        "trial": "tr-cd74783ab1",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 138404,
+          "event_count": 124,
+          "sha256": "b651681f661c9e3d6bb842a7b19b53493436595e37d729f80db449c1636a379a"
+        }
+      },
+      {
+        "call": "call-22e4307a495949d2a753abe0e06b28fc",
+        "trial": "tr-cd74783ab1",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 122264,
+          "event_count": 87,
+          "sha256": "b85b677b3a8715b504de511d0ec3267bb70e4ccba90d402f206baf36dc4acf39"
+        }
+      },
+      {
+        "call": "call-11aa2801e7314d2491188deb7cca2765",
+        "trial": "tr-cd74783ab1",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 104010,
+          "event_count": 29,
+          "sha256": "a8d5ea9a793e37ee290453d6bc363d30dce8f43e24efccac849d19d82070bd67"
+        }
+      },
+      {
+        "call": "call-2f464be5e9654b60848c685643dd1264",
+        "trial": "tr-cd74783ab1",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 121831,
+          "event_count": 87,
+          "sha256": "d472a9b57868879f68e3cfb36d6440195b8c0499f6288704ada7750bb490a78b"
+        }
+      },
+      {
+        "call": "call-29b1a667fdc642b8b237d78e0bb99b15",
+        "trial": "tr-cd74783ab1",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 116853,
+          "event_count": 70,
+          "sha256": "a829e357948445977ea8388ef913bf72b6a253ecd6611982a5b76dde51fecdeb"
+        }
+      },
+      {
+        "call": "call-b8526b43090143c68d6f95f08a8e6f15",
+        "trial": "tr-a4754cda39",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 140424,
+          "event_count": 128,
+          "sha256": "7dbbe22038fa369383f08c017b3967e840f0327e0df35a287a2c19512fc295be"
+        }
+      },
+      {
+        "call": "call-1ea531f341d8496ea143e4c8f746d70d",
+        "trial": "tr-a4754cda39",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 107849,
+          "event_count": 21,
+          "sha256": "97400336bc496ea948b9ca30101551bd83eb1b59f71856391160dd4677177bae"
+        }
+      },
+      {
+        "call": "call-250467f4f1c243628041c4c7dd27615e",
+        "trial": "tr-a4754cda39",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 125877,
+          "event_count": 83,
+          "sha256": "56b3d6cd91b490e6482851ce57cc4b11996bf30d24519cbf15f5d1f74bd4e58c"
+        }
+      },
+      {
+        "call": "call-5444f249458149f483f0496f31992ebb",
+        "trial": "tr-a4754cda39",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 104505,
+          "event_count": 21,
+          "sha256": "d4f17a2d030314c24c199eea57bd48e008af53d7b7dc431384c9ca89d5b80f2b"
+        }
+      },
+      {
+        "call": "call-bfccf67cab9045a28afe248c1d460c1e",
+        "trial": "tr-a4754cda39",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 121184,
+          "event_count": 77,
+          "sha256": "7586ce79157670983ef9a24edf985b6db82c574f7575fb076d98e13f547e062d"
+        }
+      },
+      {
+        "call": "call-1b640e3695674874b7763e6efd541141",
+        "trial": "tr-a4754cda39",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 103083,
+          "event_count": 21,
+          "sha256": "90809ce71e236256fb59bdbb24203fa745597f2b069a5ab5a69646f85982bd1d"
+        }
+      },
+      {
+        "call": "call-ae607d3cbb6445ac8d520eeae2ef394b",
+        "trial": "tr-a4754cda39",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 125542,
+          "event_count": 88,
+          "sha256": "8d29abc88d9d7eeff790ef2bdb4452b8693cada67656eda30879bd12af2a1a80"
+        }
+      },
+      {
+        "call": "call-852b04f6af8e48c68c2084485643a08c",
+        "trial": "tr-a4754cda39",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 100544,
+          "event_count": 15,
+          "sha256": "0bd2c59213ef3a2698732949cc199c7337066dfb22002d8ef7eb328b7ba11dba"
+        }
+      },
+      {
+        "call": "call-76139beaf5934d80b552e7abb34de3f8",
+        "trial": "tr-a4754cda39",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 117388,
+          "event_count": 79,
+          "sha256": "42cc01a8bde6abd447e5bdcdfa4450c69ba661916d2d287942f34fa044204259"
+        }
+      },
+      {
+        "call": "call-f800ea8072c245e3beb026c8fb0165c5",
+        "trial": "tr-5427cc05ff",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 136060,
+          "event_count": 140,
+          "sha256": "2fe0b56b6de9a7f0e3f1671be62628ba62aee905609caa0a2157d195311c8e68"
+        }
+      },
+      {
+        "call": "call-0fe9ef66df144264be55a3c091a1d9ca",
+        "trial": "tr-5427cc05ff",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 132172,
+          "event_count": 95,
+          "sha256": "b85810c8ca89c069f62551a27febaeb220258223b9b5456704cea1b957f55de2"
+        }
+      },
+      {
+        "call": "call-eb760b89c4454b97b9068a7ef7f48384",
+        "trial": "tr-5427cc05ff",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 117613,
+          "event_count": 60,
+          "sha256": "bd4302725ab452cf6de3236624cd22659dc39aa88b282b8dd8dda759d7032057"
+        }
+      },
+      {
+        "call": "call-39f147b3f2884d5f9f136da10a85578f",
+        "trial": "tr-5427cc05ff",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 122650,
+          "event_count": 83,
+          "sha256": "ad4141e61e2491477296b0376d5d1f845cbf727e9e5d64b45c0f5f9f6a5d0412"
+        }
+      },
+      {
+        "call": "call-07b16bfa23a1420d936770181bde6512",
+        "trial": "tr-5427cc05ff",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 127521,
+          "event_count": 101,
+          "sha256": "90a7ea5b5f399d9fccc1f172068b06ff2b9fab3c977f019960e27441927582a3"
+        }
+      },
+      {
+        "call": "call-73045b137c6147b78e562266e421c675",
+        "trial": "tr-5427cc05ff",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 122741,
+          "event_count": 91,
+          "sha256": "fdef01fa436c5d67a04ff8b691ee986c67497d4f15307e470ce132af59b4d5cb"
+        }
+      },
+      {
+        "call": "call-6d6c6339535945da8c39b88e738a3f8e",
+        "trial": "tr-5427cc05ff",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 99212,
+          "event_count": 12,
+          "sha256": "e4e14836f9b3521c13a70f9da20fad78114925fba51064999d6998d35adef557"
+        }
+      },
+      {
+        "call": "call-e484104bebba4f54aaf2a56dc001d86b",
+        "trial": "tr-5427cc05ff",
+        "summary": {
+          "category": "ok",
+          "transport": "sse",
+          "terminal": "completed",
+          "usage_state": "known",
+          "bytes": 121506,
+          "event_count": 93,
+          "sha256": "6dbf413343e7d68d264053b6acfc9fcdc33befe3db3ecf940063f1915ae89ced"
+        }
+      }
+    ],
+    "sha256": "25c52bb9d93b582040278a1e89beefdf49fc8d606b2d91323a6cf40177391c9d"
+  }
+}
