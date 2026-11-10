@@ -108,5 +108,26 @@
       "source_inspected": true,
       "browser_tested_separately": false
     }
+  },
+  "readonly_case_followup": {
+    "date": "2026-11-10",
+    "case_experiment": "ex-306d6835a050",
+    "source_document": "docs/studies/2026-11-10-feedback-02-result.json",
+    "valid_validation_trials": 22,
+    "planned_validation_trials": 24,
+    "status": "insufficient_evidence",
+    "control": "not_started",
+    "sealed": "not_started",
+    "report_fields_match_source": true,
+    "diff_matches_actual_experiment": true,
+    "desktop_verified": true,
+    "mobile_width": 390,
+    "mobile_dialog_client_width": 356,
+    "mobile_dialog_scroll_width": 356,
+    "new_model_calls": 0,
+    "local_versions_before_after": 6,
+    "local_experiments_before_after": 8,
+    "screenshot": "images/evo-case-replay.png",
+    "scope": "Partial real case and data-driven renderer only; not a completed study or quality gain."
   }
 }
