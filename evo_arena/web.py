@@ -15,6 +15,7 @@ from .scenario import build_image, docker
 from .store import Store, digest, now
 from .versions import CAPABILITIES, VersionRegistry, version_diff
 from .evolution import VersionExperiment
+from .improvement import ImprovementExperiment, IMPROVE_LIMITS
 from .taskpacks import MODES, current_pack
 
 STATIC = Path(__file__).with_name("static")
@@ -149,6 +150,7 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
     models = ModelProfiles(store.root, settings)
     registry = VersionRegistry(store, models)
     evolution = VersionExperiment(store, registry, harbor_bin, harness_image)
+    improvement = ImprovementExperiment(store, registry, harbor_bin, harness_image)
 
     class Handler(BaseHTTPRequestHandler):
         def send_json(self, data, status=200):
@@ -172,15 +174,20 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
                 return self.send_json({"diff": version_diff(baseline, candidate)})
             if path == "/api/evo":
                 return self.send_json({"capabilities": CAPABILITIES, "models": models.public(),
-                    "protocols": MODES, "task_pack": {k: v for k, v in current_pack().items() if k in {"id", "schema", "sha256"}},
+                    "protocols": {**MODES, "improve": {"label": "自动改进 · 开发反馈 → 配对验证", "limits": IMPROVE_LIMITS}},
+                    "projects": store.list("evo_project"),
+                    "task_pack": {k: v for k, v in current_pack().items() if k in {"id", "schema", "sha256"}},
                     "ready": bool(harbor_bin and harbor_bin.is_file() and models.public()["profiles"]),
                     "versions": store.list("evo_version"),
-                    "experiments": [{k: v for k, v in row.items() if k not in {"runs", "diff", "plan"}}
+                    "experiments": [{k: v for k, v in row.items() if k not in {"runs", "diff", "plan", "development_plan", "validation_template", "evidence_bundle", "diagnosis", "proposal"}}
                                     for row in store.list("evo_experiment")]})
             if path.startswith("/api/evo/experiments/"):
                 result = store.get("evo_experiment", path.rsplit("/", 1)[-1])
                 if result:
                     result["budget"] = store.get("evo_budget", result["id"])
+                return self.send_json(result or {"error": "not_found"}, 200 if result else 404)
+            if path.startswith("/api/evo/optimizer-outputs/"):
+                result = store.get("evo_optimizer_output", path.rsplit("/", 1)[-1])
                 return self.send_json(result or {"error": "not_found"}, 200 if result else 404)
             if path == "/api/evo/taskpacks":
                 pack = current_pack()
@@ -263,7 +270,7 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
                     key = self.headers.get("Idempotency-Key", "")
                     if not 1 <= len(key) <= 128:
                         raise ValueError("需要请求幂等键")
-                    data, code = manager.start_evolution(evolution, payload, key)
+                    data, code = manager.start_evolution(improvement if payload.get("mode") == "improve" else evolution, payload, key)
                     return self.send_json(data, code)
                 if self.path == "/api/models":
                     return self.send_json(models.save(payload))

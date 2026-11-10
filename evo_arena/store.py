@@ -46,6 +46,11 @@ class Store:
                 WHEN OLD.kind='evo_version' BEGIN SELECT RAISE(ABORT,'immutable evo version'); END;
             CREATE TRIGGER IF NOT EXISTS immutable_evo_task_pack BEFORE UPDATE ON objects
                 WHEN OLD.kind='evo_task_pack' BEGIN SELECT RAISE(ABORT,'immutable task pack'); END;
+            CREATE TRIGGER IF NOT EXISTS immutable_evo_evidence BEFORE UPDATE ON objects
+                WHEN OLD.kind IN ('evo_decision','evo_diagnosis','evo_proposal','evo_optimizer_output')
+                BEGIN SELECT RAISE(ABORT,'immutable experiment evidence'); END;
+            CREATE TRIGGER IF NOT EXISTS immutable_evo_optimizer_output BEFORE UPDATE ON objects
+                WHEN OLD.kind='evo_optimizer_output' BEGIN SELECT RAISE(ABORT,'immutable optimizer output'); END;
         """)
 
     def close(self):

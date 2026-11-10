@@ -146,6 +146,38 @@ class VersionRegistry:
             raise ValueError("模型连接已变更，请恢复该连接或创建新版本；旧实验不会静默换模型")
         return settings
 
+    def derive(self, parent, name, target, content):
+        """A generated candidate may replace exactly one existing supported asset."""
+        import yaml
+        manifest = verify_version(parent)
+        if target not in manifest["files"]:
+            raise ValueError("生成器只能修改已授权的现有文件")
+        name = bounded_text(name, "候选名称", 80, 1).strip()
+        content = bounded_text(content, "候选文件", 8000 if target == "policy.md" else 16000, 1)
+        if not name or content == manifest["files"][target]:
+            raise ValueError("候选没有实际变更")
+        if target != "policy.md":
+            try:
+                header, body = content.removeprefix("---\n").split("\n---\n", 1)
+                metadata = yaml.safe_load(header)
+                if (not content.startswith("---\n") or not isinstance(metadata, dict)
+                        or set(metadata) != {"name", "description"} or metadata["name"] != target.split("/")[1]):
+                    raise ValueError()
+                bounded_text(metadata["description"], "Skill 描述", 600, 1)
+                bounded_text(body.strip(), "Skill 正文", 12000, 1)
+                content = ("---\nname: " + json.dumps(metadata["name"]) + "\ndescription: "
+                           + json.dumps(metadata["description"], ensure_ascii=False) + "\n---\n" + body)
+            except (ValueError, TypeError, yaml.YAMLError):
+                raise ValueError("Skill 必须保留合法名称、描述与正文") from None
+        if content == manifest["files"][target]:
+            raise ValueError("候选没有实际变更")
+        updated = validate_manifest({**manifest, "files": {**manifest["files"], target: content}})
+        data = {"name": name, "parent": parent["id"], "manifest": updated, "manifest_sha256": digest(updated)}
+        ident = "av-" + digest(data)[:20]
+        with self.store.lock:
+            existing = self.store.get("evo_version", ident)
+            return existing or self.store.create("evo_version", ident, {"id": ident, **data, "created": now()})
+
 
 def version_diff(parent, child):
     before, after = parent["manifest"]["files"], child["manifest"]["files"]

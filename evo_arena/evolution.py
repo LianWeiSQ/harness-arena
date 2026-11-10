@@ -66,49 +66,58 @@ class VersionExperiment:
 
     def save(self, experiment):
         if experiment.get("plan"):
-            experiment["evaluation"] = evaluate(experiment["plan"], experiment["runs"])
+            runs = [r for r in experiment["runs"] if r.get("phase") == "validation"] if experiment.get("automatic_evolution") else experiment["runs"]
+            experiment["evaluation"] = evaluate(experiment["plan"], runs)
         self.store.update("evo_experiment", experiment["id"], experiment)
+
+    def prepare(self, experiment, selected):
+        experiment["status"] = "preparing"
+        self.save(experiment)
+        experiment["harbor_version"] = command(str(self.harbor), "--version")
+        experiment["image_id"] = command("docker", "image", "inspect", self.image, "--format", "{{.Id}}")
+        image_ref = "evoarena-snapshot:" + experiment["image_id"].split(":")[-1][:24]
+        command("docker", "tag", experiment["image_id"], image_ref)
+        experiment["image_ref"] = image_ref
+        root = self.store.root / "experiments" / experiment["id"]
+        pack = self.store.get("evo_task_pack", experiment["task_pack"]) if experiment.get("plan") else None
+        if pack:
+            materialize_business(root / "tasks", image_ref, pack, selected)
+        else:
+            materialize_tasks(root / "tasks", image_ref, {}, ["lost-receipt"])
+        experiment["status"] = "running"
+        self.save(experiment)
+        return root, pack
+
+    def run_row(self, experiment, settings, row, root, pack, budget):
+        budget.check()
+        version = self.store.get("evo_version", row.get("version_id") or experiment[row["role"]])
+        run = {**row, "id": "tr-" + uuid.uuid4().hex[:10], "version_id": version["id"],
+            "runner": experiment["runner"], "model": settings.model,
+            "status": "running", "trace": [], "checks": [], "patch": ""}
+        experiment["runs"].append(run)
+        self.save(experiment)
+
+        def record(label, message):
+            run["trace"].append({"label": label, "text": message, "time": now()})
+            self.save(experiment)
+
+        try:
+            case = next(c for c in pack["cases"] if c["id"] == row["task"]) if pack else None
+            HarborTrial(settings, self.harbor).execute(run, root, {}, record, version, case, budget)
+        except (OSError, RuntimeError, ValueError, subprocess.SubprocessError) as error:
+            run.update(status="error", error="版本执行异常 · " + type(error).__name__)
+        self.save(experiment)
+        return run
 
     def execute(self, experiment, settings):
         budget = ExperimentBudget(self.store, experiment["id"])
         try:
             budget.start(experiment.get("limits", {"calls": 24, "tokens": 360000, "seconds": 900}))
-            experiment["status"] = "preparing"
-            self.save(experiment)
-            experiment["harbor_version"] = command(str(self.harbor), "--version")
-            experiment["image_id"] = command("docker", "image", "inspect", self.image, "--format", "{{.Id}}")
-            image_ref = "evoarena-snapshot:" + experiment["image_id"].split(":")[-1][:24]
-            command("docker", "tag", experiment["image_id"], image_ref)
-            experiment["image_ref"] = image_ref
-            root = self.store.root / "experiments" / experiment["id"]
             plan = experiment.get("plan")
-            pack = self.store.get("evo_task_pack", experiment["task_pack"]) if plan else None
-            if pack:
-                materialize_business(root / "tasks", image_ref, pack, {r["task"] for r in plan["trials"]})
-            else:
-                materialize_tasks(root / "tasks", image_ref, {}, ["lost-receipt"])
-            experiment["status"] = "running"
             rows = plan["trials"] if plan else [{"role": role, "task": "lost-receipt"} for role in ("baseline", "candidate")]
+            root, pack = self.prepare(experiment, {r["task"] for r in rows})
             for row in rows:
-                budget.check()
-                role = row["role"]
-                version = self.store.get("evo_version", experiment[role])
-                run = {**row, "id": "tr-" + uuid.uuid4().hex[:10], "role": role, "version_id": version["id"],
-                       "runner": experiment["runner"], "model": settings.model,
-                       "status": "running", "trace": [], "checks": [], "patch": ""}
-                experiment["runs"].append(run)
-                self.save(experiment)
-
-                def record(label, message):
-                    run["trace"].append({"label": label, "text": message, "time": now()})
-                    self.save(experiment)
-
-                try:
-                    case = next(c for c in pack["cases"] if c["id"] == row["task"]) if pack else None
-                    HarborTrial(settings, self.harbor).execute(run, root, {}, record, version, case, budget)
-                except (OSError, RuntimeError, ValueError, subprocess.SubprocessError) as error:
-                    run.update(status="error", error="版本执行异常 · " + type(error).__name__)
-                self.save(experiment)
+                run = self.run_row(experiment, settings, row, root, pack, budget)
                 if run["status"] == "error":
                     break  # Do not spend on the second version after an infrastructure failure.
             experiment["status"] = "completed" if len(experiment["runs"]) == len(rows) and all(
