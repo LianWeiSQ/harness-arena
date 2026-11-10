@@ -1,6 +1,6 @@
 # EvoArena
 
-项目正向 **Harness 自改进平台 Evo** 演进：通过真实任务反馈生成候选版本，验证改进是否有效，并交付可复用、可回滚的资产。新方向的完整范围见 [总体规划](docs/evo-platform-plan.md)，实现边界见 [架构方案](docs/evo-architecture.md)，进度见 [长期 Goal](TASKS.md)。业务任务包、配对评测、实验预算、取消/检查点继续和 M5 版本交付已完成；v0.2 的完整自动改进验收、独立复现与最终对照报告仍在推进。
+项目正向 **Harness 自改进平台 Evo** 演进：通过真实任务反馈生成候选版本，验证改进是否有效，并交付可复用、可回滚的资产。新方向的完整范围见 [总体规划](docs/evo-platform-plan.md)，实现边界见 [架构方案](docs/evo-architecture.md)，进度见 [长期 Goal](TASKS.md)。业务任务包、配对评测、预算、取消/继续、版本交付和独立安装已验证；v0.2 的完整真实自动改进验收与最终对照报告仍在推进。
 
 默认首页 `/evo` 提供不可变基线、人工候选、运行前 diff 和真实版本加载实验。Pi 支持系统策略追加和原生 Skill；DSH 支持任务指令前缀，原生 Skill 尚未验证。详见 [用法与首组加载证据](docs/version-loading-check.md)。旧对战和 FixOps 历史仍在 `/harness` 与 `/fixops`。
 
@@ -30,6 +30,8 @@ uv run --frozen --extra harbor evo-arena serve
 打开 <http://127.0.0.1:8787/evo>，在“设置”添加兼容 Responses API 的模型连接，再创建 Pi 或 DSH 基线。模型配置保存在本机，创建版本和查看只读案例不调用模型；启动实验才使用模型预算。Harbor 固定为 `0.22.0`，CLI 自动选择当前 Python 环境中的 Harbor，可用 `--harbor-bin` 显式指定。
 
 这条路径不需要 `../app`、`../harbor-eval` 或个人凭据文件。只看工作台可省略 Harbor extra：`uv run --frozen evo-arena serve`。完整安装、依赖边界和 wheel 校验见 [独立安装](docs/installation.md)，页面操作见 [工作台与交付](docs/delivery-and-workspace.md)。
+
+新目录实测中 DSH/Pi 的四次版本加载与业务验收全部通过，24 次请求、202,389 个已知 Token，没有未知用量；这是安装与加载证据，不代表进化收益。见 [独立安装实测](docs/m6-installation-verification.json)。接入任务和运行器见 [扩展指南](docs/extensions.md)，面试讲解见 [演示与边界](docs/interview-demo.md)。
 
 ## 历史 Arena 原型
 

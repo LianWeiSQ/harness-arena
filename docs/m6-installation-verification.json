@@ -1,0 +1,273 @@
+{
+  "milestone": "M6 installation subset",
+  "date": "2026-11-10",
+  "scope": "Independent installation and manual version loading only; not automatic evolution or quality gain. M3 full protocol and M6 final controls remain pending.",
+  "source_commit": "f6e8eb2c0da6a3955587fb05af7ea971b98398ae",
+  "clone_method": "git clone --no-local of the committed repository into a fresh temporary directory; no adjacent app or harbor-eval workspace",
+  "installation": {
+    "lockfile": "uv.lock",
+    "harbor": "0.22.0",
+    "dependency_packages": 92,
+    "empty_server_endpoints": [
+      "/evo",
+      "/settings",
+      "/api/evo",
+      "/api/evo/taskpacks",
+      "/api/evo/example"
+    ],
+    "no_existing_models_versions_or_experiments": true,
+    "dependency_checks_ready": [
+      "Docker",
+      "Harbor",
+      "task image",
+      "Node"
+    ],
+    "image_built_from_clone": true,
+    "wheel_calibration_outside_checkout": true,
+    "wheel_includes_static_and_fixtures": true
+  },
+  "tests": {
+    "run": 81,
+    "passed": 80,
+    "skipped": 1,
+    "skip_reason": "Optional legacy Docker integration suite not enabled"
+  },
+  "calibration": {
+    "cases": 18,
+    "correct_accepted": 18,
+    "empty_rejected": 18,
+    "bad_rejected": 18,
+    "model_calls": 0
+  },
+  "experiments": [
+    {
+      "id": "ex-1738da3eab95",
+      "runner": "dsh",
+      "model": "gpt-5.6-sol",
+      "status": "completed",
+      "mode": "loading",
+      "baseline": "av-9908bf95de760d60d855",
+      "candidate": "av-eaf66f3fd96b30c22f10",
+      "runtime": {
+        "harbor_version": "0.22.0",
+        "image_id": "sha256:c3208589727a0680d246c3b2e1771b68aeeed230f8f77b53ceb25dc43a63a86c",
+        "protocol_sha256": "edda0b48d1134f1fbbc13f51c4ef1052a6e26ec9384fc12d9b9986cc3e6b4157"
+      },
+      "cost_by_phase": {
+        "execution": {
+          "calls": 14,
+          "known_tokens": 141705,
+          "unknown_calls": 0,
+          "pending_calls": 0
+        }
+      },
+      "runs": [
+        {
+          "id": "tr-10e7724f27",
+          "status": "passed",
+          "seconds": 35.02,
+          "usage": {
+            "calls": 7,
+            "max_calls": 12,
+            "max_tokens": 180000,
+            "tokens": 70769,
+            "unknown_usage_calls": 0
+          },
+          "input_evidence": {
+            "manifest_sha256": "af9fb58003298686493affc87d5597231a1bc5c8ce7f6108ffcd4ac18a79e1fd",
+            "policy_in_input": true,
+            "registration_verified": true,
+            "requests_observed": 7,
+            "skill_catalog": [],
+            "skill_contents_in_input": []
+          },
+          "version_load": {
+            "file_hashes": {
+              "policy.md": "19fd6dfe5a6de7536ecc4ee3d9809a5f8ef6a5aa989fc5df6f7e808f7566b486"
+            },
+            "manifest_sha256": "af9fb58003298686493affc87d5597231a1bc5c8ce7f6108ffcd4ac18a79e1fd",
+            "runner": "dsh",
+            "runtime_version": "0.1.2-rc.1",
+            "version_id": "av-9908bf95de760d60d855"
+          },
+          "checks": [
+            {
+              "label": "外部账本只写入一笔订单",
+              "passed": true
+            },
+            {
+              "label": "模拟回执超时后查询订单状态",
+              "passed": true
+            }
+          ],
+          "atif_available": false
+        },
+        {
+          "id": "tr-353e52fc70",
+          "status": "passed",
+          "seconds": 37.98,
+          "usage": {
+            "calls": 7,
+            "max_calls": 12,
+            "max_tokens": 180000,
+            "tokens": 70936,
+            "unknown_usage_calls": 0
+          },
+          "input_evidence": {
+            "manifest_sha256": "37f43643b9e825ba98b1e929e6e6ea24f2053d88d4ec0b39044655451a55b952",
+            "policy_in_input": true,
+            "registration_verified": true,
+            "requests_observed": 7,
+            "skill_catalog": [],
+            "skill_contents_in_input": []
+          },
+          "version_load": {
+            "file_hashes": {
+              "policy.md": "f355d496219afc479f6a2188fbc81e6816d912b97146a8db306440c6a4077e66"
+            },
+            "manifest_sha256": "37f43643b9e825ba98b1e929e6e6ea24f2053d88d4ec0b39044655451a55b952",
+            "runner": "dsh",
+            "runtime_version": "0.1.2-rc.1",
+            "version_id": "av-eaf66f3fd96b30c22f10"
+          },
+          "checks": [
+            {
+              "label": "外部账本只写入一笔订单",
+              "passed": true
+            },
+            {
+              "label": "模拟回执超时后查询订单状态",
+              "passed": true
+            }
+          ],
+          "atif_available": false
+        }
+      ]
+    },
+    {
+      "id": "ex-aec8f530aba8",
+      "runner": "pi",
+      "model": "gpt-5.6-sol",
+      "status": "completed",
+      "mode": "loading",
+      "baseline": "av-ae44b0a99f644fa61d7a",
+      "candidate": "av-4d5b6045307362e1fd58",
+      "runtime": {
+        "harbor_version": "0.22.0",
+        "image_id": "sha256:c3208589727a0680d246c3b2e1771b68aeeed230f8f77b53ceb25dc43a63a86c",
+        "protocol_sha256": "edda0b48d1134f1fbbc13f51c4ef1052a6e26ec9384fc12d9b9986cc3e6b4157"
+      },
+      "cost_by_phase": {
+        "execution": {
+          "calls": 10,
+          "known_tokens": 60684,
+          "unknown_calls": 0,
+          "pending_calls": 0
+        }
+      },
+      "runs": [
+        {
+          "id": "tr-091642e605",
+          "status": "passed",
+          "seconds": 28.21,
+          "usage": {
+            "calls": 5,
+            "max_calls": 12,
+            "max_tokens": 180000,
+            "tokens": 30483,
+            "unknown_usage_calls": 0
+          },
+          "input_evidence": {
+            "manifest_sha256": "8d522ff0b5c56b3c672785d23aabb27e0f93abf60e900e56dc5c10aa85974377",
+            "policy_in_input": true,
+            "registration_verified": true,
+            "requests_observed": 5,
+            "skill_catalog": [
+              "skills/order-check/SKILL.md"
+            ],
+            "skill_contents_in_input": [
+              "skills/order-check/SKILL.md"
+            ]
+          },
+          "version_load": {
+            "file_hashes": {
+              "policy.md": "19fd6dfe5a6de7536ecc4ee3d9809a5f8ef6a5aa989fc5df6f7e808f7566b486",
+              "skills/order-check/SKILL.md": "cca579747f3d95d5567bbba5ae0c21d2a58314a7679c358437e989c2b470c119"
+            },
+            "manifest_sha256": "8d522ff0b5c56b3c672785d23aabb27e0f93abf60e900e56dc5c10aa85974377",
+            "runner": "pi",
+            "runtime_version": "0.82.1",
+            "version_id": "av-ae44b0a99f644fa61d7a"
+          },
+          "checks": [
+            {
+              "label": "外部账本只写入一笔订单",
+              "passed": true
+            },
+            {
+              "label": "模拟回执超时后查询订单状态",
+              "passed": true
+            }
+          ],
+          "atif_available": false
+        },
+        {
+          "id": "tr-e03011d1ab",
+          "status": "passed",
+          "seconds": 26.02,
+          "usage": {
+            "calls": 5,
+            "max_calls": 12,
+            "max_tokens": 180000,
+            "tokens": 30201,
+            "unknown_usage_calls": 0
+          },
+          "input_evidence": {
+            "manifest_sha256": "52776df129a8243c92736d3ee2fd8423402bef87a8304bf7770d68af031941c1",
+            "policy_in_input": true,
+            "registration_verified": true,
+            "requests_observed": 5,
+            "skill_catalog": [
+              "skills/order-check/SKILL.md"
+            ],
+            "skill_contents_in_input": [
+              "skills/order-check/SKILL.md"
+            ]
+          },
+          "version_load": {
+            "file_hashes": {
+              "policy.md": "f355d496219afc479f6a2188fbc81e6816d912b97146a8db306440c6a4077e66",
+              "skills/order-check/SKILL.md": "cca579747f3d95d5567bbba5ae0c21d2a58314a7679c358437e989c2b470c119"
+            },
+            "manifest_sha256": "52776df129a8243c92736d3ee2fd8423402bef87a8304bf7770d68af031941c1",
+            "runner": "pi",
+            "runtime_version": "0.82.1",
+            "version_id": "av-4d5b6045307362e1fd58"
+          },
+          "checks": [
+            {
+              "label": "外部账本只写入一笔订单",
+              "passed": true
+            },
+            {
+              "label": "模拟回执超时后查询订单状态",
+              "passed": true
+            }
+          ],
+          "atif_available": false
+        }
+      ]
+    }
+  ],
+  "resource_cleanup": {
+    "total": 4,
+    "cleaned": 4
+  },
+  "totals": {
+    "calls": 24,
+    "known_tokens": 202389,
+    "unknown_calls": 0,
+    "passed_trials": 4,
+    "planned_trials": 4
+  }
+}

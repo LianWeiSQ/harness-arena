@@ -49,6 +49,14 @@ cd /tmp
 
 GitHub Actions 执行锁定安装、包含真实 Harbor API 的 adapter 契约测试、业务校准、JS 语法检查和仓库外 wheel 校验。CI 不使用个人密钥，不发起真实模型请求；真实运行证据需单独记录，不能用 CI 代替。
 
+2026-11-10 已在新目录完成 git clone、锁定安装、空库启动、镜像构建和四次真实加载检查，详见 [实测记录](m6-installation-verification.json)。手动复测可在配置 `ARENA_BASE_URL`、`ARENA_MODEL`、`ARENA_API_KEY` 环境变量后执行：
+
+```sh
+uv run --frozen --extra harbor python tests/manual_installation_smoke.py --data-dir .evoarena/installation-smoke
+```
+
+该命令会付费调用模型，最多两个实验、共 48 次请求和 720,000 个已知 Token 的派发阈值；最后一个响应可能跨过 Token 阈值，未知用量会停止后续派发。必须使用没有版本和实验的新目录。生成的是人工加载检查版本，不是自动优化候选。
+
 ## 本地状态和常见问题
 
 - 默认数据在启动目录的 `.evoarena/`；可用 `--data-dir` 指定。该目录和模型凭据不提交 Git。
