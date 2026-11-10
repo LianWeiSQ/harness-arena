@@ -13,6 +13,7 @@ from .provider import BudgetExceeded, ProviderError
 from .store import canonical, digest, now
 from .taskpacks import current_pack, make_plan
 from .versions import version_diff
+from . import execution_control as control
 
 
 IMPROVE_LIMITS = {"calls": 363, "tokens": 3000000, "seconds": 14400}
@@ -33,6 +34,9 @@ def finalize(store, experiment, failure=None):
         if previous:
             return store.get("evo_experiment", experiment["id"])
         saved = store.get("evo_experiment", experiment["id"])
+        execution = control.assert_epoch(store, experiment)
+        if execution["state"] == "cancelling":
+            failure = {"category": "cancelled", "message": "实验已取消；已完成的证据与用量保留"}
         if saved["status"] not in {"preparing", "running"}:
             raise ValueError("实验已停止，不能提交新判定")
         validation = [r for r in saved["runs"] if r.get("phase") == "validation"]
@@ -69,12 +73,15 @@ def finalize(store, experiment, failure=None):
                     decision.update(status="not_applied", reason="project_changed")
         saved.update(decision=decision, evaluation=result, budget=budget, phase="decided", finished=now(),
                      status="incomplete" if decision["status"] == "insufficient_evidence" else "completed")
+        if failure and failure["category"] == "cancelled":
+            saved["status"] = "cancelled"
         if failure:
             saved["error"] = failure["message"]
         store.db.execute("INSERT INTO objects VALUES(?,?,?,?)", ("evo_decision", ident, canonical(decision), now()))
         store.db.execute("UPDATE objects SET data=? WHERE kind='evo_experiment' AND id=?", (canonical(saved), saved["id"]))
         store.db.execute("INSERT INTO events(scope,kind,data,created) VALUES(?,?,?,?)",
                          (saved["project"], "evo.decision", canonical({"decision": ident, "status": decision["status"]}), now()))
+        control.terminal(store, experiment, saved["status"])
     experiment.clear(); experiment.update(saved)
     return saved
 
@@ -133,12 +140,14 @@ class ImprovementExperiment(VersionExperiment):
             if not self.store.get("evo_task_pack", pack["id"]):
                 self.store.db.execute("INSERT INTO objects VALUES(?,?,?,?)", ("evo_task_pack", pack["id"], canonical(pack), now()))
             self.store.db.execute("INSERT INTO objects VALUES(?,?,?,?)", ("evo_experiment", ident, canonical(experiment), now()))
+            control.insert_intent(self.store, experiment)
             self.store.db.execute("INSERT INTO objects VALUES(?,?,?,?)",
                 ("evo_request", digest(key), canonical({"experiment": ident, "payload_hash": digest(payload)}), now()))
         return experiment, bindings, True
 
     def execute(self, experiment, settings):
-        budget = ExperimentBudget(self.store, experiment["id"])
+        control.acquire(self.store, experiment)
+        budget = ExperimentBudget(self.store, experiment["id"], experiment)
         failure = None
         experiment["status"] = "preparing"
         try:
@@ -151,33 +160,38 @@ class ImprovementExperiment(VersionExperiment):
                 if run["status"] not in {"passed", "failed"}:
                     raise ProviderError("开发基线执行异常；不生成候选")
             experiment["phase"] = "diagnosing"
-            bundle = evidence_bundle(baseline, pack, experiment["runs"], experiment["target"])
+            bundle = evidence_bundle(baseline, pack, [r for r in experiment["runs"] if r.get("phase") == "development"], experiment["target"])
             experiment["evidence_bundle"] = bundle
             self.save(experiment)
             optimizer = self.optimizer_factory(settings["optimizer"], budget)
             diagnosis = self.diagnose(experiment, optimizer, bundle)
             experiment["diagnosis"] = diagnosis
-            self.store.create("evo_diagnosis", experiment["id"], {"experiment": experiment["id"], "evidence_sha256": digest(bundle), "value": diagnosis})
+            with self.store.lock:
+                control.assert_epoch(self.store, experiment, dispatch=True)
+                self.store.create("evo_diagnosis", experiment["id"], {"experiment": experiment["id"], "evidence_sha256": digest(bundle), "value": diagnosis})
             experiment["phase"] = "proposing"
             self.save(experiment)
             proposal_input = {"diagnosis": diagnosis, "target": experiment["target"],
                 "parent_file": baseline["manifest"]["files"][experiment["target"]],
                 "other_files": {p: c for p, c in baseline["manifest"]["files"].items() if p != experiment["target"]},
                 "evidence": [e for e in bundle["evidence"] if e["id"] in {ref for o in diagnosis["observations"] for ref in o["evidence"]}]}
-            raw, usage = optimizer.complete("proposal", PROPOSAL_INSTRUCTIONS, proposal_input)
-            experiment["optimizer_calls"].append({"phase": "proposal", **usage})
-            self.record_attempt(experiment, "proposal", raw, usage, digest(proposal_input))
+            raw, usage, _ = self.output(experiment, optimizer, "proposal", PROPOSAL_INSTRUCTIONS, proposal_input)
             proposal = validate_proposal(parse_json(raw))
             experiment["proposal"] = proposal
-            self.store.create("evo_proposal", experiment["id"], {"experiment": experiment["id"], "input_sha256": digest(proposal_input), "value": proposal})
-            candidate = self.registry.derive(baseline, proposal["name"], experiment["target"], proposal["content"])
+            with self.store.lock:
+                control.assert_epoch(self.store, experiment, dispatch=True)
+                self.store.create("evo_proposal", experiment["id"], {"experiment": experiment["id"], "input_sha256": digest(proposal_input), "value": proposal})
+                candidate = self.registry.derive(baseline, proposal["name"], experiment["target"], proposal["content"])
             experiment.update(candidate=candidate["id"], diff=version_diff(baseline, candidate), phase="validating",
                 plan=make_plan(pack, baseline["id"], candidate["id"], "validation", 2, experiment["limits"]))
             self.save(experiment)
             for row in experiment["plan"]["trials"]:
                 run = self.run_row(experiment, settings["execution"], {**row, "phase": "validation"}, root, pack, budget)
                 if run["status"] not in {"passed", "failed"}:
+                    failure = {"category": "execution_error", "message": run.get("error", "验证执行异常；剩余题目不计为失败")}
                     break
+        except control.ExecutionStopped:
+            failure = {"category": "cancelled", "message": "执行中止"}
         except BudgetExceeded:
             failure = {"category": "budget_exhausted", "message": "实验总预算耗尽或用量待结算，停止后续派发"}
         except ProviderError as error:
@@ -189,13 +203,36 @@ class ImprovementExperiment(VersionExperiment):
             failure = {"category": "execution_error", "message": "实验执行异常 · " + type(error).__name__}
         finally:
             # Persist the latest phase outputs before the single decision transaction.
-            self.save(experiment)
-            finalize(self.store, experiment, failure)
+            try:
+                self.save(experiment)
+                finalize(self.store, experiment, failure)
+            except control.ExecutionStopped:
+                pass  # Recovery already fenced this worker; it cannot finalize.
+
+    def output(self, experiment, optimizer, phase, instructions, payload):
+        """Re-use a durably captured response after a crash, never call twice."""
+        input_hash = digest(payload)
+        prior = [r for r in self.store.list("evo_optimizer_output")
+                 if r["experiment"] == experiment["id"] and r["phase"] == phase and r["input_sha256"] == input_hash]
+        if prior:
+            raw, usage = prior[0]["raw_output"], prior[0]["usage"]
+        else:
+            raw, usage = optimizer.complete(phase, instructions, payload)
+        if not any(c["call_id"] == usage["call_id"] for c in experiment["optimizer_calls"]):
+            experiment["optimizer_calls"].append({"phase": phase, **usage})
+        attempt = self.record_attempt(experiment, phase, raw, usage, input_hash)
+        return raw, usage, attempt
 
     def record_attempt(self, experiment, phase, raw, usage, input_hash):
         attempt = {"id": usage["call_id"], "experiment": experiment["id"], "phase": phase,
                    "input_sha256": input_hash, "raw_output": raw, "usage": usage, "created": now()}
-        self.store.create("evo_optimizer_output", attempt["id"], attempt)
+        with self.store.lock:
+            control.assert_epoch(self.store, experiment)
+            if not self.store.get("evo_optimizer_output", attempt["id"]):
+                self.store.create("evo_optimizer_output", attempt["id"], attempt)
+        prior = next((a for a in experiment["optimizer_attempts"] if a["id"] == attempt["id"]), None)
+        if prior:
+            return prior
         experiment["optimizer_attempts"].append({"id": attempt["id"], "phase": phase, "input_sha256": input_hash})
         self.save(experiment)
         return experiment["optimizer_attempts"][-1]
@@ -203,9 +240,7 @@ class ImprovementExperiment(VersionExperiment):
     def diagnose(self, experiment, optimizer, bundle):
         payload = bundle
         for _ in range(experiment["optimizer_policy"]["max_diagnosis_attempts"]):
-            raw, usage = optimizer.complete("diagnosis", DIAGNOSIS_INSTRUCTIONS, payload)
-            experiment["optimizer_calls"].append({"phase": "diagnosis", **usage})
-            attempt = self.record_attempt(experiment, "diagnosis", raw, usage, digest(payload))
+            raw, usage, attempt = self.output(experiment, optimizer, "diagnosis", DIAGNOSIS_INSTRUCTIONS, payload)
             try:
                 diagnosis = validate_diagnosis(parse_json(raw), bundle)
                 attempt["status"] = "valid"

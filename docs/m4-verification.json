@@ -1,0 +1,308 @@
+{
+  "schema": "evo-m4-verification-v1",
+  "date": "2026-11-10",
+  "scope": "Isolated real Pi/Harbor recovery and cancellation drills, plus controlled failure injection. Not evidence of candidate quality improvement.",
+  "code_note": "Recovery drill preceded an additional control check immediately before Harbor launch; cancellation drill covered that change. A later manual-evaluation terminal cancellation race fix is covered by fault-injection unit testing. Exact Python protocol hashes and task-pack IDs describe each real drill, not an unperformed rerun.",
+  "recovery": {
+    "id": "ex-e04015eb721a",
+    "created": "2026-11-10T08:54:42.794444+00:00",
+    "finished": "2026-11-10T09:00:28.676116+00:00",
+    "status": "completed",
+    "epoch": 3,
+    "mode": "smoke",
+    "runner": "pi",
+    "model": "gpt-5.6-sol",
+    "task_pack": "tp-1cb00b1e85a6ef0dbd5d",
+    "baseline": "av-7627401ce21c6a7fe48a",
+    "candidate": "av-99c207e9352dd698acc0",
+    "budget": {
+      "calls": 42,
+      "deadline": 1794303282.796415,
+      "limits": {
+        "calls": 72,
+        "seconds": 2400,
+        "tokens": 600000
+      },
+      "pending": 0,
+      "started": "2026-11-10T08:54:42.796413+00:00",
+      "tokens": 272629,
+      "unknown_usage_calls": 0
+    },
+    "evaluation": {
+      "automatic_promotion": false,
+      "complete": true,
+      "critical_violations": 0,
+      "duplicates": [],
+      "gate_eligible": false,
+      "invalid": [],
+      "missing": [],
+      "outcome": "unchanged",
+      "per_case": {
+        "listing-development-1": {
+          "baseline": 1,
+          "baseline_completed": 1,
+          "candidate": 1,
+          "candidate_completed": 1
+        },
+        "receipt-development-1": {
+          "baseline": 1,
+          "baseline_completed": 1,
+          "candidate": 1,
+          "candidate_completed": 1
+        },
+        "workflow-development-1": {
+          "baseline": 1,
+          "baseline_completed": 1,
+          "candidate": 1,
+          "candidate_completed": 1
+        }
+      },
+      "planned_trials": 6,
+      "statistical_significance": "not_claimed",
+      "successes": {
+        "baseline": 3,
+        "candidate": 3
+      },
+      "valid_trials": 6
+    },
+    "protocol_sha256": "8a3d64717f98202f85414f56f0160197786ffa5809c8171807bc5979f62144e3",
+    "runs": [
+      {
+        "id": "tr-0f41eb84fa",
+        "key": "receipt-development-1:0:baseline",
+        "task": "receipt-development-1",
+        "role": "baseline",
+        "version_id": "av-7627401ce21c6a7fe48a",
+        "status": "passed",
+        "usage": {
+          "calls": 6,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 37821,
+          "unknown_usage_calls": 0
+        },
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "error": null
+      },
+      {
+        "id": "tr-0b21281ccb",
+        "key": "receipt-development-1:0:candidate",
+        "task": "receipt-development-1",
+        "role": "candidate",
+        "version_id": "av-99c207e9352dd698acc0",
+        "status": "passed",
+        "usage": {
+          "calls": 8,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 52321,
+          "unknown_usage_calls": 0
+        },
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "error": null
+      },
+      {
+        "id": "tr-df326819ec",
+        "key": "listing-development-1:0:candidate",
+        "task": "listing-development-1",
+        "role": "candidate",
+        "version_id": "av-99c207e9352dd698acc0",
+        "status": "passed",
+        "usage": {
+          "calls": 8,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 52862,
+          "unknown_usage_calls": 0
+        },
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "error": null
+      },
+      {
+        "id": "tr-2e1f847374",
+        "key": "listing-development-1:0:baseline",
+        "task": "listing-development-1",
+        "role": "baseline",
+        "version_id": "av-7627401ce21c6a7fe48a",
+        "status": "passed",
+        "usage": {
+          "calls": 6,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 39761,
+          "unknown_usage_calls": 0
+        },
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "error": null
+      },
+      {
+        "id": "tr-a854d703c1",
+        "key": "workflow-development-1:0:baseline",
+        "task": "workflow-development-1",
+        "role": "baseline",
+        "version_id": "av-7627401ce21c6a7fe48a",
+        "status": "passed",
+        "usage": {
+          "calls": 7,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 44637,
+          "unknown_usage_calls": 0
+        },
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "error": null
+      },
+      {
+        "id": "tr-30a1f808ba",
+        "key": "workflow-development-1:0:candidate",
+        "task": "workflow-development-1",
+        "role": "candidate",
+        "version_id": "av-99c207e9352dd698acc0",
+        "status": "passed",
+        "usage": {
+          "calls": 7,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 45227,
+          "unknown_usage_calls": 0
+        },
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "error": null
+      }
+    ],
+    "checkpoint_count": 6,
+    "resource_states": [
+      "cleaned",
+      "cleaned",
+      "cleaned",
+      "cleaned",
+      "cleaned",
+      "cleaned"
+    ],
+    "before_resume": {
+      "runs": [
+        "tr-0f41eb84fa"
+      ],
+      "budget": {
+        "calls": 6,
+        "deadline": 1794303282.796415,
+        "limits": {
+          "calls": 72,
+          "seconds": 2400,
+          "tokens": 600000
+        },
+        "pending": 0,
+        "started": "2026-11-10T08:54:42.796413+00:00",
+        "tokens": 37821,
+        "unknown_usage_calls": 0
+      }
+    },
+    "retained_first_trial": true,
+    "retained_deadline": true,
+    "unique_trial_ids": true
+  },
+  "cancellation": {
+    "id": "ex-3c7516997451",
+    "created": "2026-11-10T09:01:48.681589+00:00",
+    "finished": "2026-11-10T09:01:56.836682+00:00",
+    "status": "cancelled",
+    "epoch": 1,
+    "mode": "smoke",
+    "runner": "pi",
+    "model": "gpt-5.6-sol",
+    "task_pack": "tp-db0d575e4538ab62d6fe",
+    "baseline": "av-7627401ce21c6a7fe48a",
+    "candidate": "av-99c207e9352dd698acc0",
+    "budget": {
+      "calls": 0,
+      "deadline": 1794303708.686002,
+      "limits": {
+        "calls": 72,
+        "seconds": 2400,
+        "tokens": 600000
+      },
+      "pending": 0,
+      "started": "2026-11-10T09:01:48.686000+00:00",
+      "tokens": 0,
+      "unknown_usage_calls": 0
+    },
+    "evaluation": {
+      "automatic_promotion": false,
+      "complete": false,
+      "critical_violations": 0,
+      "duplicates": [],
+      "gate_eligible": false,
+      "invalid": [
+        "receipt-development-1:0:baseline"
+      ],
+      "missing": [
+        "listing-development-1:0:baseline",
+        "listing-development-1:0:candidate",
+        "receipt-development-1:0:baseline",
+        "receipt-development-1:0:candidate",
+        "workflow-development-1:0:baseline",
+        "workflow-development-1:0:candidate"
+      ],
+      "outcome": "insufficient_evidence",
+      "per_case": {},
+      "planned_trials": 6,
+      "statistical_significance": "not_claimed",
+      "successes": {
+        "baseline": 0,
+        "candidate": 0
+      },
+      "valid_trials": 0
+    },
+    "protocol_sha256": "7a4a884e81242d896eb96ed5a0014052c938b9bf0fcea39d0daafad608b26144",
+    "runs": [
+      {
+        "id": "tr-b23f15a2ff",
+        "key": "receipt-development-1:0:baseline",
+        "task": "receipt-development-1",
+        "role": "baseline",
+        "version_id": "av-7627401ce21c6a7fe48a",
+        "status": "cancelled",
+        "usage": {
+          "calls": 0,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 0,
+          "unknown_usage_calls": 0
+        },
+        "verifier_attested": null,
+        "execution_frozen": false,
+        "error": "执行中止；该题结果不计入质量比较"
+      }
+    ],
+    "checkpoint_count": 0,
+    "resource_states": [
+      "cleaned"
+    ]
+  },
+  "resource_cleanup": {
+    "real_docker": true,
+    "owned_process_stopped": true,
+    "owned_container_removed": true,
+    "unrelated_container_preserved": true
+  },
+  "ui": {
+    "isolated_test_data": true,
+    "resume_button": true,
+    "cancel_button": true,
+    "cancelled_terminal_visible": true,
+    "mobile_width": 390,
+    "mobile_scroll_width": 390
+  },
+  "unit_tests": {
+    "total": 69,
+    "passed": 68,
+    "skipped": 1,
+    "skip": "optional legacy Docker calibration"
+  }
+}

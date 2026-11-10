@@ -1,7 +1,7 @@
 const $ = id => document.getElementById(id);
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const state = {overview:null, experiment:null, busy:false, selected:null};
-const labels = {queued:'等待执行',preparing:'准备环境',running:'执行中',completed:'评测完成',incomplete:'执行未完成',interrupted:'执行已中断',passed:'业务验收通过',failed:'业务验收未通过',error:'执行异常'};
+const labels = {queued:'等待执行',preparing:'准备环境',running:'执行中',completed:'评测完成',incomplete:'执行未完成',interrupted:'执行已中断',cancelled:'已取消',passed:'业务验收通过',failed:'业务验收未通过',error:'执行异常'};
 const outcomes={improved:'观察到提升',unchanged:'未观察到收益',regression:'发生退化或违反关键约束',insufficient_evidence:'证据不足'};
 const families={receipt:'下单结果核对',listing:'完整订单对账',workflow:'订单履约与补偿'};
 const phases={baseline:'运行开发基线',diagnosing:'诊断开发证据',proposing:'生成候选文件',validating:'配对验证',decided:'判定已记录'};
@@ -70,6 +70,10 @@ function renderExperiment() {
   const development=ex.runs.filter(r=>r.phase==='development'),decision=ex.decision;
   const progress=ex.automatic_evolution?`<div class="evo-steps">${Object.entries(phases).map(([phase,label])=>`<span class="${phase===ex.phase?'current':''}">${esc(label)}</span>`).join('')}</div><div class="evo-budget"><span>开发集 ${development.filter(r=>['passed','failed'].includes(r.status)).length}/6 次有效 · ${development.filter(r=>r.status==='passed').length} 次通过</span><span>修改 ${esc(ex.target)}</span><span>诊断/生成 ${esc(ex.optimizer_model.model)}</span><span>优化调用 ${(ex.optimizer_calls||[]).length}/${(ex.optimizer_policy?.max_diagnosis_attempts||1)+1}</span></div>`:'';
   $('experiment-body').innerHTML=`${progress}<div class="evo-result-head"><strong>${decision?esc(decisions[decision.status]||decision.status):esc(labels[ex.status]||ex.status)}${!decision&&evaluation&&!active(ex.status)?' · '+esc(outcomes[evaluation.outcome]):''}</strong><span>${esc(decision?(reasons[decision.reason]||decision.detail||decision.reason):scope)}</span></div>${ex.error?`<p class="evo-error evo-scope">${esc(ex.error)}</p>`:''}<div class="evo-pair">${cards}</div>${ex.plan?`<div class="evo-coverage"><table><thead><tr><th>场景 / 每个版本通过次数</th><th>基线</th><th>候选</th></tr></thead><tbody>${rows}</tbody></table><p>${evaluation?`${evaluation.valid_trials}/${evaluation.planned_trials} 次有效结果 · 候选关键约束违反 ${evaluation.critical_violations} 次`:'等待配对结果。'} · 未执行项不算失败</p></div>`:''}${budget?`<div class="evo-budget"><span>总请求 ${budget.calls}/${budget.limits.calls}</span><span>已知 Token ${number(budget.tokens)}/${number(budget.limits.tokens)}</span><span>待结算 ${budget.pending} · 用量未知 ${budget.unknown_usage_calls}</span><span>总时限 ${budget.limits.seconds}s</span></div>`:''}`;
+  const cancelling=ex.control?.state==='cancelling';
+  const controls=active(ex.status)?`<button data-control="cancel" ${cancelling?'disabled':''}>${cancelling?'正在取消…':'取消实验'}</button><span>${cancelling?'正在结算已发出的请求、停止执行并清理本实验资源。':'取消后保留已完成证据，停止派发新调用。'}</span>`:ex.status==='interrupted'?`<button data-control="resume" ${ex.recovery?.eligible?'':'disabled'}>从检查点继续</button><span>${ex.recovery?.eligible?'跳过已确认的 Trial，沿用剩余预算与原截止时间。':esc((ex.recovery?.reasons||[]).join('；'))}</span>`:'';
+  if(controls)$('experiment-body').insertAdjacentHTML('afterbegin',`<div class="evo-budget evo-controls">${controls}</div>`);
+  if(ex.resources?.some(r=>r.state!=='cleaned'))$('experiment-body').insertAdjacentHTML('beforeend','<p class="evo-error evo-scope">执行资源尚未全部核对完成，不能继续派发。</p>');
   options($('run-select'),ex.runs.length?ex.runs.map(r=>[r.id,`${r.phase==='development'?'开发':'验证'} · ${r.role==='baseline'?'基线':'候选'} · ${r.family?families[r.family]+' 场景 '+r.task.split('-').at(-1)+' · 第 '+(r.repeat+1)+' 次 · ':''}${labels[r.status]||r.status}`]):[['','暂无执行']],$('run-select').value);
   renderDiagnosis();
   renderEvidence();
@@ -133,6 +137,14 @@ $('version-form').onsubmit=async event=>{
   }catch(error){$('form-error').textContent=error.message;$('form-error').hidden=false;}finally{$('save-version').disabled=false;}
 };
 let submitKey=null;
+const resumeKeys=new Map();
+$('experiment-body').onclick=async event=>{
+  const button=event.target.closest('[data-control]');if(!button||state.busy)return;
+  const id=state.selected,action=button.dataset.control;state.busy=true;button.disabled=true;
+  if(action==='resume'&&!resumeKeys.has(id))resumeKeys.set(id,crypto.randomUUID());
+  try{await api(`/api/evo/experiments/${encodeURIComponent(id)}/${action}`,{},resumeKeys.get(id));notice(action==='resume'?'已从检查点继续，预算不会重置。':'已请求取消；正在保留证据并清理执行资源。');await refresh();}
+  catch(error){notice(error.message);button.disabled=false;}finally{state.busy=false;}
+};
 function protocolChanged(){
   const mode=$('protocol').value,config=state.overview?.protocols?.[mode]||{limits:{calls:24,tokens:360000,seconds:900}};
   for(const key of ['calls','tokens','seconds'])$('budget-'+key).value=config.limits[key];

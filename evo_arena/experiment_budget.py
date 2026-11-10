@@ -18,8 +18,14 @@ def limits_checked(value, default):
 
 
 class ExperimentBudget:
-    def __init__(self, store, ident):
-        self.store, self.ident = store, ident
+    def __init__(self, store, ident, experiment=None):
+        self.store, self.ident, self.experiment = store, ident, experiment
+
+    def check_control(self):
+        if self.experiment is not None:
+            from .execution_control import assert_epoch
+            with self.store.lock:
+                assert_epoch(self.store, self.experiment, dispatch=True)
 
     def start(self, limits):
         existing = self.store.get("evo_budget", self.ident)
@@ -38,6 +44,7 @@ class ExperimentBudget:
         return max(0, self.public()["deadline"] - time.time())
 
     def check(self):
+        self.check_control()
         budget = self.public()
         if (budget["pending"] or budget["unknown_usage_calls"] or budget["calls"] >= budget["limits"]["calls"]
                 or budget["tokens"] >= budget["limits"]["tokens"] or time.time() >= budget["deadline"]):

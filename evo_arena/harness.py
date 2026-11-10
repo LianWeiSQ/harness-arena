@@ -171,6 +171,12 @@ class TrialGateway:
         atomic_json(folder / "receipt.json", {"payload": payload, "signature": signature})
 
     def dispatch(self, data, ledger):
+        if self.experiment_budget:
+            from .execution_control import ExecutionStopped
+            try:
+                self.experiment_budget.check_control()
+            except ExecutionStopped:
+                return self.error(409, "Experiment stopped; no new actions admitted")
         route = data.get("route")
         if self.end_marker and self.end_marker.exists():
             return self.error(409, "Trial execution ended; state is frozen")
@@ -383,7 +389,8 @@ class HarborTrial:
         gateway = TrialGateway(self.settings, record, version, case, experiment_budget, run.get("id"))
         worker_root = self.harbor.parent.parent.parent
         python_path = os.pathsep.join([str(Path(__file__).resolve().parent.parent), str(worker_root)])
-        with tempfile.TemporaryDirectory(prefix="evoarena-relay-") as temporary, (root / f"{job}.log").open("w") as logs:
+        from .trial_resources import workspace
+        with workspace(experiment_budget, run, root, job, self.harbor) as temporary, (root / f"{job}.log").open("w") as logs:
             spool, ledger = Path(temporary) / "spool", Path(temporary) / "ledger"
             spool.mkdir()
             spool.chmod(0o777)
@@ -413,6 +420,8 @@ class HarborTrial:
             if task == "lost-receipt" or case:
                 args += ["--ve", "ARENA_VERIFY_TOKEN=" + gateway.verifier_token]
             record("Harbor 启动", f"{RUNNERS[runner][0]} · {(case or TASKS[task])['title']}")
+            if experiment_budget:
+                experiment_budget.check_control()
             with subprocess.Popen(args, env=env, cwd=worker_root, stdout=logs, stderr=subprocess.STDOUT,
                                   start_new_session=True) as process:
                 deadline = time.monotonic() + TIME_LIMIT + 150
@@ -420,6 +429,8 @@ class HarborTrial:
                     deadline = min(deadline, time.monotonic() + experiment_budget.remaining_seconds())
                 try:
                     while process.poll() is None and time.monotonic() < deadline:
+                        if experiment_budget:
+                            experiment_budget.check_control()
                         gateway.drain(spool, ledger)
                         time.sleep(.10)
                 finally:
@@ -430,13 +441,13 @@ class HarborTrial:
                         except subprocess.TimeoutExpired:
                             os.killpg(process.pid, signal.SIGKILL)
                             process.wait()
-                run["usage"] = gateway.budget.public()
-                if gateway.input_evidence:
-                    run["input_evidence"] = gateway.input_evidence.public()
-                if gateway.budget_exhausted:
-                    run["stop_reason"] = "达到模型请求或 Token 预算"
-                if case:
-                    run["execution_frozen"] = gateway.end_marker.is_file()
+                    run["usage"] = gateway.budget.public()
+                    if gateway.input_evidence:
+                        run["input_evidence"] = gateway.input_evidence.public()
+                    if gateway.budget_exhausted:
+                        run["stop_reason"] = "达到模型请求或 Token 预算"
+                    if case:
+                        run["execution_frozen"] = gateway.end_marker.is_file()
         results = list((jobs / job).glob("*/result.json"))
         if len(results) != 1:
             run.update(status="error", error="Harbor 未生成单题结果")

@@ -17,6 +17,8 @@ from .versions import CAPABILITIES, VersionRegistry, version_diff
 from .evolution import VersionExperiment
 from .improvement import ImprovementExperiment, IMPROVE_LIMITS
 from .taskpacks import MODES, current_pack
+from . import execution_control as control
+from .trial_resources import reconcile_experiment
 
 STATIC = Path(__file__).with_name("static")
 
@@ -49,13 +51,10 @@ def recover(store: Store) -> None:
             match.update(status="incomplete", finished=now())
             store.update("harness_match", match["id"], match)
 
+    control.recover(store)
     for experiment in store.list("evo_experiment"):
-        if experiment["status"] in ACTIVE:
-            for run in experiment["runs"]:
-                if run["status"] == "running":
-                    run.update(status="interrupted", error="控制面重启，需核对已有执行")
-            experiment.update(status="interrupted", finished=now())
-            store.update("evo_experiment", experiment["id"], experiment)
+        if experiment["status"] in {"interrupted", "cancelled", "incomplete"}:
+            reconcile_experiment(store, experiment["id"])
 
 
 class Manager:
@@ -76,8 +75,42 @@ class Manager:
             if self.worker and self.worker.is_alive():
                 return {"error": "已有实验正在运行"}, 409
             experiment, settings, _ = engine.create(payload, key)
-            self.current = None
-            self.worker = threading.Thread(target=engine.execute, args=(experiment, settings), daemon=True)
+            self.current = experiment["id"]
+            self.worker = threading.Thread(target=self.run_evolution, args=(engine, experiment, settings), daemon=True)
+            self.worker.start()
+            return experiment, 202
+
+    def run_evolution(self, engine, experiment, settings):
+        try:
+            engine.execute(experiment, settings)
+        except control.ExecutionStopped:
+            saved = self.store.get("evo_experiment", experiment["id"])
+            if saved and saved["status"] in ACTIVE:
+                control.recover(self.store)
+                reconcile_experiment(self.store, experiment["id"])
+        except Exception as error:
+            # Unexpected controller failure must not strand an active intent.
+            control.recover(self.store)
+            reconcile_experiment(self.store, experiment["id"])
+            self.store.event(experiment["id"], "evo.worker_interrupted", {"category": type(error).__name__})
+
+    def resume_evolution(self, engine, ident, key):
+        with self.lock:
+            old = self.store.get("evo_control_request", "resume-" + digest(key))
+            if old:
+                if old["experiment"] != ident:
+                    return {"error": "恢复请求幂等键冲突"}, 409
+                return self.store.get("evo_experiment", ident), 200
+            if self.worker and self.worker.is_alive():
+                return {"error": "已有实验正在运行"}, 409
+            experiment = self.store.get("evo_experiment", ident)
+            if not experiment:
+                return {"error": "实验不存在"}, 404
+            settings = engine.resume_settings(experiment)
+            reconcile_experiment(self.store, ident)
+            experiment, _ = control.enqueue_resume(self.store, ident, key)
+            self.current = ident
+            self.worker = threading.Thread(target=self.run_evolution, args=(engine, experiment, settings), daemon=True)
             self.worker.start()
             return experiment, 202
 
@@ -185,6 +218,11 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
                 result = store.get("evo_experiment", path.rsplit("/", 1)[-1])
                 if result:
                     result["budget"] = store.get("evo_budget", result["id"])
+                    result["control"] = store.get("evo_control", result["id"])
+                    reasons = control.resume_reasons(store, result)
+                    result["recovery"] = {"eligible": not reasons, "reasons": reasons}
+                    result["resources"] = [{k: r[k] for k in ("id", "state", "error", "reconciled") if k in r}
+                                           for r in store.list("evo_resource") if r["experiment"] == result["id"]]
                 return self.send_json(result or {"error": "not_found"}, 200 if result else 404)
             if path.startswith("/api/evo/optimizer-outputs/"):
                 result = store.get("evo_optimizer_output", path.rsplit("/", 1)[-1])
@@ -272,6 +310,20 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
                         raise ValueError("需要请求幂等键")
                     data, code = manager.start_evolution(improvement if payload.get("mode") == "improve" else evolution, payload, key)
                     return self.send_json(data, code)
+                if self.path.startswith("/api/evo/experiments/"):
+                    parts = self.path.split("/")
+                    if len(parts) != 6 or payload:
+                        raise ValueError("实验控制请求格式错误")
+                    ident, action = parts[-2:]
+                    if action == "cancel":
+                        return self.send_json(control.request_cancel(store, ident))
+                    if action == "resume":
+                        key = self.headers.get("Idempotency-Key", "")
+                        if not 1 <= len(key) <= 128:
+                            raise ValueError("需要请求幂等键")
+                        ex = store.get("evo_experiment", ident)
+                        data, code = manager.resume_evolution(improvement if ex and ex.get("mode") == "improve" else evolution, ident, key)
+                        return self.send_json(data, code)
                 if self.path == "/api/models":
                     return self.send_json(models.save(payload))
                 if self.path == "/api/models/delete":

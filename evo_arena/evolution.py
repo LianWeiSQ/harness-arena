@@ -11,11 +11,24 @@ from .taskpacks import MODES, current_pack, make_plan, materialize_business
 from .experiment_budget import ExperimentBudget, limits_checked
 from .evaluation import evaluate
 from .provider import BudgetExceeded
+from . import execution_control as control
 
 
 class VersionExperiment:
     def __init__(self, store, registry, harbor, image):
         self.store, self.registry, self.harbor, self.image = store, registry, harbor, image
+
+    def resume_settings(self, experiment):
+        settings = self.registry.settings_for(self.store.get("evo_version", experiment["baseline"]))
+        if experiment.get("candidate"):
+            self.registry.settings_for(self.store.get("evo_version", experiment["candidate"]))
+        if experiment.get("automatic_evolution"):
+            model = experiment["optimizer_model"]
+            optimizer, _, _ = self.registry.models.resolve(model["profile"])
+            if optimizer.model != model["model"] or optimizer.base_url != model["base_url"]:
+                raise ValueError("诊断模型连接已变化，请创建新实验")
+            return {"execution": settings, "optimizer": optimizer}
+        return settings
 
     def create(self, payload, key):
         if (not {"baseline", "candidate"} <= set(payload) or set(payload) - {"baseline", "candidate", "mode", "repeats", "limits"}
@@ -60,21 +73,29 @@ class VersionExperiment:
                 self.store.db.execute("INSERT INTO objects VALUES(?,?,?,?)", ("evo_task_pack", pack["id"], canonical(pack), now()))
             self.store.db.execute("INSERT INTO objects VALUES(?,?,?,?)",
                 ("evo_experiment", ident, canonical(experiment), now()))
+            control.insert_intent(self.store, experiment)
             self.store.db.execute("INSERT INTO objects VALUES(?,?,?,?)",
                 ("evo_request", request_id, canonical({"experiment": ident, "payload_hash": digest(payload)}), now()))
         return experiment, settings, True
 
-    def save(self, experiment):
+    def save(self, experiment, completed_run=None):
         if experiment.get("plan"):
             runs = [r for r in experiment["runs"] if r.get("phase") == "validation"] if experiment.get("automatic_evolution") else experiment["runs"]
             experiment["evaluation"] = evaluate(experiment["plan"], runs)
-        self.store.update("evo_experiment", experiment["id"], experiment)
+        if "epoch" in experiment:
+            control.save(self.store, experiment, completed_run)
+        else:
+            self.store.update("evo_experiment", experiment["id"], experiment)
 
     def prepare(self, experiment, selected):
         experiment["status"] = "preparing"
         self.save(experiment)
-        experiment["harbor_version"] = command(str(self.harbor), "--version")
-        experiment["image_id"] = command("docker", "image", "inspect", self.image, "--format", "{{.Id}}")
+        harbor_version = command(str(self.harbor), "--version")
+        if experiment.get("harbor_version") and experiment["harbor_version"] != harbor_version:
+            raise ValueError("Harbor 版本已变化，请创建新实验")
+        experiment["harbor_version"] = harbor_version
+        # Resume the pinned content, never a tag that may have moved meanwhile.
+        experiment["image_id"] = command("docker", "image", "inspect", experiment.get("image_id", self.image), "--format", "{{.Id}}")
         image_ref = "evoarena-snapshot:" + experiment["image_id"].split(":")[-1][:24]
         command("docker", "tag", experiment["image_id"], image_ref)
         experiment["image_ref"] = image_ref
@@ -89,8 +110,13 @@ class VersionExperiment:
         return root, pack
 
     def run_row(self, experiment, settings, row, root, pack, budget):
-        budget.check()
         version = self.store.get("evo_version", row.get("version_id") or experiment[row["role"]])
+        row = {**row, "version_id": version["id"]}
+        if "epoch" in experiment:
+            previous = control.completed_row(self.store, experiment, row)
+            if previous:
+                return previous
+        budget.check()
         run = {**row, "id": "tr-" + uuid.uuid4().hex[:10], "version_id": version["id"],
             "runner": experiment["runner"], "model": settings.model,
             "status": "running", "trace": [], "checks": [], "patch": ""}
@@ -104,13 +130,23 @@ class VersionExperiment:
         try:
             case = next(c for c in pack["cases"] if c["id"] == row["task"]) if pack else None
             HarborTrial(settings, self.harbor).execute(run, root, {}, record, version, case, budget)
+            resource = self.store.get("evo_resource", run["id"])
+            if resource and resource["state"] != "cleaned":
+                run.update(status="error", error="本题执行资源尚未完成对账，停止后续派发")
+        except control.ExecutionStopped:
+            state = self.store.get("evo_control", experiment["id"])
+            run.update(status="cancelled" if state and state["state"] == "cancelling" else "interrupted",
+                       error="执行中止；该题结果不计入质量比较")
+            raise
         except (OSError, RuntimeError, ValueError, subprocess.SubprocessError) as error:
             run.update(status="error", error="版本执行异常 · " + type(error).__name__)
-        self.save(experiment)
+        self.save(experiment, completed_run=run if run["status"] in {"passed", "failed"} else None)
         return run
 
     def execute(self, experiment, settings):
-        budget = ExperimentBudget(self.store, experiment["id"])
+        control.acquire(self.store, experiment)
+        budget = ExperimentBudget(self.store, experiment["id"], experiment)
+        stopped = False
         try:
             budget.start(experiment.get("limits", {"calls": 24, "tokens": 360000, "seconds": 900}))
             plan = experiment.get("plan")
@@ -122,13 +158,30 @@ class VersionExperiment:
                     break  # Do not spend on the second version after an infrastructure failure.
             experiment["status"] = "completed" if len(experiment["runs"]) == len(rows) and all(
                 r["status"] in {"passed", "failed"} for r in experiment["runs"]) else "incomplete"
+        except control.ExecutionStopped:
+            stopped = True
         except BudgetExceeded:
             experiment.update(status="incomplete", error="实验总预算耗尽或用量未结算；剩余题目不计为失败")
         except (OSError, RuntimeError, ValueError, subprocess.SubprocessError) as error:
             experiment.update(status="incomplete", error="实验准备失败 · " + type(error).__name__)
         finally:
+            try:
+                state = control.assert_epoch(self.store, experiment)
+            except control.ExecutionStopped:
+                return  # An old epoch may not overwrite recovery state.
+            if state["state"] == "cancelling":
+                experiment.update(status="cancelled", error="实验已取消；已完成的证据与用量保留")
+            elif stopped:
+                experiment.update(status="interrupted", error="执行中止，需核对检查点")
             experiment["budget"] = budget.public()
             if experiment.get("plan"):
                 experiment["evaluation"] = evaluate(experiment["plan"], experiment["runs"])
             experiment["finished"] = now()
-            self.save(experiment)
+            with self.store.lock, self.store.db:
+                # save() has its own transaction; inline to keep terminal fencing atomic.
+                from .store import canonical
+                if control.assert_epoch(self.store, experiment)["state"] == "cancelling":
+                    experiment.update(status="cancelled", error="实验已取消；已完成的证据与用量保留")
+                control.terminal(self.store, experiment, experiment["status"])
+                self.store.db.execute("UPDATE objects SET data=? WHERE kind='evo_experiment' AND id=?",
+                                      (canonical(experiment), experiment["id"]))

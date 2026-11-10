@@ -1,0 +1,565 @@
+{
+  "schema": "evo-m3-verification-v1",
+  "date": "2026-11-10",
+  "implementation_commit": "bdfeb4fdc27a6756956fd6290b71c3f73008ffc9",
+  "full_protocol_verified": false,
+  "recommendation_changed": false,
+  "scope": "Real integration attempts; partial validation is not a complete quality comparison. Runtime records and credentials remain local.",
+  "experiments": [
+    {
+      "id": "ex-dc5e82c1fae8",
+      "status": "completed",
+      "phase": "decided",
+      "created": "2026-11-10T08:19:11.066051+00:00",
+      "finished": "2026-11-10T08:24:56.264413+00:00",
+      "baseline": "av-7627401ce21c6a7fe48a",
+      "candidate": null,
+      "target": "skills/order-recovery/SKILL.md",
+      "model": "gpt-5.6-sol",
+      "task_pack": "tp-f7d868a50a72b5e99ca4",
+      "budget": {
+        "calls": 49,
+        "deadline": 1794313151.066538,
+        "limits": {
+          "calls": 362,
+          "seconds": 14400,
+          "tokens": 3000000
+        },
+        "pending": 0,
+        "started": "2026-11-10T08:19:11.066534+00:00",
+        "tokens": 329206,
+        "unknown_usage_calls": 0
+      },
+      "evaluation": {
+        "automatic_promotion": false,
+        "complete": false,
+        "critical_violations": 0,
+        "duplicates": [],
+        "gate_eligible": false,
+        "invalid": [],
+        "missing": [
+          "listing-validation-1:0:baseline",
+          "listing-validation-1:0:candidate",
+          "listing-validation-1:1:baseline",
+          "listing-validation-1:1:candidate",
+          "listing-validation-2:0:baseline",
+          "listing-validation-2:0:candidate",
+          "listing-validation-2:1:baseline",
+          "listing-validation-2:1:candidate",
+          "receipt-validation-1:0:baseline",
+          "receipt-validation-1:0:candidate",
+          "receipt-validation-1:1:baseline",
+          "receipt-validation-1:1:candidate",
+          "receipt-validation-2:0:baseline",
+          "receipt-validation-2:0:candidate",
+          "receipt-validation-2:1:baseline",
+          "receipt-validation-2:1:candidate",
+          "workflow-validation-1:0:baseline",
+          "workflow-validation-1:0:candidate",
+          "workflow-validation-1:1:baseline",
+          "workflow-validation-1:1:candidate",
+          "workflow-validation-2:0:baseline",
+          "workflow-validation-2:0:candidate",
+          "workflow-validation-2:1:baseline",
+          "workflow-validation-2:1:candidate"
+        ],
+        "outcome": "insufficient_evidence",
+        "per_case": {},
+        "planned_trials": 24,
+        "statistical_significance": "not_claimed",
+        "successes": {
+          "baseline": 0,
+          "candidate": 0
+        },
+        "valid_trials": 0
+      },
+      "decision": {
+        "id": "decision-ex-dc5e82c1fae8",
+        "status": "rejected",
+        "reason": "invalid_candidate",
+        "detail": "观察引用了不存在、重复或未提供的证据"
+      },
+      "runs": [
+        {
+          "id": "tr-e3ffb9d378",
+          "phase": "development",
+          "task": "receipt-development-1",
+          "role": "baseline",
+          "version_id": "av-7627401ce21c6a7fe48a",
+          "status": "passed",
+          "verifier_attested": true,
+          "execution_frozen": true,
+          "usage": {
+            "calls": 7,
+            "max_calls": 12,
+            "max_tokens": 180000,
+            "tokens": 45051,
+            "unknown_usage_calls": 0
+          }
+        },
+        {
+          "id": "tr-f8ac0235f9",
+          "phase": "development",
+          "task": "receipt-development-2",
+          "role": "baseline",
+          "version_id": "av-7627401ce21c6a7fe48a",
+          "status": "passed",
+          "verifier_attested": true,
+          "execution_frozen": true,
+          "usage": {
+            "calls": 8,
+            "max_calls": 12,
+            "max_tokens": 180000,
+            "tokens": 50524,
+            "unknown_usage_calls": 0
+          }
+        },
+        {
+          "id": "tr-beaba58443",
+          "phase": "development",
+          "task": "listing-development-1",
+          "role": "baseline",
+          "version_id": "av-7627401ce21c6a7fe48a",
+          "status": "passed",
+          "verifier_attested": true,
+          "execution_frozen": true,
+          "usage": {
+            "calls": 7,
+            "max_calls": 12,
+            "max_tokens": 180000,
+            "tokens": 45512,
+            "unknown_usage_calls": 0
+          }
+        },
+        {
+          "id": "tr-64988fdbb6",
+          "phase": "development",
+          "task": "listing-development-2",
+          "role": "baseline",
+          "version_id": "av-7627401ce21c6a7fe48a",
+          "status": "passed",
+          "verifier_attested": true,
+          "execution_frozen": true,
+          "usage": {
+            "calls": 9,
+            "max_calls": 12,
+            "max_tokens": 180000,
+            "tokens": 58982,
+            "unknown_usage_calls": 0
+          }
+        },
+        {
+          "id": "tr-eaf85d458b",
+          "phase": "development",
+          "task": "workflow-development-1",
+          "role": "baseline",
+          "version_id": "av-7627401ce21c6a7fe48a",
+          "status": "passed",
+          "verifier_attested": true,
+          "execution_frozen": true,
+          "usage": {
+            "calls": 7,
+            "max_calls": 12,
+            "max_tokens": 180000,
+            "tokens": 47277,
+            "unknown_usage_calls": 0
+          }
+        },
+        {
+          "id": "tr-320534b10b",
+          "phase": "development",
+          "task": "workflow-development-2",
+          "role": "baseline",
+          "version_id": "av-7627401ce21c6a7fe48a",
+          "status": "passed",
+          "verifier_attested": true,
+          "execution_frozen": true,
+          "usage": {
+            "calls": 10,
+            "max_calls": 12,
+            "max_tokens": 180000,
+            "tokens": 67330,
+            "unknown_usage_calls": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "ex-8163f70dac1d",
+      "status": "incomplete",
+      "phase": "decided",
+      "created": "2026-11-10T08:28:50.714281+00:00",
+      "finished": "2026-11-10T08:43:26.575379+00:00",
+      "baseline": "av-7627401ce21c6a7fe48a",
+      "candidate": "av-adcbb19519b4a526f770",
+      "target": "skills/order-recovery/SKILL.md",
+      "model": "gpt-5.6-sol",
+      "task_pack": "tp-f7d868a50a72b5e99ca4",
+      "budget": {
+        "calls": 134,
+        "deadline": 1794313730.714903,
+        "limits": {
+          "calls": 363,
+          "seconds": 14400,
+          "tokens": 3000000
+        },
+        "pending": 0,
+        "started": "2026-11-10T08:28:50.714898+00:00",
+        "tokens": 902450,
+        "unknown_usage_calls": 1
+      },
+      "evaluation": {
+        "automatic_promotion": false,
+        "complete": false,
+        "critical_violations": 0,
+        "duplicates": [],
+        "gate_eligible": false,
+        "invalid": [
+          "listing-validation-1:1:candidate"
+        ],
+        "missing": [
+          "listing-validation-1:1:baseline",
+          "listing-validation-1:1:candidate",
+          "listing-validation-2:0:baseline",
+          "listing-validation-2:0:candidate",
+          "listing-validation-2:1:baseline",
+          "listing-validation-2:1:candidate",
+          "workflow-validation-1:0:baseline",
+          "workflow-validation-1:0:candidate",
+          "workflow-validation-1:1:baseline",
+          "workflow-validation-1:1:candidate",
+          "workflow-validation-2:0:baseline",
+          "workflow-validation-2:0:candidate",
+          "workflow-validation-2:1:baseline",
+          "workflow-validation-2:1:candidate"
+        ],
+        "outcome": "insufficient_evidence",
+        "per_case": {
+          "listing-validation-1": {
+            "baseline": 1,
+            "baseline_completed": 1,
+            "candidate": 1,
+            "candidate_completed": 1
+          },
+          "receipt-validation-1": {
+            "baseline": 2,
+            "baseline_completed": 2,
+            "candidate": 2,
+            "candidate_completed": 2
+          },
+          "receipt-validation-2": {
+            "baseline": 2,
+            "baseline_completed": 2,
+            "candidate": 2,
+            "candidate_completed": 2
+          }
+        },
+        "planned_trials": 24,
+        "statistical_significance": "not_claimed",
+        "successes": {
+          "baseline": 5,
+          "candidate": 5
+        },
+        "valid_trials": 10
+      },
+      "decision": {
+        "id": "decision-ex-8163f70dac1d",
+        "status": "insufficient_evidence",
+        "reason": "incomplete_coverage",
+        "detail": null
+      },
+      "runs": [
+        {
+          "id": "tr-6e0569c9b0",
+          "phase": "development",
+          "task": "receipt-development-1",
+          "role": "baseline",
+          "version_id": "av-7627401ce21c6a7fe48a",
+          "status": "passed",
+          "verifier_attested": true,
+          "execution_frozen": true,
+          "usage": {
+            "calls": 6,
+            "max_calls": 12,
+            "max_tokens": 180000,
+            "tokens": 37674,
+            "unknown_usage_calls": 0
+          }
+        },
+        {
+          "id": "tr-1aae2c1bbb",
+          "phase": "development",
+          "task": "receipt-development-2",
+          "role": "baseline",
+          "version_id": "av-7627401ce21c6a7fe48a",
+          "status": "passed",
+          "verifier_attested": true,
+          "execution_frozen": true,
+          "usage": {
+            "calls": 7,
+            "max_calls": 12,
+            "max_tokens": 180000,
+            "tokens": 43551,
+            "unknown_usage_calls": 0
+          }
+        },
+        {
+          "id": "tr-8821a5b37d",
+          "phase": "development",
+          "task": "listing-development-1",
+          "role": "baseline",
+          "version_id": "av-7627401ce21c6a7fe48a",
+          "status": "passed",
+          "verifier_attested": true,
+          "execution_frozen": true,
+          "usage": {
+            "calls": 10,
+            "max_calls": 12,
+            "max_tokens": 180000,
+            "tokens": 69821,
+            "unknown_usage_calls": 0
+          }
+        },
+        {
+          "id": "tr-a66e888c96",
+          "phase": "development",
+          "task": "listing-development-2",
+          "role": "baseline",
+          "version_id": "av-7627401ce21c6a7fe48a",
+          "status": "passed",
+          "verifier_attested": true,
+          "execution_frozen": true,
+          "usage": {
+            "calls": 8,
+            "max_calls": 12,
+            "max_tokens": 180000,
+            "tokens": 53212,
+            "unknown_usage_calls": 0
+          }
+        },
+        {
+          "id": "tr-d2ead4caa2",
+          "phase": "development",
+          "task": "workflow-development-1",
+          "role": "baseline",
+          "version_id": "av-7627401ce21c6a7fe48a",
+          "status": "passed",
+          "verifier_attested": true,
+          "execution_frozen": true,
+          "usage": {
+            "calls": 7,
+            "max_calls": 12,
+            "max_tokens": 180000,
+            "tokens": 43581,
+            "unknown_usage_calls": 0
+          }
+        },
+        {
+          "id": "tr-0f52fa8f75",
+          "phase": "development",
+          "task": "workflow-development-2",
+          "role": "baseline",
+          "version_id": "av-7627401ce21c6a7fe48a",
+          "status": "passed",
+          "verifier_attested": true,
+          "execution_frozen": true,
+          "usage": {
+            "calls": 11,
+            "max_calls": 12,
+            "max_tokens": 180000,
+            "tokens": 77304,
+            "unknown_usage_calls": 0
+          }
+        },
+        {
+          "id": "tr-fe750747c9",
+          "phase": "validation",
+          "task": "receipt-validation-1",
+          "role": "baseline",
+          "version_id": "av-7627401ce21c6a7fe48a",
+          "status": "passed",
+          "verifier_attested": true,
+          "execution_frozen": true,
+          "usage": {
+            "calls": 9,
+            "max_calls": 12,
+            "max_tokens": 180000,
+            "tokens": 59159,
+            "unknown_usage_calls": 0
+          }
+        },
+        {
+          "id": "tr-a407a46ec3",
+          "phase": "validation",
+          "task": "receipt-validation-1",
+          "role": "candidate",
+          "version_id": "av-adcbb19519b4a526f770",
+          "status": "passed",
+          "verifier_attested": true,
+          "execution_frozen": true,
+          "usage": {
+            "calls": 8,
+            "max_calls": 12,
+            "max_tokens": 180000,
+            "tokens": 57025,
+            "unknown_usage_calls": 0
+          }
+        },
+        {
+          "id": "tr-7ab013df3f",
+          "phase": "validation",
+          "task": "receipt-validation-1",
+          "role": "candidate",
+          "version_id": "av-adcbb19519b4a526f770",
+          "status": "passed",
+          "verifier_attested": true,
+          "execution_frozen": true,
+          "usage": {
+            "calls": 8,
+            "max_calls": 12,
+            "max_tokens": 180000,
+            "tokens": 57338,
+            "unknown_usage_calls": 0
+          }
+        },
+        {
+          "id": "tr-5c23234af2",
+          "phase": "validation",
+          "task": "receipt-validation-1",
+          "role": "baseline",
+          "version_id": "av-7627401ce21c6a7fe48a",
+          "status": "passed",
+          "verifier_attested": true,
+          "execution_frozen": true,
+          "usage": {
+            "calls": 8,
+            "max_calls": 12,
+            "max_tokens": 180000,
+            "tokens": 52158,
+            "unknown_usage_calls": 0
+          }
+        },
+        {
+          "id": "tr-cc10ea1812",
+          "phase": "validation",
+          "task": "receipt-validation-2",
+          "role": "candidate",
+          "version_id": "av-adcbb19519b4a526f770",
+          "status": "passed",
+          "verifier_attested": true,
+          "execution_frozen": true,
+          "usage": {
+            "calls": 7,
+            "max_calls": 12,
+            "max_tokens": 180000,
+            "tokens": 49536,
+            "unknown_usage_calls": 0
+          }
+        },
+        {
+          "id": "tr-aa5700581c",
+          "phase": "validation",
+          "task": "receipt-validation-2",
+          "role": "baseline",
+          "version_id": "av-7627401ce21c6a7fe48a",
+          "status": "passed",
+          "verifier_attested": true,
+          "execution_frozen": true,
+          "usage": {
+            "calls": 8,
+            "max_calls": 12,
+            "max_tokens": 180000,
+            "tokens": 50460,
+            "unknown_usage_calls": 0
+          }
+        },
+        {
+          "id": "tr-8133dc0d2a",
+          "phase": "validation",
+          "task": "receipt-validation-2",
+          "role": "baseline",
+          "version_id": "av-7627401ce21c6a7fe48a",
+          "status": "passed",
+          "verifier_attested": true,
+          "execution_frozen": true,
+          "usage": {
+            "calls": 8,
+            "max_calls": 12,
+            "max_tokens": 180000,
+            "tokens": 50566,
+            "unknown_usage_calls": 0
+          }
+        },
+        {
+          "id": "tr-78b8b0baec",
+          "phase": "validation",
+          "task": "receipt-validation-2",
+          "role": "candidate",
+          "version_id": "av-adcbb19519b4a526f770",
+          "status": "passed",
+          "verifier_attested": true,
+          "execution_frozen": true,
+          "usage": {
+            "calls": 7,
+            "max_calls": 12,
+            "max_tokens": 180000,
+            "tokens": 49793,
+            "unknown_usage_calls": 0
+          }
+        },
+        {
+          "id": "tr-643c5d861d",
+          "phase": "validation",
+          "task": "listing-validation-1",
+          "role": "baseline",
+          "version_id": "av-7627401ce21c6a7fe48a",
+          "status": "passed",
+          "verifier_attested": true,
+          "execution_frozen": true,
+          "usage": {
+            "calls": 7,
+            "max_calls": 12,
+            "max_tokens": 180000,
+            "tokens": 44906,
+            "unknown_usage_calls": 0
+          }
+        },
+        {
+          "id": "tr-aa76673c6a",
+          "phase": "validation",
+          "task": "listing-validation-1",
+          "role": "candidate",
+          "version_id": "av-adcbb19519b4a526f770",
+          "status": "passed",
+          "verifier_attested": true,
+          "execution_frozen": true,
+          "usage": {
+            "calls": 7,
+            "max_calls": 12,
+            "max_tokens": 180000,
+            "tokens": 49342,
+            "unknown_usage_calls": 0
+          }
+        },
+        {
+          "id": "tr-88dafaecd0",
+          "phase": "validation",
+          "task": "listing-validation-1",
+          "role": "candidate",
+          "version_id": "av-adcbb19519b4a526f770",
+          "status": "error",
+          "verifier_attested": true,
+          "execution_frozen": true,
+          "usage": {
+            "calls": 6,
+            "max_calls": 12,
+            "max_tokens": 180000,
+            "tokens": 35205,
+            "unknown_usage_calls": 1
+          },
+          "error": "模型响应异常或用量未报告"
+        }
+      ]
+    }
+  ]
+}
