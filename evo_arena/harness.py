@@ -21,6 +21,8 @@ from pathlib import Path
 from .provider import Budget, BudgetExceeded, NoRedirect, ProviderError
 from .store import now
 from .versions import InputEvidence, file_hashes, materialize_version
+from .business import BusinessService
+from .store import digest
 
 
 FIXTURES = Path(__file__).with_name("fixtures") / "harness"
@@ -72,7 +74,7 @@ def read_text(path: Path, limit: int = 200_000) -> str:
 
 class TrialGateway:
     """Forward one trial's model calls and keep the order ledger outside the sandbox."""
-    def __init__(self, settings, record, version=None):
+    def __init__(self, settings, record, version=None, case=None, experiment_budget=None, trial_id=None):
         self.settings, self.record = settings, record
         self.budget = Budget(MAX_CALLS, MAX_TOKENS)
         self.opener = urllib.request.build_opener(NoRedirect())
@@ -83,8 +85,12 @@ class TrialGateway:
         self.checked_after_fault = False
         self.verifier_token = secrets.token_urlsafe()
         self.input_evidence = InputEvidence(version) if version else None
+        self.business = BusinessService(case) if case else None
+        self.experiment_budget, self.trial_id = experiment_budget, trial_id
+        self.end_marker = None
 
     def model(self, raw: bytes) -> tuple[int, str, str]:
+        ledger_call_id = None
         try:
             data = json.loads(raw)
             if not isinstance(data, dict) or data.get("model") != self.settings.model:
@@ -93,6 +99,10 @@ class TrialGateway:
                 raise ValueError()
             data["store"] = False
             data["max_output_tokens"] = min(8192, int(data.get("max_output_tokens") or 8192))
+            if self.budget.unknown_usage_calls or self.budget.calls >= MAX_CALLS or self.budget.tokens >= MAX_TOKENS:
+                raise BudgetExceeded("单题预算耗尽")
+            if self.experiment_budget:
+                ledger_call_id = self.experiment_budget.claim(self.trial_id, "execution", digest(data))
             self.budget.claim()
         except BudgetExceeded:
             self.budget_exhausted = True
@@ -111,7 +121,8 @@ class TrialGateway:
             data=json.dumps(data).encode(), method="POST",
             headers={"Authorization": "Bearer " + self.settings.api_key, "Content-Type": "application/json"})
         try:
-            with self.opener.open(req, timeout=75) as response:
+            timeout = min(75, max(.1, self.experiment_budget.remaining_seconds())) if self.experiment_budget else 75
+            with self.opener.open(req, timeout=timeout) as response:
                 content_type = response.headers.get("Content-Type", "application/json")
                 result = response.read(6_000_001).decode()
             if len(result) > 6_000_000:
@@ -123,7 +134,15 @@ class TrialGateway:
                                   if r.get("type") == "response.completed"), {})
             else:
                 completed = json.loads(result)
-            self.budget.record(completed.get("usage") or {})
+            if not isinstance(completed, dict):
+                raise ValueError("Invalid response object")
+            usage = completed.get("usage")
+            if not isinstance(usage, dict):
+                usage = {}
+            if self.experiment_budget:
+                self.experiment_budget.settle(ledger_call_id, usage)
+                ledger_call_id = None
+            self.budget.record(usage)
             for item in completed.get("output", []):
                 if item.get("type") == "function_call":
                     self.record("调用 " + str(item.get("name", "tool")), str(item.get("arguments", ""))[:2600])
@@ -134,9 +153,11 @@ class TrialGateway:
             return 200, content_type, result
         except urllib.error.HTTPError as error:
             self.failure = f"模型供应商 HTTP {error.code}"
-        except (OSError, ValueError, ProviderError, KeyError, TypeError):
+        except (OSError, ValueError, ProviderError, KeyError, TypeError, AttributeError):
             self.failure = "模型响应异常或用量未报告"
         self.budget.unknown_usage_calls = max(1, self.budget.unknown_usage_calls)
+        if ledger_call_id:
+            self.experiment_budget.settle(ledger_call_id)
         return self.error(502, self.failure)
 
     @staticmethod
@@ -144,18 +165,34 @@ class TrialGateway:
         return status, "application/json", json.dumps({"error": {"message": message}})
 
     def write_ledger(self, folder):
-        payload = json.dumps({"writes": self.writes, "checkedAfterFault": self.checked_after_fault})
+        payload = json.dumps(self.business.ledger() if self.business else
+                             {"writes": self.writes, "checkedAfterFault": self.checked_after_fault})
         signature = hmac.new(self.verifier_token.encode(), payload.encode(), hashlib.sha256).hexdigest()
         atomic_json(folder / "receipt.json", {"payload": payload, "signature": signature})
 
     def dispatch(self, data, ledger):
         route = data.get("route")
+        if self.end_marker and self.end_marker.exists():
+            return self.error(409, "Trial execution ended; state is frozen")
         if route == "models":
             return 200, "application/json", json.dumps({"object": "list",
                 "data": [{"id": self.settings.model, "object": "model"}]})
         if route == "model":
             body = data.get("body")
             return self.model(body.encode()) if isinstance(body, str) else self.error(400, "Invalid request")
+        if route == "business" and self.business:
+            try:
+                body = json.loads(data.get("body", ""))
+                if not isinstance(body, dict) or set(body) != {"action", "args"} or not isinstance(body["action"], str):
+                    raise ValueError()
+                status, result = self.business.call(body["action"], body["args"])
+                self.write_ledger(ledger)
+                self.record("业务工具", json.dumps({"action": body["action"], "http": status, "result": result}, ensure_ascii=False))
+                return status, "application/json", json.dumps(result)
+            except (ValueError, TypeError):
+                return self.error(400, "Invalid business request")
+        if self.business:
+            return self.error(404, "Not found")
         if route == "submit":
             self.writes += 1
             self.write_ledger(ledger)
@@ -255,6 +292,8 @@ node /tests/verify.mjs /work/scripts > /tmp/checks.json
 node -e 'const fs=require("node:fs");const checks=JSON.parse(fs.readFileSync("/tmp/checks.json"));fs.writeFileSync("/logs/verifier/reward.json",JSON.stringify({reward:Number(checks.length===4&&checks.every(c=>c.passed))}));console.log(JSON.stringify({checks}))'
 """
         else:
+            files["environment/order.cjs"] = (FIXTURES / "order.cjs").read_text()
+            files["environment/Dockerfile"] += "COPY --chmod=755 order.cjs /usr/local/bin/arena-order\n"
             files["tests/verify.cjs"] = (FIXTURES / "verify-order.cjs").read_text()
             files["tests/test.sh"] = "#!/bin/sh\nset -eu\nnode /tests/verify.cjs\n"
         write_files(path, files)
@@ -335,13 +374,13 @@ class HarborTrial:
     def __init__(self, settings, harbor):
         self.settings, self.harbor = settings, harbor
 
-    def execute(self, run, root, original, record, version=None):
+    def execute(self, run, root, original, record, version=None, case=None, experiment_budget=None):
         task, runner = run["task"], run["runner"]
         job = f"{task}-{runner}" + ("-" + run["id"] if version else "")
         jobs = root / "jobs"
         jobs.mkdir(exist_ok=True)
         run["job"] = job
-        gateway = TrialGateway(self.settings, record, version)
+        gateway = TrialGateway(self.settings, record, version, case, experiment_budget, run.get("id"))
         worker_root = self.harbor.parent.parent.parent
         python_path = os.pathsep.join([str(Path(__file__).resolve().parent.parent), str(worker_root)])
         with tempfile.TemporaryDirectory(prefix="evoarena-relay-") as temporary, (root / f"{job}.log").open("w") as logs:
@@ -350,13 +389,17 @@ class HarborTrial:
             spool.chmod(0o777)
             ledger.mkdir(mode=0o755)
             gateway.write_ledger(ledger)
-            mounts = [
-                {"type": "bind", "source": str(spool), "target": "/arena-relay"},
-                {"type": "bind", "source": str(ledger), "target": "/arena-ledger", "read_only": True},
-            ]
+            mounts = [{"type": "bind", "source": str(spool), "target": "/arena-relay"}]
+            if not case:
+                mounts.append({"type": "bind", "source": str(ledger), "target": "/arena-ledger", "read_only": True})
             env = {**os.environ, "PYTHONPATH": python_path, "ARENA_TRIAL_URL": "http://127.0.0.1:18765",
                    "ARENA_TRIAL_TOKEN": "arena", "HARBOR_TELEMETRY": "off"}
             env.pop("EVO_VERSION_FILE", None)
+            env.pop("EVO_TRIAL_END_FILE", None)
+            if case:
+                env["EVO_LEDGER_DIR"] = str(ledger)
+                gateway.end_marker = Path(temporary) / "execution-ended"
+                env["EVO_TRIAL_END_FILE"] = str(gateway.end_marker)
             if version:
                 version_root = Path(temporary) / "version"
                 env["EVO_VERSION_FILE"] = str(materialize_version(version, version_root))
@@ -367,12 +410,14 @@ class HarborTrial:
                     "--job-name", job, "--agent", "evo_arena.harbor_agents:" + RUNNERS[runner][1],
                     "--model", "arena/" + self.settings.model, "--n-concurrent", "1", "--max-retries", "0",
                     "--mounts", json.dumps(mounts), "--yes"]
-            if task == "lost-receipt":
+            if task == "lost-receipt" or case:
                 args += ["--ve", "ARENA_VERIFY_TOKEN=" + gateway.verifier_token]
-            record("Harbor 启动", f"{RUNNERS[runner][0]} · {TASKS[task]['title']}")
+            record("Harbor 启动", f"{RUNNERS[runner][0]} · {(case or TASKS[task])['title']}")
             with subprocess.Popen(args, env=env, cwd=worker_root, stdout=logs, stderr=subprocess.STDOUT,
                                   start_new_session=True) as process:
                 deadline = time.monotonic() + TIME_LIMIT + 150
+                if experiment_budget:
+                    deadline = min(deadline, time.monotonic() + experiment_budget.remaining_seconds())
                 try:
                     while process.poll() is None and time.monotonic() < deadline:
                         gateway.drain(spool, ledger)
@@ -390,11 +435,27 @@ class HarborTrial:
                     run["input_evidence"] = gateway.input_evidence.public()
                 if gateway.budget_exhausted:
                     run["stop_reason"] = "达到模型请求或 Token 预算"
+                if case:
+                    run["execution_frozen"] = gateway.end_marker.is_file()
         results = list((jobs / job).glob("*/result.json"))
         if len(results) != 1:
             run.update(status="error", error="Harbor 未生成单题结果")
             return
         self.load_result(run, results[0], original, gateway.failure)
+        if case:
+            try:
+                output = read_text(results[0].parent / "verifier" / "test-stdout.txt", 16000)
+                evidence = next(json.loads(line) for line in reversed(output.splitlines()) if line.startswith("{"))
+                receipt = evidence["attestation"]
+                signature = hmac.new(gateway.verifier_token.encode(), receipt["payload"].encode(), hashlib.sha256).hexdigest()
+                verified = json.loads(receipt["payload"])
+                if (not hmac.compare_digest(signature, receipt["signature"]) or not run.get("execution_frozen")
+                        or verified["checks"] != run["checks"] or verified["ledger"] != run.get("ledger")
+                        or verified["reward"] != ((json.loads(results[0].read_text()).get("verifier_result") or {}).get("rewards") or {}).get("reward")):
+                    raise ValueError("Verifier receipt mismatch")
+                run["verifier_attested"] = True
+            except (OSError, ValueError, KeyError, TypeError, StopIteration):
+                run.update(status="error", error="独立验收签名缺失、不匹配或业务状态未冻结")
         if version:
             receipt = read_text(results[0].parent / "agent" / "version-load.json")
             try:

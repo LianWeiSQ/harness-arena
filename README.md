@@ -1,8 +1,10 @@
 # EvoArena
 
-项目正向 **Harness 自改进平台 Evo** 演进：通过真实任务反馈生成候选版本，验证改进是否有效，并交付可复用、可回滚的资产。新方向的完整范围见 [总体规划](docs/evo-platform-plan.md)，实现边界见 [架构方案](docs/evo-architecture.md)，进度见 [长期 Goal](TASKS.md)。目前已完成 M1 版本与真实加载验证，v0.2 的自动改进闭环尚未完成。
+项目正向 **Harness 自改进平台 Evo** 演进：通过真实任务反馈生成候选版本，验证改进是否有效，并交付可复用、可回滚的资产。新方向的完整范围见 [总体规划](docs/evo-platform-plan.md)，实现边界见 [架构方案](docs/evo-architecture.md)，进度见 [长期 Goal](TASKS.md)。目前已完成 M2 业务任务包、配对评测和实验预算，v0.2 的自动改进闭环尚未完成。
 
 默认首页 `/evo` 提供不可变基线、人工候选、运行前 diff 和真实版本加载实验。Pi 支持系统策略追加和原生 Skill；DSH 支持任务指令前缀，原生 Skill 尚未验证。详见 [用法与首组加载证据](docs/version-loading-check.md)。旧对战和 FixOps 历史仍在 `/harness` 与 `/fixops`。
+
+新业务任务包有 3 类问题、18 个不同机制场景，开发/验证/封存各 6 题。页面可选择开发冒烟、重复验证或封存报告，配置实验总预算，查看逐题差异与可信验收。真实 Pi 冒烟中两版均为 3/3，报告“未观察到收益”；DSH 的永久失败补偿路径也已实际通过。见 [评测用法与边界](docs/business-evaluation.md) 和 [脱敏验证摘要](docs/m2-verification.json)。新任务不依赖旁边的桌面项目代码，但 DSH 适配器当前仍依赖已有 Harbor 工作区；独立克隆安装在 M6 完成。
 
 EvoArena 让工具型 Agent 在可验证任务中竞争，并根据执行反馈产生候选策略。比赛、策略差异、父子配对、晋级或拒绝都有持久记录。
 

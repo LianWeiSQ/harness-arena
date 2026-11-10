@@ -4,12 +4,26 @@ from __future__ import annotations
 import json
 import os
 import shlex
+from functools import wraps
 from pathlib import Path
 
 from agents.deepseek_harness import DeepSeekHarness
 from harbor.agents.installed.base import BaseInstalledAgent
 
 from .versions import file_hashes, verify_version
+
+
+def freeze_after_run(method):
+    @wraps(method)
+    async def wrapped(*args, **kwargs):
+        try:
+            return await method(*args, **kwargs)
+        finally:
+            marker = os.environ.get("EVO_TRIAL_END_FILE")
+            if marker:
+                # Host-only path, outside every sandbox mount. Runs on timeout too.
+                Path(marker).write_text("ended")
+    return wrapped
 
 
 async def load_version(agent, environment, runner):
@@ -59,6 +73,7 @@ class ArenaDSH(DeepSeekHarness):
     async def install(self, environment):
         await self.exec_as_agent(environment, "dsh --version")
 
+    @freeze_after_run
     async def run(self, instruction, environment, context):
         manifest = await load_version(self, environment, "dsh")
         if manifest and manifest["files"]["policy.md"]:
@@ -86,6 +101,7 @@ class ArenaPi(BaseInstalledAgent):
     async def install(self, environment):
         await self.exec_as_agent(environment, self.get_version_command())
 
+    @freeze_after_run
     async def run(self, instruction, environment, context):
         manifest = await load_version(self, environment, "pi")
         await start_relay(self, environment)

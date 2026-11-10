@@ -10,12 +10,13 @@
 <main class="evo-page">
 <div class="evo-heading"><div><p class="eyebrow">WORKSPACE / 从执行反馈开始</p><h1>让改动进入真实执行。</h1><p class="evo-muted">固化基线，创建候选，检查实际加载的策略与 Skill，再对照业务验收。</p></div><button class="primary" id="new-version">创建基线版本 ↗</button></div>
 <div id="notice" class="evo-notice" role="status" hidden></div>
-<section class="evo-strip" aria-label="工作台状态"><div><span>不可变版本</span><strong id="version-count">—</strong></div><div><span>运行记录</span><strong id="experiment-count">—</strong></div><div><span>当前任务</span><strong>订单回执恢复</strong></div><div><span>验证范围</span><strong>加载检查 · SMOKE</strong></div></section>
+<section class="evo-strip" aria-label="工作台状态"><div><span>不可变版本</span><strong id="version-count">—</strong></div><div><span>运行记录</span><strong id="experiment-count">—</strong></div><div><span>任务包</span><strong>业务工具 · 18 场景</strong></div><div><span>数据分组</span><strong>开发 / 验证 / 封存</strong></div></section>
 <div class="evo-layout">
 <section class="evo-main">
 <section class="evo-panel" aria-labelledby="experiment-title"><div class="evo-panel-head"><h2 id="experiment-title">版本实验</h2><select id="history" aria-label="实验记录"><option value="">暂无实验</option></select></div>
 <div class="evo-launch"><label>基线<select id="baseline" aria-label="基线版本"></select></label><span aria-hidden="true">→</span><label>候选<select id="candidate" aria-label="候选版本"></select></label><button id="run-experiment" class="primary" disabled>验证两个版本</button></div>
-<p class="evo-scope">同一模型、同一任务、独立环境。每个版本最多 12 次模型请求；加载检查不产生晋升结论。</p>
+<div class="evo-protocol"><label>评测范围<select id="protocol" aria-label="评测范围"><option value="smoke">开发冒烟 · 3 题 × 双版本</option><option value="validation">验证对比 · 6 题 × 2 次 × 双版本</option><option value="report">封存报告 · 6 题 × 2 次 × 双版本</option><option value="loading">旧任务 · 版本加载检查</option></select></label><label>总请求上限<input id="budget-calls" type="number" min="1" max="1000" value="72"></label><label>总 Token 上限<input id="budget-tokens" type="number" min="1" max="10000000" value="600000"></label><label>总时限（秒）<input id="budget-seconds" type="number" min="1" max="43200" value="2400"></label></div>
+<p class="evo-scope" id="protocol-hint">3 类业务问题，每类抽取 1 道开发题。用于确认执行链路，不产生晋升结论。每题最多 12 次模型请求。</p>
 <details class="evo-draft"><summary>运行前检查所选版本的改动</summary><pre id="draft-diff" class="evo-diff">请选择一组基线与候选。</pre></details>
 <div id="experiment-body" class="evo-experiment-body"><div class="evo-empty"><span class="evo-empty-symbol" aria-hidden="true">↗</span><h3>先保留一个可复现的起点</h3><p>创建基线后，从它生成一个人工候选。实验会核对版本文件与实际模型输入，并展示两次执行的差异。</p></div></div>
 </section>

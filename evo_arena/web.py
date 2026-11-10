@@ -15,6 +15,7 @@ from .scenario import build_image, docker
 from .store import Store, digest, now
 from .versions import CAPABILITIES, VersionRegistry, version_diff
 from .evolution import VersionExperiment
+from .taskpacks import MODES, current_pack
 
 STATIC = Path(__file__).with_name("static")
 
@@ -171,13 +172,21 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
                 return self.send_json({"diff": version_diff(baseline, candidate)})
             if path == "/api/evo":
                 return self.send_json({"capabilities": CAPABILITIES, "models": models.public(),
+                    "protocols": MODES, "task_pack": {k: v for k, v in current_pack().items() if k in {"id", "schema", "sha256"}},
                     "ready": bool(harbor_bin and harbor_bin.is_file() and models.public()["profiles"]),
                     "versions": store.list("evo_version"),
-                    "experiments": [{k: v for k, v in row.items() if k not in {"runs", "diff"}}
+                    "experiments": [{k: v for k, v in row.items() if k not in {"runs", "diff", "plan"}}
                                     for row in store.list("evo_experiment")]})
             if path.startswith("/api/evo/experiments/"):
                 result = store.get("evo_experiment", path.rsplit("/", 1)[-1])
+                if result:
+                    result["budget"] = store.get("evo_budget", result["id"])
                 return self.send_json(result or {"error": "not_found"}, 200 if result else 404)
+            if path == "/api/evo/taskpacks":
+                pack = current_pack()
+                return self.send_json({"id": pack["id"], "schema": pack["schema"], "sha256": pack["sha256"],
+                    "cases": [{k: c[k] for k in ("id", "family", "split", "title", "checksum")} for c in pack["cases"]],
+                    "protocols": MODES})
             if path == "/api/harness":
                 overview = harness.overview()
                 profiles = models.public()

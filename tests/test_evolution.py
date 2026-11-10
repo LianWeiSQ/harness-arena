@@ -121,6 +121,22 @@ class VersionExperimentTests(unittest.TestCase):
         self.assertEqual(result["runs"][0], experiment["runs"][0])
         self.assertEqual(result["runs"][1]["status"], "interrupted")
 
+    def test_paired_protocol_freezes_limits_splits_and_task_pack(self):
+        payload = {"baseline": self.baseline["id"], "candidate": self.candidate["id"], "mode": "validation",
+                   "limits": {"calls": 12, "tokens": 100000, "seconds": 600}}
+        experiment, _, _ = self.engine.create(payload, "validation")
+        self.assertEqual(len(experiment["plan"]["trials"]), 24)
+        self.assertEqual(experiment["plan"]["experiment_limits"], payload["limits"])
+        self.assertEqual({r["split"] for r in experiment["plan"]["trials"]}, {"validation"})
+        pack = self.store.get("evo_task_pack", experiment["task_pack"])
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.store.update("evo_task_pack", pack["id"], {**pack, "cases": []})
+        again, _, created = self.engine.create(payload, "validation")
+        self.assertFalse(created)
+        self.assertEqual(experiment["id"], again["id"])
+        with self.assertRaises(ValueError):
+            self.engine.create({**payload, "limits": {"calls": 0}}, "bad")
+
 
 if __name__ == "__main__":
     unittest.main()

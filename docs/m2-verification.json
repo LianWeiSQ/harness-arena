@@ -1,0 +1,463 @@
+{
+  "verified_at": "2026-11-10T08:03:36.375818+00:00",
+  "scope": "M2 integration, not automatic evolution or generalization evidence",
+  "calibration": {
+    "task_pack": "tp-f7d868a50a72b5e99ca4",
+    "case_count": 18,
+    "correct_solutions_passed": 18,
+    "blank_solutions_rejected": 18,
+    "typical_wrong_solutions_rejected": 18,
+    "unjustified_cancellations_rejected": 3,
+    "tampered_or_wrong_case_ledgers_rejected": 3
+  },
+  "paired_development_smoke": {
+    "id": "ex-5aebaa32a849",
+    "baseline": "av-7627401ce21c6a7fe48a",
+    "candidate": "av-99c207e9352dd698acc0",
+    "task_pack": "tp-d983e098e1648a0d5678",
+    "runner": "pi",
+    "model": "gpt-5.6-sol",
+    "status": "completed",
+    "evaluation": {
+      "automatic_promotion": false,
+      "complete": true,
+      "critical_violations": 0,
+      "duplicates": [],
+      "gate_eligible": false,
+      "invalid": [],
+      "missing": [],
+      "outcome": "unchanged",
+      "per_case": {
+        "listing-development-1": {
+          "baseline": 1,
+          "baseline_completed": 1,
+          "candidate": 1,
+          "candidate_completed": 1
+        },
+        "receipt-development-1": {
+          "baseline": 1,
+          "baseline_completed": 1,
+          "candidate": 1,
+          "candidate_completed": 1
+        },
+        "workflow-development-1": {
+          "baseline": 1,
+          "baseline_completed": 1,
+          "candidate": 1,
+          "candidate_completed": 1
+        }
+      },
+      "planned_trials": 6,
+      "statistical_significance": "not_claimed",
+      "successes": {
+        "baseline": 3,
+        "candidate": 3
+      },
+      "valid_trials": 6
+    },
+    "image_id": "sha256:a57d62434aea2bd07377b526a43fda736352b343db661f08af55c4549c7c9b27",
+    "harbor_version": "0.22.0",
+    "budget": {
+      "calls": 40,
+      "tokens": 261670,
+      "pending": 0,
+      "unknown_usage_calls": 0,
+      "limits": {
+        "calls": 72,
+        "seconds": 2400,
+        "tokens": 600000
+      }
+    },
+    "runs": [
+      {
+        "task": "receipt-development-1",
+        "case_checksum": "c6dfe920ec075e4e2d01c5dc5652ccf3a9e494afed7dcddd8a3067497fc1a5a4",
+        "repeat": 0,
+        "role": "baseline",
+        "version_id": "av-7627401ce21c6a7fe48a",
+        "status": "passed",
+        "usage": {
+          "calls": 7,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 44646,
+          "unknown_usage_calls": 0
+        },
+        "seconds": 37.22,
+        "checks": [
+          {
+            "critical": false,
+            "name": "最终恰好一笔订单",
+            "passed": true
+          },
+          {
+            "critical": true,
+            "name": "没有重复写入或重复在途提交",
+            "passed": true
+          },
+          {
+            "critical": false,
+            "name": "最终状态经过一致性查询",
+            "passed": true
+          }
+        ],
+        "verifier_mode": "separate",
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "task_checksum": "4fefe66b8c230fec1d3afb99c1d2d3562c60b70f0d9804c5a19a9fbda07fc178",
+        "input_evidence": {
+          "manifest_sha256": "27e6fd018693341618ea3397b70ca601e1e3ada1981442709ae19336a54799c8",
+          "policy_in_input": true,
+          "registration_verified": true,
+          "requests_observed": 7,
+          "skill_catalog": [
+            "skills/order-recovery/SKILL.md"
+          ],
+          "skill_contents_in_input": [
+            "skills/order-recovery/SKILL.md"
+          ]
+        }
+      },
+      {
+        "task": "receipt-development-1",
+        "case_checksum": "c6dfe920ec075e4e2d01c5dc5652ccf3a9e494afed7dcddd8a3067497fc1a5a4",
+        "repeat": 0,
+        "role": "candidate",
+        "version_id": "av-99c207e9352dd698acc0",
+        "status": "passed",
+        "usage": {
+          "calls": 5,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 32548,
+          "unknown_usage_calls": 0
+        },
+        "seconds": 30.97,
+        "checks": [
+          {
+            "critical": false,
+            "name": "最终恰好一笔订单",
+            "passed": true
+          },
+          {
+            "critical": true,
+            "name": "没有重复写入或重复在途提交",
+            "passed": true
+          },
+          {
+            "critical": false,
+            "name": "最终状态经过一致性查询",
+            "passed": true
+          }
+        ],
+        "verifier_mode": "separate",
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "task_checksum": "4fefe66b8c230fec1d3afb99c1d2d3562c60b70f0d9804c5a19a9fbda07fc178",
+        "input_evidence": {
+          "manifest_sha256": "0b1ccfa06cb786703f92351aa1f5c3b13cc180967567e66370404cca20ccc49a",
+          "policy_in_input": true,
+          "registration_verified": true,
+          "requests_observed": 5,
+          "skill_catalog": [
+            "skills/order-recovery/SKILL.md"
+          ],
+          "skill_contents_in_input": [
+            "skills/order-recovery/SKILL.md"
+          ]
+        }
+      },
+      {
+        "task": "listing-development-1",
+        "case_checksum": "2814b1257b596013873b1bc0c4d5e9cbbeccca67770488e92156f876d934b2e3",
+        "repeat": 0,
+        "role": "candidate",
+        "version_id": "av-99c207e9352dd698acc0",
+        "status": "passed",
+        "usage": {
+          "calls": 9,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 59917,
+          "unknown_usage_calls": 0
+        },
+        "seconds": 45.35,
+        "checks": [
+          {
+            "critical": false,
+            "name": "已遍历完整且一致的查询结果",
+            "passed": true
+          },
+          {
+            "critical": false,
+            "name": "清单准确、无遗漏、无重复",
+            "passed": true
+          },
+          {
+            "critical": false,
+            "name": "金额按最终有效记录汇总",
+            "passed": true
+          },
+          {
+            "critical": true,
+            "name": "未混入其他客户或取消订单",
+            "passed": true
+          }
+        ],
+        "verifier_mode": "separate",
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "task_checksum": "b096d1b1d0cf58fefef57934d324b45e19925747cb70f215912c44dd12258618",
+        "input_evidence": {
+          "manifest_sha256": "0b1ccfa06cb786703f92351aa1f5c3b13cc180967567e66370404cca20ccc49a",
+          "policy_in_input": true,
+          "registration_verified": true,
+          "requests_observed": 9,
+          "skill_catalog": [
+            "skills/order-recovery/SKILL.md"
+          ],
+          "skill_contents_in_input": [
+            "skills/order-recovery/SKILL.md"
+          ]
+        }
+      },
+      {
+        "task": "listing-development-1",
+        "case_checksum": "2814b1257b596013873b1bc0c4d5e9cbbeccca67770488e92156f876d934b2e3",
+        "repeat": 0,
+        "role": "baseline",
+        "version_id": "av-7627401ce21c6a7fe48a",
+        "status": "passed",
+        "usage": {
+          "calls": 6,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 39137,
+          "unknown_usage_calls": 0
+        },
+        "seconds": 30.57,
+        "checks": [
+          {
+            "critical": false,
+            "name": "已遍历完整且一致的查询结果",
+            "passed": true
+          },
+          {
+            "critical": false,
+            "name": "清单准确、无遗漏、无重复",
+            "passed": true
+          },
+          {
+            "critical": false,
+            "name": "金额按最终有效记录汇总",
+            "passed": true
+          },
+          {
+            "critical": true,
+            "name": "未混入其他客户或取消订单",
+            "passed": true
+          }
+        ],
+        "verifier_mode": "separate",
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "task_checksum": "b096d1b1d0cf58fefef57934d324b45e19925747cb70f215912c44dd12258618",
+        "input_evidence": {
+          "manifest_sha256": "27e6fd018693341618ea3397b70ca601e1e3ada1981442709ae19336a54799c8",
+          "policy_in_input": true,
+          "registration_verified": true,
+          "requests_observed": 6,
+          "skill_catalog": [
+            "skills/order-recovery/SKILL.md"
+          ],
+          "skill_contents_in_input": [
+            "skills/order-recovery/SKILL.md"
+          ]
+        }
+      },
+      {
+        "task": "workflow-development-1",
+        "case_checksum": "19b336511d3ba8d609ed3d977ab52281eecaa13ebf206dbedd390bcc590a13ec",
+        "repeat": 0,
+        "role": "baseline",
+        "version_id": "av-7627401ce21c6a7fe48a",
+        "status": "passed",
+        "usage": {
+          "calls": 7,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 46133,
+          "unknown_usage_calls": 0
+        },
+        "seconds": 35.5,
+        "checks": [
+          {
+            "critical": false,
+            "name": "订单最终状态正确",
+            "passed": true
+          },
+          {
+            "critical": false,
+            "name": "库存占用与最终状态一致",
+            "passed": true
+          },
+          {
+            "critical": true,
+            "name": "没有重复占用或破坏已确认订单",
+            "passed": true
+          },
+          {
+            "critical": false,
+            "name": "最终状态已查询确认",
+            "passed": true
+          }
+        ],
+        "verifier_mode": "separate",
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "task_checksum": "d30cd39cb81632fed4963e640e02f41cb2fcd4a621fe2a8e63c72afddc51ad80",
+        "input_evidence": {
+          "manifest_sha256": "27e6fd018693341618ea3397b70ca601e1e3ada1981442709ae19336a54799c8",
+          "policy_in_input": true,
+          "registration_verified": true,
+          "requests_observed": 7,
+          "skill_catalog": [
+            "skills/order-recovery/SKILL.md"
+          ],
+          "skill_contents_in_input": [
+            "skills/order-recovery/SKILL.md"
+          ]
+        }
+      },
+      {
+        "task": "workflow-development-1",
+        "case_checksum": "19b336511d3ba8d609ed3d977ab52281eecaa13ebf206dbedd390bcc590a13ec",
+        "repeat": 0,
+        "role": "candidate",
+        "version_id": "av-99c207e9352dd698acc0",
+        "status": "passed",
+        "usage": {
+          "calls": 6,
+          "max_calls": 12,
+          "max_tokens": 180000,
+          "tokens": 39289,
+          "unknown_usage_calls": 0
+        },
+        "seconds": 30.02,
+        "checks": [
+          {
+            "critical": false,
+            "name": "订单最终状态正确",
+            "passed": true
+          },
+          {
+            "critical": false,
+            "name": "库存占用与最终状态一致",
+            "passed": true
+          },
+          {
+            "critical": true,
+            "name": "没有重复占用或破坏已确认订单",
+            "passed": true
+          },
+          {
+            "critical": false,
+            "name": "最终状态已查询确认",
+            "passed": true
+          }
+        ],
+        "verifier_mode": "separate",
+        "verifier_attested": true,
+        "execution_frozen": true,
+        "task_checksum": "d30cd39cb81632fed4963e640e02f41cb2fcd4a621fe2a8e63c72afddc51ad80",
+        "input_evidence": {
+          "manifest_sha256": "0b1ccfa06cb786703f92351aa1f5c3b13cc180967567e66370404cca20ccc49a",
+          "policy_in_input": true,
+          "registration_verified": true,
+          "requests_observed": 6,
+          "skill_catalog": [
+            "skills/order-recovery/SKILL.md"
+          ],
+          "skill_contents_in_input": [
+            "skills/order-recovery/SKILL.md"
+          ]
+        }
+      }
+    ]
+  },
+  "dsh_followup": {
+    "task": "workflow-validation-2",
+    "task_pack": "tp-e3b0fea42024e477c821",
+    "status": "passed",
+    "usage": {
+      "calls": 8,
+      "tokens": 88388,
+      "max_calls": 12,
+      "max_tokens": 180000,
+      "unknown_usage_calls": 0
+    },
+    "checks": [
+      {
+        "name": "补偿有实际永久失败依据",
+        "passed": true,
+        "critical": false
+      },
+      {
+        "name": "订单最终状态正确",
+        "passed": true,
+        "critical": false
+      },
+      {
+        "name": "库存占用与最终状态一致",
+        "passed": true,
+        "critical": false
+      },
+      {
+        "name": "没有重复占用或破坏已确认订单",
+        "passed": true,
+        "critical": true
+      },
+      {
+        "name": "最终状态已查询确认",
+        "passed": true,
+        "critical": false
+      }
+    ],
+    "verifier_attested": true,
+    "execution_frozen": true,
+    "verifier_mode": "separate",
+    "atif_available": true,
+    "task_checksum": "c756408ac1fedf869d19664b4fee611272b2f2e917ab2fdc306c71750c7b2ee6",
+    "runtime_version": "0.1.2-rc.1"
+  },
+  "task_pack_changes_after_paired_smoke": [
+    "harness.py",
+    "fixtures/harness/verify-business.cjs"
+  ],
+  "change_reason": "Verifier requires observed permanent failure before accepting compensation; all 18 cases recalibrated and DSH ran that path on tp-e3b0fea42024e477c821. A subsequent provider-parser guard handles non-object responses and non-object usage: tested with a local fake provider, with unknown usage settled and further dispatch blocked; no extra paid rerun of successful-response paths.",
+  "preliminary_integration": {
+    "id": "ex-5f3c1472a446",
+    "task_pack": "tp-5c4d8f67951fcb885af0",
+    "calls": 43,
+    "tokens": 282174,
+    "purpose": "Before result attestation and execution freeze; not relabeled as the later protocol."
+  },
+  "all_real_verification_cost": {
+    "calls": 91,
+    "tokens": 632232
+  },
+  "limitations": [
+    "No automatic candidate generation or promotion in M2",
+    "No full repeated validation or sealed model report yet",
+    "No deterministic provider seed",
+    "No statistical significance claim",
+    "Trial-boundary recovery is M4"
+  ],
+  "current_task_pack": "tp-f7d868a50a72b5e99ca4",
+  "verification_tests": {
+    "total": 45,
+    "passed": 44,
+    "skipped": 1,
+    "optional_skip": "legacy Docker suite; new Harbor business trials were run separately"
+  }
+}

@@ -44,6 +44,8 @@ class Store:
                 WHEN OLD.kind='version' BEGIN SELECT RAISE(ABORT,'immutable version'); END;
             CREATE TRIGGER IF NOT EXISTS immutable_evo_version BEFORE UPDATE ON objects
                 WHEN OLD.kind='evo_version' BEGIN SELECT RAISE(ABORT,'immutable evo version'); END;
+            CREATE TRIGGER IF NOT EXISTS immutable_evo_task_pack BEFORE UPDATE ON objects
+                WHEN OLD.kind='evo_task_pack' BEGIN SELECT RAISE(ABORT,'immutable task pack'); END;
         """)
 
     def close(self):

@@ -1,7 +1,11 @@
 #!/usr/bin/env node
-const [action] = process.argv.slice(2);
+const [action, ...extra] = process.argv.slice(2);
 const methods = { submit: "POST", status: "GET" };
-if (!methods[action]) {
+if ((action === 'help' || action === '--help') && !extra.length || methods[action] && extra.length === 1 && extra[0] === '--help') {
+  console.log("Usage: arena-order submit|status");
+  process.exit(0);
+}
+if (!methods[action] || extra.length) {
   console.error("Usage: arena-order submit|status");
   process.exit(2);
 }
