@@ -281,7 +281,7 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
                 result = benchmarks.trial(parts[4], parts[6]) if len(parts) == 7 and parts[5] == "trials" else None
                 return self.send_json(result or {"error": "not_found"}, 200 if result else 404)
             if path.startswith("/api/benchmarks/runs/"):
-                result = store.get("benchmark_run", path.rsplit("/", 1)[-1])
+                result = benchmarks.run_view(path.rsplit("/", 1)[-1])
                 return self.send_json(result or {"error": "not_found"}, 200 if result else 404)
             if path == "/api/evo/example":
                 value = json.loads((STATIC.parent / "fixtures" / "evo-example.json").read_text())

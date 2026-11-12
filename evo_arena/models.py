@@ -37,7 +37,7 @@ class ModelProfiles:
 
     def _items(self, data):
         items = list(data["profiles"])
-        if self.inherited:
+        if self.inherited and not any(item["id"] == "startup" for item in items):
             items.insert(0, {"id": "startup", "name": "启动配置", "model": self.inherited.model,
                             "base_url": self.inherited.base_url, "api_key": self.inherited.api_key})
         return items
@@ -51,7 +51,10 @@ class ModelProfiles:
                 default = items[0]["id"] if items else None
             return {"default": default, "profiles": [
                 {k: item[k] for k in ("id", "name", "model", "base_url")} |
-                {"credential_ready": bool(item["api_key"]), "editable": item["id"] != "startup"}
+                {"credential_ready": bool(item["api_key"]), "editable": True,
+                 "deletable": item["id"] != "startup",
+                 "source": "startup" if item["id"] == "startup" and not any(
+                     p["id"] == "startup" for p in data["profiles"]) else "local"}
                 for item in items]}
 
     def resolve(self, ident=None):
@@ -69,11 +72,9 @@ class ModelProfiles:
         if "default" in payload and type(payload["default"]) is not bool:
             raise ValueError("默认模型配置格式错误")
         ident = payload.get("id") or "model-" + uuid.uuid4().hex[:12]
-        if ident == "startup":
-            raise ValueError("启动配置由启动参数管理，可另存为新连接")
         with self.lock:
             data = self._read()
-            old = next((row for row in data["profiles"] if row["id"] == ident), None)
+            old = next((row for row in self._items(data) if row["id"] == ident), None)
             if payload.get("id") and old is None:
                 raise ValueError("模型配置不存在，请刷新页面")
             values = {key: payload.get(key, "").strip() for key in ("name", "model", "base_url", "api_key")}
@@ -90,9 +91,7 @@ class ModelProfiles:
                 raise ValueError("请完整填写连接名称、模型 ID、API 地址和 API Key")
             values["base_url"] = values["base_url"].rstrip("/")
             item = {"id": ident, **values}
-            data["profiles"] = [item if row["id"] == ident else row for row in data["profiles"]]
-            if old is None:
-                data["profiles"].append(item)
+            data["profiles"] = [row for row in data["profiles"] if row["id"] != ident] + [item]
             if payload.get("default") or not self.public()["default"]:
                 data["default"] = ident
             self._write(data)
@@ -100,6 +99,8 @@ class ModelProfiles:
 
     def remove(self, ident):
         with self.lock:
+            if ident == "startup":
+                raise ValueError("启动连接可以编辑，不能删除")
             data = self._read()
             if ident not in {row["id"] for row in data["profiles"]}:
                 raise ValueError("该连接不可删除或已不存在")

@@ -8,8 +8,23 @@ const page = await browser.newPage({viewport:{width:1440,height:1000}});
 const errors=[];page.on('pageerror', e=>errors.push(e.message));
 page.on('console', e=>{if(e.type()==='error') errors.push(e.text());});
 try {
+  await page.goto('http://127.0.0.1:8797/settings?edit=startup');
+  await page.waitForFunction(()=>document.querySelector('#form-title').textContent==='编辑模型连接');
+  assert.equal(await page.locator('#profile-key').inputValue(),'');
+  assert.equal(await page.locator('#profiles button').count(),1);
+  await page.fill('#profile-name','Editable fixture');
+  await page.fill('#profile-model','test-model-edited');
+  await page.click('#save-model');
+  await page.waitForFunction(()=>document.querySelector('#save-status').textContent.includes('已保存'));
+  await page.reload();
+  await page.waitForFunction(()=>document.querySelector('#profile-model').value==='test-model-edited');
+  const modelData=await (await page.request.get('http://127.0.0.1:8797/api/models')).json();
+  assert.equal(modelData.profiles.length,1);
+  assert.equal(modelData.profiles[0].credential_ready,true);
+  assert.equal(JSON.stringify(modelData).includes('secret-test'),false);
   await page.goto('http://127.0.0.1:8797/evo');
   await page.waitForFunction(()=>document.querySelector('#dataset').options.length===2);
+  assert.equal(await page.locator('.edit-model').first().getAttribute('href'),'/settings?edit=startup');
   const custom = await page.locator('#dataset option').evaluateAll(options=>options.find(o=>o.text==='Fixture').value);
   await page.selectOption('#dataset', custom);
   assert.equal(await page.locator('#start').isEnabled(), false);
@@ -18,6 +33,17 @@ try {
   await page.click('.back-link');
   assert.equal(await page.locator('#trial-count').innerText(),'2');
   await page.click('#start');
+  await page.waitForFunction(()=>document.querySelector('#live-progress').textContent.includes('下载 Node.js'));
+  await page.locator('[data-trial]').first().click();
+  await page.waitForFunction(()=>document.querySelector('#installation-log')?.textContent.includes('10%'));
+  assert.match(await page.locator('#evidence-architecture').innerText(),/AMD64.*ARM64.*模拟运行/);
+  await page.locator('[data-evidence="identity"] summary').click();
+  await page.waitForFunction(()=>document.querySelector('#installation-log')?.textContent.includes('100%'));
+  assert.equal(await page.locator('[data-evidence="identity"]').getAttribute('open'),'');
+  assert.match(await page.locator('#agent-output').textContent(),/Fixture tool in progress/);
+  assert.match(await page.locator('#evidence-phase').innerText(),/Agent 执行/);
+  await page.screenshot({path:'.evoarena/live-progress-fixture.png',fullPage:true});
+  await page.click('[data-close="evidence-dialog"]');
   await page.waitForFunction(()=>document.querySelector('#run-meta').textContent.includes('已完成'));
   assert.equal(await page.locator('.score-card').count(),2);
   assert.match(await page.locator('.score-card').first().innerText(),/100.0%/);
@@ -32,5 +58,5 @@ try {
   await page.setViewportSize({width:390,height:844});
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
   assert.deepEqual(errors,[]);
-  console.log('PASS: selection, submit, comparisons, evidence, reload, mobile; fixture only.');
+  console.log('PASS: startup editing, key preservation, live stages/logs, modal auto-refresh, selection, comparisons, reload, mobile; fixture only.');
 } finally {await browser.close();}

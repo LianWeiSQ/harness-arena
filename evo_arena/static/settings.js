@@ -13,6 +13,7 @@ async function api(path, payload) {
     path,
     payload
       ? {
+          signal: AbortSignal.timeout(40000),
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -20,7 +21,7 @@ async function api(path, payload) {
           },
           body: JSON.stringify(payload),
         }
-      : undefined,
+      : {signal: AbortSignal.timeout(15000)},
   );
   const result = await response.json();
   if (!response.ok) throw new Error(result.error || "配置保存失败");
@@ -44,6 +45,10 @@ function edit(profile) {
     ? "留空沿用已保存的密钥"
     : "输入此连接的 API Key";
   $("profile-default").checked = profile?.id === profiles?.default;
+  $("save-model").textContent = profile ? "保存修改" : "保存连接";
+  $("key-hint").textContent = profile?.id === "startup"
+    ? "保存为本机覆盖配置，重启后仍生效；密钥留空则沿用。"
+    : "密钥留空可沿用已有配置，页面不会回显密钥。";
   status("");
 }
 function render() {
@@ -94,7 +99,8 @@ function render() {
             remove.disabled = false;
           }
         };
-        actions.append(change, remove, cancel);
+        actions.append(change);
+        if (profile.deletable !== false) actions.append(remove, cancel);
       } else actions.append(el("span", "由启动参数管理", "muted"));
       item.append(actions);
       return item;
@@ -102,7 +108,7 @@ function render() {
   );
   if (!profiles.profiles.length)
     $("profiles").append(
-      el("p", "添加第一个模型连接，再创建一个可执行版本。", "empty"),
+      el("p", "添加模型连接后，即可在评测中选择。", "empty"),
     );
 }
 $("new-profile").onclick = () => {
@@ -126,7 +132,7 @@ $("model-form").onsubmit = async (event) => {
     profiles = result;
     edit(profiles.profiles.find((profile) => profile.id === result.id));
     render();
-    status("连接已保存，可以在创建版本或配置诊断模型时选择。");
+    status("已保存，新评测使用此配置；正在执行的任务保持原配置。");
   } catch (error) {
     status(error.message, true);
   } finally {
@@ -150,6 +156,8 @@ api("/api/models")
   .then((data) => {
     profiles = data;
     render();
+    const selected = new URLSearchParams(location.search).get("edit");
+    if (selected) edit(profiles.profiles.find(profile => profile.id === selected));
   })
   .catch((error) => status(error.message, true));
 
@@ -157,12 +165,9 @@ $("inspect-system").onclick = async () => {
   $("inspect-system").disabled = true;
   $("system-checks").textContent = "正在检查本地依赖…";
   try {
-    const data = await api("/api/evo/system");
-    $("system-checks").replaceChildren(...data.checks.map(c => el("p", `${c.ready ? "✓" : "×"} ${c.name} · ${c.detail}`, c.ready ? "evo-ok" : "evo-error")), el("p", `数据目录：${data.data_directory}`));
-    const labels = {improve:"自动改进",smoke:"开发冒烟",validation:"验证对比",report:"封存报告"};
-    const table = el("table");const head = el("tr");for(const label of ["实验","请求","Token","秒"])head.append(el("th",label));table.append(head);
-    for(const [name,value] of Object.entries(data.defaults)){const row=el("tr");for(const text of [labels[name],value.calls,value.tokens.toLocaleString('zh-CN'),value.seconds])row.append(el("td",text));table.append(row);}
-    $("system-defaults").replaceChildren(table,...Object.values(data.capabilities).map(c=>el("p",`${c.name} ${c.runtime_version} · ${c.skills ? "策略与原生 Skill" : "策略前缀；原生 Skill 未验证"}`)));
+    const data = await api("/api/benchmarks/preflight", {});
+    $("system-checks").replaceChildren(...data.checks.map(c => el("p", `${c.ok ? "✓" : "×"} ${c.name} · ${c.detail}`, c.ok ? "evo-ok" : "evo-error")));
+    $("system-defaults").replaceChildren(el("p", "任务环境、安装运行器、模型执行和验收会分别显示进度。"), el("p", "单题预算和重复次数在启动前设置；点击开始评测后才调用模型。"));
   } catch(error) {$("system-checks").textContent=error.message;}
   finally {$("inspect-system").disabled=false;}
 };

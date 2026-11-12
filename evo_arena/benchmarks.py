@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import math
 import os
+import platform
 import signal
 import subprocess
 import threading
@@ -15,13 +16,28 @@ from .datasets import DatasetCatalog
 from .harness import TrialGateway, read_text
 from .provider import Budget
 from .store import digest, now
+from .benchmark_progress import snapshot
 
 ADAPTERS = {"pi": "BenchmarkPi", "dsh": "BenchmarkDSH"}
 ACTIVE = {"queued", "preparing", "running", "cancelling"}
-DETAIL_FIELDS = {"trace", "verifier_output", "harbor_log"}
+DETAIL_FIELDS = {"trace", "verifier_output", "harbor_log", "installation_log", "agent_output", "progress"}
 
 
 class ModelGateway(TrialGateway):
+    on_stage = None
+
+    def model(self, raw):
+        if self.failure:
+            return super().model(raw)
+        if self.on_stage:
+            self.on_stage("model")
+        try:
+            self.record("模型请求", f"第 {self.budget.calls + 1} 次请求，等待模型响应")
+            return super().model(raw)
+        finally:
+            if self.on_stage:
+                self.on_stage("agent")
+
     def dispatch(self, data, ledger):
         if data.get("route") not in {"model", "models"}:
             return self.error(404, "Not found")
@@ -158,6 +174,7 @@ class BenchmarkEngine:
         return run, credentials
 
     def save(self, run):
+        run["updated_at"] = now()
         run["summary"] = summarize(run)
         # Polling 89 × N trials must not serialize every trajectory on each model call.
         compact = {**run, "trials": [{k: v for k, v in trial.items() if k not in DETAIL_FIELDS}
@@ -176,13 +193,27 @@ class BenchmarkEngine:
         row = next((t for t in (run or {}).get("trials", []) if t["id"] == trial_id), None)
         if not row:
             return None
-        return {**(self.store.get("benchmark_trial", run_id + "/" + trial_id) or {}), **row}
+        return snapshot(self.store.root, run, {
+            **(self.store.get("benchmark_trial", run_id + "/" + trial_id) or {}), **row}, include_logs=True)
+
+    def run_view(self, run_id):
+        run = self.store.get("benchmark_run", run_id)
+        if run:
+            run["trials"] = [snapshot(self.store.root, run, trial) for trial in run["trials"]]
+        return run
 
     def execute(self, run, credentials):
         root = self.store.root / "benchmarks" / run["id"]
         root.mkdir(parents=True)
         try:
             run.update(status="running", started=now())
+            run["platform"] = {"host_arch": platform.machine()}
+            try:
+                run["platform"]["engine_arch"] = subprocess.check_output(
+                    ["docker", "version", "--format", "{{.Server.Arch}}"], text=True,
+                    stderr=subprocess.DEVNULL, timeout=8).strip()
+            except (OSError, subprocess.SubprocessError):
+                pass
             run["harbor_version"] = subprocess.check_output([str(self.harbor), "--version"], text=True).strip()
             self.save(run)
             for trial in run["trials"]:
@@ -212,7 +243,7 @@ class BenchmarkEngine:
 
     def run_trial(self, run, trial, root, settings):
         path = self.catalog.task_path(run["dataset"], trial["task"])
-        trial.update(status="running", phase="准备环境与运行器", started=now())
+        trial.update(status="running", phase="准备任务环境", stage="environment", started=now(), heartbeat_at=now())
         work = root / trial["id"]
         spool, ledger = work / "spool", work / "ledger"
         spool.mkdir(parents=True)
@@ -223,11 +254,17 @@ class BenchmarkEngine:
             trial["trace"].append({"time": now(), "title": title, "body": body})
             trial["trace"] = trial["trace"][-200:]
             trial["usage"] = gateway.budget.public()
-            trial["phase"] = "Agent 执行"
+            trial["heartbeat_at"] = now()
             self.save_trial(run, trial)
             self.save(run)
 
+        def set_stage(stage):
+            trial.update(stage=stage, stage_started=now(), heartbeat_at=now(),
+                         phase="等待模型响应" if stage == "model" else "Agent 执行", usage=gateway.budget.public())
+            self.save(run)
+
         gateway = ModelGateway(settings, record)
+        gateway.on_stage = set_stage
         gateway.budget = Budget(run["limits"]["calls_per_trial"], run["limits"]["tokens_per_trial"])
         gateway.end_marker = work / "agent-ended"
         config = build_job_config(path, root, trial, spool)
@@ -254,9 +291,12 @@ class BenchmarkEngine:
                         break
                     gateway.drain(spool, ledger)
                     if time.monotonic() - last_saved >= 5:
+                        trial["heartbeat_at"] = now()
                         trial["usage"] = gateway.budget.public()
                         if gateway.end_marker.exists():
                             trial["phase"] = "验收中"
+                            if trial.get("stage") != "verifier":
+                                trial.update(stage="verifier", stage_started=now())
                         elif gateway.budget.calls:
                             trial["phase"] = "Agent 执行"
                         self.save(run)
