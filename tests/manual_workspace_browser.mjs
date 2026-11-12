@@ -15,7 +15,9 @@ try{
  await page.locator('#project-goal').fill('核对下单结果，避免重复创建订单。此工作区使用受控测试数据，不代表真实模型收益。');
  await page.locator('#project-target').selectOption('policy.md');
  await page.locator('#project-submit').click();
+ await page.locator('#workspace-details>summary').click();
  await page.locator('#workspace-summary').getByText(/核对下单结果/).waitFor();
+ await page.locator('#workspace-details>summary').click();
  const project=(await overview()).projects[0].id;
  await page.locator('#open-experiment').click();
  await page.locator('#improve-stage').selectOption('diagnose');
@@ -38,15 +40,18 @@ try{
  let data=await overview();assert.equal(data.projects[0].cost.calls,32);assert.equal(data.projects[0].revision,1);
  const validated=data.experiments[0].id;
  console.log('validation: 24 additional calls, recommendation updated in original project');
+ await page.locator('[data-nav="overview"]').click();
  await page.locator('#new-campaign').click();await page.locator('#campaign-submit').click();
  await page.locator('#campaign-list b').filter({hasText:'计划完成'}).waitFor({timeout:25000});
  data=await overview();assert.equal(data.campaigns[0].budget.calls,96);assert.equal(data.projects[0].cost.calls,128);assert.equal(data.projects[0].revision,4);
  console.log('campaign: 3 generations, 96 calls, project total 128');
+ await page.locator('[data-nav="overview"]').click();
  await page.locator('#new-campaign').click();await page.locator('#campaign-submit').click();
  await page.locator('[data-cancel-campaign]').click();
  await page.locator('#campaign-list b').filter({hasText:'已取消'}).waitFor({timeout:20000});
  data=await overview();assert.equal(data.projects[0].revision,4);
  console.log('cancel: no later adoption, active work stopped');
+ await page.locator('[data-nav="experiments"]').click();
  await page.locator('#history').selectOption(validated);
  await page.locator('.evo-result-head strong').filter({hasText:'接受候选'}).waitFor();
  await page.evaluate(()=>window.scrollTo(0,0));
@@ -61,7 +66,7 @@ try{
  await page.locator('#experiment-body').getByText('本项目还没有实验，可从分析执行反馈开始。').waitFor();
  assert.equal(await page.locator('#comparison-summary').innerText(),'');
  await page.locator('#workspace').selectOption(project);
- await page.locator('#comparison-summary .evo-journey').waitFor();
+ await page.locator('#comparison-summary .evo-context-actions').waitFor();
  assert.deepEqual(errors,[]);
  await fs.writeFile('.evoarena/workspace-ui-result.json',JSON.stringify({passed:true,controlled_only:true,model_network_calls:0,overflow,errors,project,validated},null,2));
  console.log('desktop/mobile, download, empty workspace, project switching: passed');
