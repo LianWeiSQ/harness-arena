@@ -14,6 +14,7 @@ from .store import canonical, digest, now
 from .taskpacks import current_pack, make_plan
 from .versions import version_diff
 from . import execution_control as control
+from .stages import STAGES, source_snapshot, finish_stage
 
 
 IMPROVE_LIMITS = {"calls": 363, "tokens": 3000000, "seconds": 14400}
@@ -35,7 +36,8 @@ def finalize(store, experiment, failure=None):
             return store.get("evo_experiment", experiment["id"])
         saved = store.get("evo_experiment", experiment["id"])
         execution = control.assert_epoch(store, experiment)
-        if execution["state"] == "cancelling":
+        parent = store.get("evo_campaign", saved.get("campaign", "")) if saved.get("campaign") else None
+        if execution["state"] == "cancelling" or parent and parent["status"] != "running":
             failure = {"category": "cancelled", "message": "实验已取消；已完成的证据与用量保留"}
         if saved["status"] not in {"preparing", "running"}:
             raise ValueError("实验已停止，不能提交新判定")
@@ -90,10 +92,29 @@ class ImprovementExperiment(VersionExperiment):
     optimizer_factory = BudgetedOptimizer
 
     def create(self, payload, key):
-        allowed = {"baseline", "mode", "target", "limits", "optimizer_profile", "project", "feedback_mode"}
+        allowed = {"baseline", "mode", "target", "limits", "optimizer_profile", "project", "feedback_mode", "stage", "source", "campaign", "round"}
         if (not isinstance(payload, dict) or set(payload) - allowed or payload.get("mode") != "improve"
                 or not isinstance(payload.get("baseline"), str) or not isinstance(payload.get("target"), str)):
             raise ValueError("请选择基线、授权文件和改进预算")
+        campaign_id = payload.get("campaign")
+        if campaign_id:
+            campaign = self.store.get("evo_campaign", campaign_id) if isinstance(campaign_id, str) else None
+            if (not campaign or campaign["status"] != "running" or payload.get("stage", "full") != "full" or payload.get("source")
+                    or payload.get("project") != campaign["project"] or payload.get("target") != campaign["target"]
+                    or type(payload.get("round")) is not int or payload["round"] != len(campaign["experiments"]) + 1
+                    or payload["round"] > campaign["max_rounds"]
+                    or payload.get("limits") != campaign["round_limits"] or payload.get("optimizer_profile") != campaign["optimizer_profile"]
+                    or payload.get("feedback_mode", "development") != campaign["feedback_mode"]):
+                raise ValueError("多轮计划与子实验配置不一致")
+        elif "round" in payload:
+            raise ValueError("轮次必须属于多轮计划")
+        stage = payload.get("stage", "full")
+        if not isinstance(stage, str) or stage not in STAGES:
+            raise ValueError("未知改进阶段")
+        if stage in {"propose", "validate"} and not isinstance(payload.get("source"), str):
+            raise ValueError("此阶段需要来源实验")
+        if "source" in payload and (not isinstance(payload["source"], str) or stage == "full"):
+            raise ValueError("来源实验配置错误")
         feedback_mode = payload.get("feedback_mode", "development")
         if not isinstance(feedback_mode, str) or feedback_mode not in {"development", "none"}:
             raise ValueError("反馈方式只能是 development 或 none")
@@ -128,15 +149,23 @@ class ImprovementExperiment(VersionExperiment):
                 raise ValueError("反馈实验和无反馈对照必须使用独立项目")
             if project and project["current_version"] != baseline["id"]:
                 raise ValueError("项目推荐版本已变化，请刷新后选择当前版本")
+            if project and project.get("task_pack") and project["task_pack"] != pack["id"]:
+                raise ValueError("项目任务包与当前执行协议不同，请保留历史并创建新项目")
+            if project and project.get("target") and project["target"] != payload["target"]:
+                raise ValueError("改进文件必须与项目约定一致")
             if not project:
                 project = {"id": project_id, "name": ("无反馈对照 · " if feedback_mode == "none" else "") + baseline["name"],
                     "feedback_mode": feedback_mode, "initial_version": baseline["id"],
                     "current_version": baseline["id"], "revision": 0, "created": now()}
                 self.store.db.execute("INSERT INTO objects VALUES(?,?,?,?)", ("evo_project", project_id, canonical(project), now()))
+            snapshot = source_snapshot(self.store, payload["source"], stage=stage, baseline=baseline,
+                target=payload["target"], pack=pack, project=project_id, feedback_mode=feedback_mode) if payload.get("source") else None
             ident = "ex-" + uuid.uuid4().hex[:12]
             experiment = {"id": ident, "schema": "evo-improvement-v1", "kind": "improvement", "mode": "improve",
                 "created": now(), "status": "queued", "phase": "baseline", "automatic_evolution": True,
-                "feedback_mode": feedback_mode,
+                "feedback_mode": feedback_mode, "stage": stage, "source": payload.get("source"),
+                "campaign": campaign_id, "round": payload.get("round"),
+                "source_snapshot": snapshot, "source_sha256": digest(snapshot) if snapshot else None,
                 "baseline": baseline["id"], "candidate": None, "target": payload["target"], "diff": "", "runs": [],
                 "runner": baseline["manifest"]["runner"], "model": settings.model,
                 "optimizer_model": {"profile": optimizer_profile, "model": optimizer_settings.model, "base_url": optimizer_settings.base_url},
@@ -160,40 +189,77 @@ class ImprovementExperiment(VersionExperiment):
         experiment["status"] = "preparing"
         try:
             budget.start(experiment["limits"])
-            selected = {r["task"] for r in experiment["development_plan"] + experiment["plan"]["trials"]}
-            root, pack = self.prepare(experiment, selected)
+            stage = experiment.get("stage", "full")
+            snapshot = experiment.get("source_snapshot")
+            if snapshot and digest(snapshot) != experiment["source_sha256"]:
+                raise ValueError("阶段来源指纹不匹配")
+            if snapshot and snapshot.get("image_id"):
+                experiment["image_id"] = snapshot["image_id"]
+            if snapshot and snapshot.get("harbor_version"):
+                experiment["harbor_version"] = snapshot["harbor_version"]
+            if experiment.get("campaign"):
+                parent = self.store.get("evo_campaign", experiment["campaign"])
+                for field in ("image_id", "harbor_version"):
+                    if parent.get(field): experiment[field] = parent[field]
+            pack = self.store.get("evo_task_pack", experiment["task_pack"])
+            root = self.store.root / "experiments" / experiment["id"]
+            if not snapshot or stage == "validate":
+                selected = {r["task"] for r in experiment["development_plan"] + experiment["plan"]["trials"]}
+                root, pack = self.prepare(experiment, selected)
+                if experiment.get("campaign"):
+                    with self.store.lock:
+                        control.assert_epoch(self.store, experiment, dispatch=True)
+                        parent = self.store.get("evo_campaign", experiment["campaign"])
+                        for field in ("image_id", "harbor_version"):
+                            if parent.get(field) and parent[field] != experiment.get(field):
+                                raise ValueError("多轮计划执行环境已变化")
+                            if experiment.get(field): parent[field] = experiment[field]
+                        self.store.update("evo_campaign", parent["id"], parent)
+            else:
+                experiment["status"] = "running"
+                self.save(experiment)
             baseline = self.store.get("evo_version", experiment["baseline"])
-            for row in experiment["development_plan"]:
-                run = self.run_row(experiment, settings["execution"], row, root, pack, budget)
-                if run["status"] not in {"passed", "failed"}:
-                    raise ProviderError("开发基线执行异常；不生成候选")
+            if not snapshot:
+                for row in experiment["development_plan"]:
+                    run = self.run_row(experiment, settings["execution"], row, root, pack, budget)
+                    if run["status"] not in {"passed", "failed"}:
+                        raise ProviderError("开发基线执行异常；不生成候选")
             experiment["phase"] = "diagnosing"
-            bundle = (prior_bundle(baseline, pack, experiment["target"]) if experiment.get("feedback_mode") == "none" else
-                      evidence_bundle(baseline, pack, [r for r in experiment["runs"] if r.get("phase") == "development"], experiment["target"]))
+            bundle = snapshot["evidence_bundle"] if snapshot else (
+                prior_bundle(baseline, pack, experiment["target"]) if experiment.get("feedback_mode") == "none" else
+                evidence_bundle(baseline, pack, [r for r in experiment["runs"] if r.get("phase") == "development"], experiment["target"]))
             experiment["evidence_bundle"] = bundle
             self.save(experiment)
             optimizer = self.optimizer_factory(settings["optimizer"], budget)
-            diagnosis = self.diagnose(experiment, optimizer, bundle)
+            diagnosis = snapshot["diagnosis"] if snapshot and stage in {"propose", "validate"} else self.diagnose(experiment, optimizer, bundle)
             experiment["diagnosis"] = diagnosis
             with self.store.lock:
                 control.assert_epoch(self.store, experiment, dispatch=True)
                 self.store.create("evo_diagnosis", experiment["id"], {"experiment": experiment["id"], "evidence_sha256": digest(bundle), "value": diagnosis})
+            if stage == "diagnose":
+                return
             experiment["phase"] = "proposing"
             self.save(experiment)
             proposal_input = {"diagnosis": diagnosis, "target": experiment["target"],
                 "parent_file": baseline["manifest"]["files"][experiment["target"]],
                 "other_files": {p: c for p, c in baseline["manifest"]["files"].items() if p != experiment["target"]},
                 "evidence": [e for e in bundle["evidence"] if e["id"] in {ref for o in diagnosis["observations"] for ref in o["evidence"]}]}
-            raw, usage, _ = self.output(experiment, optimizer, "proposal", PROPOSAL_INSTRUCTIONS, proposal_input)
-            proposal = validate_proposal(parse_json(raw))
+            if stage == "validate":
+                proposal = snapshot["proposal"]
+            else:
+                raw, usage, _ = self.output(experiment, optimizer, "proposal", PROPOSAL_INSTRUCTIONS, proposal_input)
+                proposal = validate_proposal(parse_json(raw))
             experiment["proposal"] = proposal
             with self.store.lock:
                 control.assert_epoch(self.store, experiment, dispatch=True)
                 self.store.create("evo_proposal", experiment["id"], {"experiment": experiment["id"], "input_sha256": digest(proposal_input), "value": proposal})
-                candidate = self.registry.derive(baseline, proposal["name"], experiment["target"], proposal["content"])
+                candidate = (self.store.get("evo_version", snapshot["candidate"]) if stage == "validate" else
+                             self.registry.derive(baseline, proposal["name"], experiment["target"], proposal["content"]))
             experiment.update(candidate=candidate["id"], diff=version_diff(baseline, candidate), phase="validating",
                 plan=make_plan(pack, baseline["id"], candidate["id"], "validation", 2, experiment["limits"]))
             self.save(experiment)
+            if stage == "propose":
+                return
             for row in experiment["plan"]["trials"]:
                 run = self.run_row(experiment, settings["execution"], {**row, "phase": "validation"}, root, pack, budget)
                 if run["status"] not in {"passed", "failed"}:
@@ -213,8 +279,17 @@ class ImprovementExperiment(VersionExperiment):
         finally:
             # Persist the latest phase outputs before the single decision transaction.
             try:
-                self.save(experiment)
-                finalize(self.store, experiment, failure)
+                # Linearize cancellation with stage completion: a cancel between
+                # the state read and finish_stage must not strand a live intent.
+                with self.store.lock:
+                    self.save(experiment)
+                    state = self.store.get("evo_control", experiment["id"])
+                    if state and state["state"] == "cancelling":
+                        failure = {"category": "cancelled", "message": "阶段结束前收到取消请求"}
+                    if failure is None and experiment.get("stage") in {"diagnose", "propose"}:
+                        finish_stage(self.store, experiment)
+                    else:
+                        finalize(self.store, experiment, failure)
             except control.ExecutionStopped:
                 pass  # Recovery already fenced this worker; it cannot finalize.
 

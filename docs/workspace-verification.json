@@ -1,0 +1,92 @@
+{
+  "date": "2026-11-12",
+  "scope": "N1–N5 engineering acceptance; controlled fixtures are not evidence of Agent improvement",
+  "user_model_calls": 0,
+  "production_history": {
+    "versions": 6,
+    "experiments": 8,
+    "active": 0
+  },
+  "tests": {
+    "total": 115,
+    "passed": 114,
+    "skipped": 1,
+    "skip": "optional legacy Docker integration"
+  },
+  "stages": {
+    "diagnose_calls": 7,
+    "propose_calls": 1,
+    "validate_calls": 24,
+    "project_calls": 32,
+    "project_tokens": 340,
+    "duplicated_source_trials": 0,
+    "cancellation_after_optimizer_response": "diagnose and propose stop without adoption"
+  },
+  "campaign": {
+    "rounds": 3,
+    "calls": 96,
+    "tokens": 1020,
+    "initial_baseline_preserved": true,
+    "recommendation_revision": 3,
+    "tested_stops": [
+      "consecutive_no_gain",
+      "call_cap",
+      "token_threshold",
+      "unknown_usage",
+      "cancel_during_call",
+      "cancel_after_round_commit",
+      "process_loss"
+    ],
+    "runtime_pinned": [
+      "image_id",
+      "harbor_version"
+    ],
+    "repeated_settlement_charged_twice": false
+  },
+  "browser": {
+    "desktop_width": 1440,
+    "mobile_width": 390,
+    "mobile_horizontal_overflow": false,
+    "mobile_dialog_client_width": 356,
+    "mobile_dialog_scroll_width": 356,
+    "flows": [
+      "create_project",
+      "diagnose",
+      "propose",
+      "validate",
+      "source_navigation",
+      "three_rounds",
+      "cancel_campaign",
+      "download_project",
+      "empty_project",
+      "switch_projects"
+    ],
+    "console_errors": 0,
+    "production_read_only_check": true
+  },
+  "delivery": {
+    "installed_wheel_outside_checkout": true,
+    "clean_store_import": true,
+    "assets": 5,
+    "files_equal": true,
+    "idempotent_project_import": true,
+    "local_import_revision": 0,
+    "local_import_calls": 0,
+    "historical_experiments_imported": 0,
+    "provenance_mapping_preserved": true
+  },
+  "calibration": {
+    "cases": 18,
+    "correct_accepted": 18,
+    "empty_rejected": 18,
+    "bad_rejected": 18,
+    "model_calls": 0
+  },
+  "limitations": [
+    "M3 complete real automatic improvement remains unverified",
+    "M6 sealed report and equal-search-budget feedback control remain incomplete",
+    "Token limits stop subsequent dispatch; last in-flight usage can exceed threshold",
+    "Campaigns do not auto-resume after process loss",
+    "Validation reuse across rounds does not establish generalization"
+  ]
+}

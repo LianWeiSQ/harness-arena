@@ -24,6 +24,9 @@ from .trial_resources import reconcile_experiment
 from .delivery import export_bundle, import_bundle, experiment_report, rollback, rollback_targets, version_metadata
 from .calibration import calibrate
 from .platform_info import inspect_platform
+from .projects import create_project, project_view
+from .campaigns import Campaign, campaign_view, cancel_campaign
+from .project_delivery import export_project, import_project
 
 STATIC = Path(__file__).with_name("static")
 
@@ -57,6 +60,10 @@ def recover(store: Store) -> None:
             store.update("harness_match", match["id"], match)
 
     control.recover(store)
+    for plan in store.list("evo_campaign"):
+        if plan["status"] in {"queued", "running", "cancelling"}:
+            plan.update(status="cancelled" if plan["status"] == "cancelling" else "interrupted", reason="owner_process_lost", finished=now())
+            store.update("evo_campaign", plan["id"], plan)
     for experiment in store.list("evo_experiment"):
         if experiment["status"] in {"interrupted", "cancelled", "incomplete"}:
             reconcile_experiment(store, experiment["id"])
@@ -69,6 +76,19 @@ class Manager:
         self.worker = None
         self.cancel = threading.Event()
         self.current = None
+
+    def start_campaign(self, engine, payload, key):
+        with self.lock:
+            previous = self.store.get("evo_campaign_request", digest(key))
+            if previous:
+                if previous["payload_sha256"] != digest(payload): return {"error": "同一请求不能更改多轮计划"}, 409
+                return campaign_view(self.store, self.store.get("evo_campaign", previous["campaign"])), 200
+            if self.worker and self.worker.is_alive(): return {"error": "已有实验或计划正在运行"}, 409
+            plan, _ = engine.create(payload, key)
+            self.current = plan["id"]
+            self.worker = threading.Thread(target=engine.execute, args=(plan,), daemon=True)
+            self.worker.start()
+            return campaign_view(self.store, plan), 202
 
     def start_evolution(self, engine, payload, key):
         with self.lock:
@@ -189,6 +209,7 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
     registry = VersionRegistry(store, models)
     evolution = VersionExperiment(store, registry, harbor_bin, harness_image)
     improvement = ImprovementExperiment(store, registry, harbor_bin, harness_image)
+    campaigns = Campaign(store, registry, harbor_bin, harness_image)
 
     class Handler(BaseHTTPRequestHandler):
         def send_download(self, body, filename, content_type):
@@ -238,13 +259,14 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
             if path == "/api/evo":
                 return self.send_json({"capabilities": CAPABILITIES, "models": models.public(),
                     "protocols": {**MODES, "improve": {"label": "自动改进 · 开发反馈 → 配对验证", "limits": IMPROVE_LIMITS}},
-                    "projects": [{**p, "rollback_targets": rollback_targets(store, p)} for p in store.list("evo_project")],
+                    "projects": [project_view(store, p) for p in store.list("evo_project")],
                     "project_changes": store.list("evo_project_change"),
+                    "campaigns": [campaign_view(store, c) for c in store.list("evo_campaign")],
                     "imports": store.list("evo_import"),
                     "task_pack": {k: v for k, v in current_pack().items() if k in {"id", "schema", "sha256"}},
                     "ready": bool(harbor_bin and harbor_bin.is_file() and models.public()["profiles"]),
                     "versions": [version_metadata(v) for v in store.list("evo_version")],
-                    "experiments": [{k: v for k, v in row.items() if k not in {"runs", "diff", "plan", "development_plan", "validation_template", "evidence_bundle", "diagnosis", "proposal"}}
+                    "experiments": [{k: v for k, v in row.items() if k not in {"runs", "diff", "plan", "development_plan", "validation_template", "evidence_bundle", "diagnosis", "proposal", "source_snapshot"}}
                                     for row in store.list("evo_experiment")]})
             if path.startswith("/api/evo/experiments/"):
                 result = store.get("evo_experiment", path.rsplit("/", 1)[-1])
@@ -256,6 +278,18 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
                     result["resources"] = [{k: r[k] for k in ("id", "state", "error", "reconciled") if k in r}
                                            for r in store.list("evo_resource") if r["experiment"] == result["id"]]
                 return self.send_json(result or {"error": "not_found"}, 200 if result else 404)
+            if path.startswith("/api/evo/campaigns/"):
+                plan = store.get("evo_campaign", path.rsplit("/", 1)[-1])
+                return self.send_json(campaign_view(store, plan) if plan else {"error": "计划不存在"}, 200 if plan else 404)
+            if path.startswith("/api/evo/projects/") and path.endswith("/bundle"):
+                try:
+                    ident = path.split("/")[-2]
+                    return self.send_download(export_project(store, ident), ident + ".zip", "application/zip")
+                except ValueError as error:
+                    return self.send_json({"error": str(error)}, 400)
+            if path.startswith("/api/evo/projects/"):
+                project = store.get("evo_project", path.rsplit("/", 1)[-1])
+                return self.send_json(project_view(store, project) if project else {"error": "项目不存在"}, 200 if project else 404)
             if path.startswith("/api/evo/optimizer-outputs/"):
                 result = store.get("evo_optimizer_output", path.rsplit("/", 1)[-1])
                 return self.send_json(result or {"error": "not_found"}, 200 if result else 404)
@@ -333,13 +367,29 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
                 return self.send_json({"error": "same_origin_request_required"}, 403)
             try:
                 size = int(self.headers.get("Content-Length", "0"))
-                if not 0 < size <= (150000 if self.path == "/api/evo/import" else 128000 if self.path == "/api/evo/versions" else 32768 if self.path == "/api/versions" else 4096):
+                if not 0 < size <= (11000000 if self.path == "/api/evo/projects/import" else 150000 if self.path == "/api/evo/import" else 128000 if self.path == "/api/evo/versions" else 32768 if self.path == "/api/versions" else 16384 if self.path == "/api/evo/projects" else 4096):
                     raise ValueError()
                 payload = json.loads(self.rfile.read(size))
                 if not isinstance(payload, dict):
                     raise ValueError()
                 if self.path == "/api/evo/versions":
                     return self.send_json(registry.register(payload), 201)
+                if self.path == "/api/evo/campaigns":
+                    data, code = manager.start_campaign(campaigns, payload, self.headers.get("Idempotency-Key", ""))
+                    return self.send_json(data, code)
+                if self.path.startswith("/api/evo/campaigns/") and self.path.endswith("/cancel"):
+                    if payload: raise ValueError("取消计划不接受附加配置")
+                    return self.send_json(campaign_view(store, cancel_campaign(store, self.path.split("/")[-2])))
+                if self.path == "/api/evo/projects":
+                    return self.send_json(create_project(store, registry, payload, self.headers.get("Idempotency-Key", "")), 201)
+                if self.path == "/api/evo/projects/import":
+                    if set(payload) != {"archive", "model_profile"} or not isinstance(payload["archive"], str):
+                        raise ValueError("请选择项目包与本地模型连接")
+                    try:
+                        archive = base64.b64decode(payload["archive"], validate=True)
+                    except binascii.Error:
+                        raise ValueError("项目包编码错误") from None
+                    return self.send_json(import_project(store, registry, archive, payload["model_profile"], self.headers.get("Idempotency-Key", "")), 201)
                 if self.path == "/api/evo/calibrate":
                     if payload:
                         raise ValueError("校准不接受外部任务或脚本")

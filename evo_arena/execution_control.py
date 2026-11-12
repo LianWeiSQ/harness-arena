@@ -17,7 +17,7 @@ class ExecutionStopped(RuntimeError):
 
 INTENT_FIELDS = ("schema", "kind", "mode", "baseline", "target", "runner", "model", "optimizer_model",
     "task_pack", "limits", "limits_per_trial", "development_plan", "validation_template", "optimizer_policy",
-    "project", "initial_version", "expected_revision", "feedback_mode")
+    "project", "initial_version", "expected_revision", "feedback_mode", "stage", "source", "source_sha256", "campaign", "round")
 
 
 def protocol_hash():
@@ -44,6 +44,10 @@ def assert_epoch(store, ex, *, dispatch=False):
     control = store.get("evo_control", ex["id"])
     if not control or ex.get("epoch") != control["epoch"] or control["state"] not in {"active", "cancelling"}:
         raise ExecutionStopped("执行者已失效，不能写入或继续派发")
+    if dispatch and ex.get("campaign"):
+        parent = store.get("evo_campaign", ex["campaign"])
+        if not parent or parent["status"] != "running":
+            raise ExecutionStopped("多轮计划已停止，不能继续派发")
     if dispatch and control["state"] == "cancelling":
         raise ExecutionStopped("实验取消中，停止新调用")
     if store.get("evo_intent", ex["id"]) != intent(ex):
@@ -133,6 +137,8 @@ def terminal(store, ex, state):
 
 def resume_reasons(store, ex):
     reasons = []
+    if ex.get("campaign"):
+        return ["多轮计划中断后保留全部记录，不单独续跑子实验；请从项目当前版本创建新计划"]
     control = store.get("evo_control", ex["id"])
     if ex["status"] != "interrupted" or not control or control["state"] != "interrupted":
         return ["仅支持新协议的中断实验"]

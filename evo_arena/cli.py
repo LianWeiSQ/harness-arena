@@ -41,6 +41,8 @@ def find_harbor(explicit=None):
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(prog="evo-arena")
     sub = parser.add_subparsers(dest="command", required=True)
+    from . import workspace_cli
+    workspace_cli.add_commands(sub)
     for name in ["doctor", "calibrate", "calibrate-business", "demo", "serve", "export", "register"]:
         cmd = sub.add_parser(name)
         cmd.add_argument("--data-dir", type=Path, default=Path(".evoarena"))
@@ -69,6 +71,8 @@ def main(argv=None) -> int:
             cmd.add_argument("--output", type=Path, required=True)
     args = parser.parse_args(argv)
     try:
+        if args.command in {"project", "experiment", "campaign", "package"}:
+            return workspace_cli.run(args)
         profile = {}
         if args.profile:
             profile = json.loads(args.profile.read_text())
