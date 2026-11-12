@@ -104,7 +104,8 @@ class TrialGateway:
                 raise ValueError()
             data["store"] = False
             data["max_output_tokens"] = min(8192, int(data.get("max_output_tokens") or 8192))
-            if self.budget.unknown_usage_calls or self.budget.calls >= MAX_CALLS or self.budget.tokens >= MAX_TOKENS:
+            if (self.budget.unknown_usage_calls or self.budget.calls >= self.budget.max_calls
+                    or self.budget.tokens >= self.budget.max_tokens):
                 raise BudgetExceeded("单题预算耗尽")
             if self.experiment_budget:
                 ledger_call_id = self.experiment_budget.claim(self.trial_id, "execution", digest(data))

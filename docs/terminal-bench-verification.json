@@ -1,0 +1,59 @@
+{
+  "date": "2026-11-12",
+  "dataset": "terminal-bench/terminal-bench-2-1",
+  "source": "https://github.com/harbor-framework/terminal-bench-2-1.git",
+  "revision": "12b7565679ce5006230b820666353673a133db93",
+  "tasks": 89,
+  "catalog_sha256": "0d00fc232fd51062e012aae1ed1471225467c93e9b71e201fe3ec178a0eb6cf4",
+  "harbor": "0.22.0",
+  "task_adapter_configs_validated": 178,
+  "installation_checks": [
+    {
+      "agent": "pi",
+      "version": "0.82.1",
+      "task": "fix-git",
+      "mode": "Harbor install_only",
+      "status": "passed",
+      "agent_execution": false,
+      "verifier_execution": false,
+      "setup": {
+        "started_at": "2026-11-12T06:31:50.912832Z",
+        "finished_at": "2026-11-12T06:33:04.888423Z"
+      }
+    },
+    {
+      "agent": "deepseek-harness",
+      "version": "0.1.2-rc.1",
+      "task": "fix-git",
+      "mode": "Harbor install_only",
+      "status": "passed",
+      "agent_execution": false,
+      "verifier_execution": false,
+      "setup": {
+        "started_at": "2026-11-12T06:46:15.989367Z",
+        "finished_at": "2026-11-12T06:58:21.986782Z"
+      }
+    }
+  ],
+  "unit_tests": {
+    "total": 125,
+    "passed": 124,
+    "skipped": 1
+  },
+  "browser_checks": [
+    "task selection",
+    "fixture-only submission",
+    "comparison",
+    "evidence",
+    "reload",
+    "mobile without overflow"
+  ],
+  "real_evaluation_runs": 0,
+  "model_calls": 0,
+  "notes": [
+    "DSH download check exposed HTTP/2 interruption; installer now uses HTTP/1.1 with bounded retries.",
+    "DSH cold dependency resolution exceeded 600 seconds; setup now has a separate 1800-second limit.",
+    "Successful DSH install-only recheck reused a public npm download cache; no model keys or task execution.",
+    "No real model evaluation or performance claim."
+  ]
+}

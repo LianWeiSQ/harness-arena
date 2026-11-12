@@ -27,12 +27,14 @@ from .platform_info import inspect_platform
 from .projects import create_project, project_view
 from .campaigns import Campaign, campaign_view, cancel_campaign
 from .project_delivery import export_project, import_project
+from .benchmarks import BenchmarkEngine, recover_benchmarks
 
 STATIC = Path(__file__).with_name("static")
 
 
 def recover(store: Store) -> None:
     """Preserve evidence; ambiguous executions are never automatically replayed."""
+    recover_benchmarks(store)
     for run in store.list("run"):
         if run["status"] in {"preparing", "running", "verifying"}:
             name = run.get("container_name", "")
@@ -76,6 +78,43 @@ class Manager:
         self.worker = None
         self.cancel = threading.Event()
         self.current = None
+
+    def start_benchmark(self, engine, payload, key):
+        with self.lock:
+            previous = self.store.get("benchmark_request", digest(key)) if key else None
+            if previous:
+                if previous["payload_sha256"] != digest(payload):
+                    return {"error": "同一请求不能更改评测配置"}, 409
+                return self.store.get("benchmark_run", previous["run"]), 200
+            if self.worker and self.worker.is_alive():
+                return {"error": "后台已有任务正在运行"}, 409
+            run, credentials = engine.create(payload, key)
+            self.current = run["id"]
+            self.worker = threading.Thread(target=engine.execute, args=(run, credentials), daemon=True)
+            self.worker.start()
+            return run, 202
+
+    def sync_dataset(self, engine):
+        with self.lock:
+            if self.worker and self.worker.is_alive():
+                return {"error": "后台已有任务正在运行"}, 409
+            state = {"id": "terminal-bench-2.1", "status": "running", "started": now()}
+            if self.store.get("benchmark_sync", state["id"]):
+                self.store.update("benchmark_sync", state["id"], state)
+            else:
+                self.store.create("benchmark_sync", state["id"], state)
+
+            def sync():
+                try:
+                    engine.catalog.sync_terminal()
+                    state.update(status="ready", finished=now())
+                except Exception as error:
+                    state.update(status="error", error=str(error) if isinstance(error, ValueError) else type(error).__name__)
+                self.store.update("benchmark_sync", state["id"], state)
+
+            self.worker = threading.Thread(target=sync, daemon=True)
+            self.worker.start()
+            return state, 202
 
     def start_campaign(self, engine, payload, key):
         with self.lock:
@@ -206,6 +245,7 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
     manager = Manager(store, settings, base_image)
     harness = HarnessMatch(store, settings, harness_repo, harbor_bin, harness_image)
     models = ModelProfiles(store.root, settings)
+    benchmarks = BenchmarkEngine(store, models, harbor_bin)
     registry = VersionRegistry(store, models)
     evolution = VersionExperiment(store, registry, harbor_bin, harness_image)
     improvement = ImprovementExperiment(store, registry, harbor_bin, harness_image)
@@ -234,6 +274,15 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
         def do_GET(self):
             parsed = urlparse(self.path)
             path = parsed.path
+            if path == "/api/benchmarks":
+                return self.send_json(benchmarks.overview())
+            if path.startswith("/api/benchmarks/runs/") and "/trials/" in path:
+                parts = path.split("/")
+                result = benchmarks.trial(parts[4], parts[6]) if len(parts) == 7 and parts[5] == "trials" else None
+                return self.send_json(result or {"error": "not_found"}, 200 if result else 404)
+            if path.startswith("/api/benchmarks/runs/"):
+                result = store.get("benchmark_run", path.rsplit("/", 1)[-1])
+                return self.send_json(result or {"error": "not_found"}, 200 if result else 404)
             if path == "/api/evo/example":
                 value = json.loads((STATIC.parent / "fixtures" / "evo-example.json").read_text())
                 return self.send_json(value)
@@ -294,12 +343,11 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
                 result = store.get("evo_optimizer_output", path.rsplit("/", 1)[-1])
                 return self.send_json(result or {"error": "not_found"}, 200 if result else 404)
             if path == "/api/evo/taskpacks":
-                pack = current_pack()
-                packs = {p["id"]: p for p in store.list("evo_task_pack")}; packs[pack["id"]] = pack
-                return self.send_json({"active": pack["id"], "packs": [
+                packs = store.list("evo_task_pack")
+                return self.send_json({"active": None, "retired": True, "packs": [
                     {"id": p["id"], "schema": p["schema"], "sha256": p["sha256"],
                      "cases": [{k: c[k] for k in ("id", "family", "split", "title", "checksum")} for c in p["cases"]]}
-                    for p in sorted(packs.values(), key=lambda p: p["id"] != pack["id"])], "protocols": MODES})
+                    for p in packs], "protocols": {}})
             if path == "/api/evo/system":
                 return self.send_json(inspect_platform(store, harbor_bin, harness_image))
             if path == "/api/harness":
@@ -339,7 +387,9 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
                     return self.send_json({"events": store.events(args.get("scope", [None])[0], int(args.get("after", [0])[0]))})
                 except ValueError:
                     return self.send_json({"error": "invalid_cursor"}, 400)
-            files = {"/": "evo.html", "/evo": "evo.html", "/evo.js": "evo.js", "/evo.css": "evo.css",
+            files = {"/": "benchmarks.html", "/evo": "benchmarks.html", "/archive": "evo.html",
+                     "/benchmarks.js": "benchmarks.js", "/benchmarks.css": "benchmarks.css",
+                     "/evo.js": "evo.js", "/evo.css": "evo.css",
                      "/fixops": "index.html",
                      "/harness": "harness.html", "/harness.js": "harness.js", "/harness.css": "harness.css",
                      "/settings": "settings.html", "/settings.js": "settings.js",
@@ -367,11 +417,38 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
                 return self.send_json({"error": "same_origin_request_required"}, 403)
             try:
                 size = int(self.headers.get("Content-Length", "0"))
-                if not 0 < size <= (11000000 if self.path == "/api/evo/projects/import" else 150000 if self.path == "/api/evo/import" else 128000 if self.path == "/api/evo/versions" else 32768 if self.path == "/api/versions" else 16384 if self.path == "/api/evo/projects" else 4096):
+                if not 0 < size <= (11000000 if self.path == "/api/evo/projects/import" else 150000 if self.path == "/api/evo/import" else 128000 if self.path == "/api/evo/versions" else 32768 if self.path in {"/api/versions", "/api/benchmarks/runs"} else 16384 if self.path == "/api/evo/projects" else 4096):
                     raise ValueError()
                 payload = json.loads(self.rfile.read(size))
                 if not isinstance(payload, dict):
                     raise ValueError()
+                if self.path == "/api/benchmarks/sync":
+                    if payload: raise ValueError("接入官方评测集不接受附加参数")
+                    data, code = manager.sync_dataset(benchmarks)
+                    return self.send_json(data, code)
+                if self.path == "/api/benchmarks/import":
+                    with manager.lock:
+                        if manager.worker and manager.worker.is_alive():
+                            return self.send_json({"error": "后台已有任务正在运行"}, 409)
+                        return self.send_json(benchmarks.catalog.import_local(payload), 201)
+                if self.path == "/api/benchmarks/preflight":
+                    if payload: raise ValueError("环境检查不接受附加参数")
+                    return self.send_json(benchmarks.preflight())
+                if self.path == "/api/benchmarks/runs":
+                    data, code = manager.start_benchmark(benchmarks, payload, self.headers.get("Idempotency-Key", ""))
+                    return self.send_json(data, code)
+                if self.path.startswith("/api/benchmarks/runs/") and self.path.endswith("/cancel"):
+                    if payload: raise ValueError("停止评测不接受附加参数")
+                    ident = self.path.split("/")[-2]
+                    with manager.lock:
+                        run = store.get("benchmark_run", ident)
+                        if not run: return self.send_json({"error": "not_found"}, 404)
+                        if manager.current == ident and run["status"] in {"queued", "running"}:
+                            benchmarks.cancel.set()
+                        return self.send_json({"id": ident, "cancellation_requested": benchmarks.cancel.is_set()})
+                if (self.path in {"/api/evo/experiments", "/api/evo/campaigns", "/api/evo/calibrate", "/api/harness/matches", "/api/seasons"}
+                        or self.path.endswith("/resume")):
+                    return self.send_json({"error": "旧自建评测已下线，请在评测工作台选择 Harbor 任务集"}, 410)
                 if self.path == "/api/evo/versions":
                     return self.send_json(registry.register(payload), 201)
                 if self.path == "/api/evo/campaigns":
@@ -453,7 +530,7 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
                     manager.cancel.set()
                     return self.send_json({"status": "cancellation_requested"})
             except ValueError as error:
-                if self.path.startswith("/api/evo/") or self.path in {"/api/models", "/api/models/delete", "/api/harness/matches"}:
+                if self.path.startswith(("/api/evo/", "/api/benchmarks/")) or self.path in {"/api/models", "/api/models/delete", "/api/harness/matches"}:
                     return self.send_json({"error": str(error) or "请求格式错误"}, 400)
                 return self.send_json({"error": "invalid_request"}, 400)
             except TypeError:
@@ -470,6 +547,7 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
         pass
     finally:
         manager.cancel.set()
+        benchmarks.cancel.set()
         server.server_close()
         if manager.worker:
             manager.worker.join(timeout=65)
