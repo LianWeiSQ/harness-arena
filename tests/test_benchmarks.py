@@ -172,6 +172,18 @@ class BenchmarkTests(unittest.TestCase):
         self.assertNotIn("secret-test", repr(captured))
         self.assertNotIn("OPENAI_API_KEY", captured["env"])
 
+    def test_user_stop_is_not_reported_as_a_provider_outage(self):
+        run, credentials = self.engine.create(self.payload, "user-stop")
+        def stop(run, trial, root, settings):
+            self.engine.cancel.set()
+            trial.update(status="cancelled", provider_failure={"category": "cancelled"})
+        with patch.object(self.engine, "run_trial", side_effect=stop), patch(
+                "evo_arena.benchmarks.subprocess.check_output", return_value="0.22.0"):
+            self.engine.execute(run, credentials)
+        self.assertEqual(run["status"], "cancelled")
+        self.assertNotIn("error", run)
+        self.assertEqual(run["trials"][1]["status"], "cancelled")
+
 
 if __name__ == "__main__":
     unittest.main()

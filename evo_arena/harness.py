@@ -25,6 +25,7 @@ from .versions import InputEvidence, file_hashes, materialize_version
 from .business import BusinessService
 from .store import digest
 from .response_protocol import decode_response, read_response, public_summary, MESSAGES, READ_ERRORS
+from .request_control import RequestControl
 
 
 FIXTURES = Path(__file__).with_name("fixtures") / "harness"
@@ -79,7 +80,7 @@ class TrialGateway:
     def __init__(self, settings, record, version=None, case=None, experiment_budget=None, trial_id=None):
         self.settings, self.record = settings, record
         self.budget = Budget(MAX_CALLS, MAX_TOKENS)
-        self.opener = urllib.request.build_opener(NoRedirect())
+        self.opener = None  # Tests may inject a transport; real requests use task-owned connections.
         self.failure = None
         self.failure_detail = None
         self.budget_exhausted = False
@@ -91,10 +92,30 @@ class TrialGateway:
         self.business = BusinessService(case) if case else None
         self.experiment_budget, self.trial_id = experiment_budget, trial_id
         self.end_marker = None
+        self.stop_check = None
+
+    def request_stop_reason(self):
+        if self.stop_check:
+            reason = self.stop_check()
+            if reason:
+                return reason
+        if self.end_marker and self.end_marker.exists():
+            return "task_ended"
+        if self.experiment_budget:
+            from .execution_control import ExecutionStopped
+            try:
+                self.experiment_budget.check_control()
+            except ExecutionStopped:
+                return "cancelled"
+            if self.experiment_budget.remaining_seconds() <= 0:
+                return "budget_timeout"
+        return None
 
     def model(self, raw: bytes) -> tuple[int, str, str]:
         if self.failure:
             return self.error(502, self.failure)
+        if reason := self.request_stop_reason():
+            return self.error(409, MESSAGES[reason])
         ledger_call_id = None
         try:
             data = json.loads(raw)
@@ -129,11 +150,15 @@ class TrialGateway:
         summary = {"category": "transport_error", "usage_state": "unknown"}
         usage = None
         started = time.monotonic()
+        control = RequestControl(self.request_stop_reason)
         try:
-            timeout = min(75, max(.1, self.experiment_budget.remaining_seconds())) if self.experiment_budget else 75
-            with self.opener.open(req, timeout=timeout) as response:
-                content_type = response.headers.get("Content-Type", "application/json")
-                body, reading = read_response(response, content_type, deadline=started + timeout)
+            with control:
+                opener = self.opener if self.opener is not None else control.opener(NoRedirect())
+                with opener.open(req, timeout=None) as response:
+                    content_type = response.headers.get("Content-Type", "application/json")
+                    body, reading = read_response(response, content_type)
+            if control.reason:
+                reading.update(category=control.reason, read_termination="error")
             completed, summary = decode_response(body, content_type)
             summary.update(reading, elapsed_ms=round((time.monotonic() - started) * 1000))
             usage = (completed or {}).get("usage")
@@ -164,6 +189,10 @@ class TrialGateway:
             if summary["category"] == "ok":
                 summary["category"] = "invalid_response"
         summary["elapsed_ms"] = round((time.monotonic() - started) * 1000)
+        if control.reason:
+            summary["category"] = control.reason
+        elif summary.get("category") == "timeout":
+            summary["timeout_phase"] = "connect" if control.phase == "connecting" else "response"
         self.failure_detail = public_summary(summary)
         self.failure = MESSAGES[self.failure_detail["category"]]
         if self.failure_detail.get("http_status"):
@@ -443,6 +472,8 @@ class HarborTrial:
                 deadline = time.monotonic() + TIME_LIMIT + 150
                 if experiment_budget:
                     deadline = min(deadline, time.monotonic() + experiment_budget.remaining_seconds())
+                gateway.stop_check = lambda: ("task_ended" if process.poll() is not None else
+                                              "job_timeout" if time.monotonic() >= deadline else None)
                 try:
                     while process.poll() is None and time.monotonic() < deadline:
                         if experiment_budget:

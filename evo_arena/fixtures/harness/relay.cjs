@@ -21,7 +21,9 @@ async function handle(req, res) {
   const base = "/arena-relay/" + randomUUID();
   await fs.writeFile(base + ".tmp", JSON.stringify({ route, body: Buffer.concat(chunks).toString() }));
   await fs.rename(base + ".tmp", base + ".request");
-  for (let i = 0; i < 900; i++) {
+  // Harbor owns the task deadline. A model request can take more than 90s.
+  // Stop polling when the caller disconnects; never impose a second deadline.
+  while (!res.destroyed) {
     try {
       const reply = JSON.parse(await fs.readFile(base + ".reply", "utf8"));
       await fs.unlink(base + ".reply");
@@ -32,8 +34,6 @@ async function handle(req, res) {
       await delay(100);
     }
   }
-  res.writeHead(504);
-  res.end(JSON.stringify({ error: { message: "Model relay timed out" } }));
 }
 
 http.createServer((req, res) => {

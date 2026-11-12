@@ -224,6 +224,8 @@ class BenchmarkEngine:
                 self.save(run)
                 for key in DETAIL_FIELDS:
                     trial.pop(key, None)
+                if self.cancel.is_set():
+                    break
                 if trial.get("provider_failure") or trial.get("budget_exhausted"):
                     run["error"] = "模型连接或预算异常，剩余任务未派发"
                     break
@@ -285,6 +287,9 @@ class BenchmarkEngine:
         with (work / "harbor.log").open("w") as log:
             process = subprocess.Popen([str(self.harbor), "run", "--config", str(config_path), "--yes"],
                                        cwd=root, env=env, stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
+            gateway.stop_check = lambda: ("cancelled" if self.cancel.is_set() else
+                "task_ended" if process.poll() is not None else
+                "job_timeout" if time.monotonic() - started > timeout else None)
             try:
                 while process.poll() is None:
                     if self.cancel.is_set() or time.monotonic() - started > timeout:

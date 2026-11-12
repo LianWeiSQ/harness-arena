@@ -141,7 +141,7 @@ $('sync').onclick=async()=>{try{$('sync').disabled=true;await api('/api/benchmar
 $('preflight').onclick=async()=>{try{$('preflight').disabled=true;const r=await api('/api/benchmarks/preflight',{});notice(r.checks.map(c=>`${c.ok?'✓':'×'} ${c.name}：${c.detail}`).join('　'));}catch(e){notice(e.message);}finally{$('preflight').disabled=false;}};
 $('start').onclick=async()=>{try{$('start').disabled=true;const run=await api('/api/benchmarks/runs',{dataset:dataset().id,tasks:[...selected],entries,repeats:Number($('repeats').value),max_calls:Number($('calls').value),max_tokens:Number($('tokens').value)});requestedRun=run.id;notice('评测已提交。');await refresh();}catch(e){notice(e.message);updateCount();}};
 $('history').onchange=async()=>{requestedRun=$('history').value;await refresh();};
-$('cancel').onclick=async()=>{if(currentRun){try{await api('/api/benchmarks/runs/'+currentRun.id+'/cancel',{});notice('正在停止，已发出的模型请求会结算。');}catch(e){notice(e.message);}}};
+$('cancel').onclick=async()=>{if(currentRun){try{await api('/api/benchmarks/runs/'+currentRun.id+'/cancel',{});notice('正在停止任务并关闭模型连接。');}catch(e){notice(e.message);}}};
 $('open-import').onclick=()=>$('import-dialog').showModal();
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>$(b.dataset.close).close());
 $('import-form').onsubmit=async e=>{e.preventDefault();$('import-submit').disabled=true;try{const d=await api('/api/benchmarks/import',{name:$('import-name').value,path:$('import-path').value});$('import-dialog').close();await refresh();$('dataset').value=d.id;selected.clear();renderCatalog();notice('已导入自建评测集。');}catch(err){$('import-error').textContent=err.message;}finally{$('import-submit').disabled=false;}};

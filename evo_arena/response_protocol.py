@@ -19,13 +19,16 @@ TERMINALS = {"response.completed": "completed", "response.failed": "failed",
              "response.incomplete": "incomplete"}
 CATEGORIES = {"ok", "invalid_response", "missing_terminal", "conflicting_terminal",
               "response_failed", "response_incomplete", "missing_usage", "http_error",
-              "transport_error", "timeout", "response_too_large"}
+              "transport_error", "timeout", "response_too_large", "cancelled", "task_ended",
+              "budget_timeout", "job_timeout"}
 MESSAGES = {
     "invalid_response": "模型响应格式无效", "missing_terminal": "模型流缺少终止事件",
     "conflicting_terminal": "模型流包含冲突的终止事件", "response_failed": "模型响应以失败状态结束",
     "response_incomplete": "模型响应未完成", "missing_usage": "模型响应未报告有效用量",
     "http_error": "模型供应商 HTTP 错误", "transport_error": "模型连接或读取失败",
     "timeout": "模型响应超时", "response_too_large": "模型响应超过大小上限",
+    "cancelled": "用户已停止评测，模型连接已关闭", "task_ended": "任务执行已结束，模型连接已关闭",
+    "budget_timeout": "实验总时限已到，模型连接已关闭", "job_timeout": "评测进程总时限已到，模型连接已关闭",
 }
 
 
@@ -39,6 +42,8 @@ def public_summary(value):
                          ("error_type", READ_ERRORS)):
         if isinstance(value.get(key), str) and value[key] in choices:
             result[key] = value[key]
+    if value.get("timeout_phase") in ("connect", "response"):
+        result["timeout_phase"] = value["timeout_phase"]
     for key in ("bytes", "event_count", "http_status"):
         if type(value.get(key)) is int and 0 <= value[key] <= 6_000_001:
             result[key] = value[key]
@@ -50,11 +55,11 @@ def public_summary(value):
     return result
 
 
-def read_response(response, content_type, *, deadline):
+def read_response(response, content_type, *, deadline=None):
     """Stop HTTP SSE at its terminal event, not at an eventual socket EOF.
 
-    The socket still has an inactivity timeout. A streaming deadline is checked
-    between reads; it is not a hard cancellation of a currently blocked read.
+    There is no default request deadline. An explicit caller deadline is checked
+    between reads; task cancellation closes the transport to wake blocked reads.
     Partial transport data is retained for diagnosis and accounting, not replay.
     """
     chunks, size, data = [], 0, []
@@ -62,7 +67,7 @@ def read_response(response, content_type, *, deadline):
         if "text/event-stream" not in content_type.lower():
             return response.read(6_000_001), {"read_termination": "eof"}
         while size <= 6_000_000:
-            if time.monotonic() >= deadline:
+            if deadline is not None and time.monotonic() >= deadline:
                 raise TimeoutError()
             line = response.readline(6_000_001 - size)
             if not line:
