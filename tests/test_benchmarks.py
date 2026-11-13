@@ -2,6 +2,8 @@ import importlib.util
 import json
 import tempfile
 import unittest
+import copy
+import sqlite3
 from pathlib import Path
 from unittest.mock import patch
 
@@ -183,6 +185,150 @@ class BenchmarkTests(unittest.TestCase):
         self.assertEqual(run["status"], "cancelled")
         self.assertNotIn("error", run)
         self.assertEqual(run["trials"][1]["status"], "cancelled")
+
+    def interrupted_run(self):
+        run, _ = self.engine.create({**self.payload, "repeats": 3}, "interrupted-fixture")
+        run["status"] = "incomplete"
+        run["error"] = "provider failed"
+        for trial, status in zip(run["trials"], ["passed", "failed", "scored", "error", "not_run", "cancelled"]):
+            trial["status"] = status
+            if status in {"passed", "failed", "scored", "error"}:
+                trial.update(started="2026-11-13T07:00:00+00:00", seconds=3,
+                             usage={"calls": 1, "tokens": 100, "unknown_usage_calls": int(status == "error")},
+                             trace=[{"title": "Original", "body": "Keep original evidence"}])
+            self.engine.save_trial(run, trial)
+        self.engine.save(run)
+        return self.store.get("benchmark_run", run["id"])
+
+    def test_resume_preserves_graded_results_and_archives_all_paid_attempts(self):
+        original = self.interrupted_run()
+        previous_evidence = self.store.get("benchmark_trial", original["id"] + "/trial-0002")
+        run, credentials = self.engine.resume(original["id"], "retry")
+        self.assertEqual(run["trials"][:3], original["trials"][:3])
+        self.assertEqual([t["status"] for t in run["trials"]], ["passed", "failed", "scored"] + ["queued"] * 3)
+        self.assertEqual([t["attempt"] for t in run["trials"]], [1, 1, 1, 2, 1, 1])
+        self.assertEqual(self.store.get("benchmark_trial", run["id"] + "/trial-0002"), previous_evidence)
+        old = self.engine.trial(run["id"], "trial-0004", 1)
+        self.assertEqual(old["status"], "error")
+        self.assertEqual(old["trace"][0]["body"], "Keep original evidence")
+        self.assertEqual(self.engine.trial(run["id"], "trial-0004")["trace"], [])
+        self.assertIsNone(self.engine.trial(run["id"], "trial-0004", "../../bad"))
+        dispatched = []
+        def finish(run, trial, root, settings):
+            dispatched.append(trial["id"])
+            trial.update(status="passed", seconds=5, usage={"calls": 2, "tokens": 200})
+        with patch.object(self.engine, "run_trial", side_effect=finish), patch(
+                "evo_arena.benchmarks.subprocess.check_output", return_value="0.22.0"):
+            self.engine.execute(run, credentials)
+        self.assertEqual(dispatched, ["trial-0004", "trial-0005", "trial-0006"])
+        self.assertEqual(run["status"], "completed")
+        self.assertEqual(run["trials"][1]["status"], "failed")  # Never retry a valid zero score.
+        self.assertEqual(sum(s["tokens"] for s in run["summary"]), 1000)
+        self.assertEqual(sum(s["unknown_usage_calls"] for s in run["summary"]), 1)
+        self.assertEqual(sum(s["retries"] for s in run["summary"]), 1)
+        self.assertFalse(self.engine.run_view(run["id"])["recovery"]["eligible"])
+
+    def test_resume_idempotency_exclusion_and_invalid_state(self):
+        original = self.interrupted_run()
+        manager = Manager(self.store, None, "")
+        class Worker:
+            def __init__(self, **kwargs): pass
+            def start(self): pass
+            def is_alive(self): return True
+        with patch("evo_arena.web.threading.Thread", Worker):
+            run, code = manager.resume_benchmark(self.engine, original["id"], "retry")
+            self.assertEqual(code, 202)
+            self.assertEqual(manager.resume_benchmark(self.engine, run["id"], "retry")[1], 200)
+            self.assertEqual(manager.resume_benchmark(self.engine, run["id"], "new-key")[1], 409)
+            self.assertEqual(manager.resume_benchmark(self.engine, "another-run", "retry")[1], 409)
+            self.assertEqual(manager.start_benchmark(self.engine, self.payload, "new-start")[1], 409)
+        self.assertEqual(len(self.store.list("benchmark_attempt")), 1)
+        manager.worker = None
+        with self.assertRaises(ValueError): manager.resume_benchmark(self.engine, run["id"], "new-key")
+        self.assertEqual(manager.resume_benchmark(self.engine, "missing", "unknown")[1], 404)
+
+    def test_resume_validates_model_identity_and_dataset_before_writing(self):
+        run = self.interrupted_run()
+        for field, value in (("model", "other-model"), ("base_url", "https://other.invalid/v1")):
+            self.models.save({"id": "startup", "name": "Fixture", "model": "test-model",
+                              "base_url": "https://example.invalid/v1", field: value})
+            with self.assertRaisesRegex(ValueError, "已改变"):
+                self.engine.resume(run["id"], field)
+            self.assertEqual(self.store.get("benchmark_run", run["id"]), run)
+        self.models.save({"id": "startup", "name": "Renamed", "model": "test-model",
+                          "base_url": "https://example.invalid/v1", "api_key": "rotated-secret"})
+        self.catalog.task_path(run["dataset"], "task-one").joinpath("instruction.md").write_text("tampered")
+        with self.assertRaisesRegex(ValueError, "快照"): self.engine.resume(run["id"], "tamper")
+        self.assertEqual(self.store.list("benchmark_attempt"), [])
+        self.assertEqual(self.store.list("benchmark_resume_request"), [])
+
+    def test_resume_transaction_rolls_back_evidence_and_queue_together(self):
+        run = self.interrupted_run()
+        before = copy.deepcopy(self.store.list("benchmark_trial"))
+        self.store.db.execute("CREATE TEMP TRIGGER fail_retry BEFORE INSERT ON objects "
+                              "WHEN NEW.kind='benchmark_resume_request' BEGIN SELECT RAISE(ABORT,'fixture'); END")
+        with self.assertRaises(sqlite3.IntegrityError): self.engine.resume(run["id"], "rollback")
+        self.assertEqual(self.store.get("benchmark_run", run["id"]), run)
+        self.assertEqual(self.store.list("benchmark_trial"), before)
+        self.assertEqual(self.store.list("benchmark_attempt"), [])
+
+    def test_restarting_a_queued_retry_does_not_replay_or_lose_its_archive(self):
+        run = self.interrupted_run()
+        run, _ = self.engine.resume(run["id"], "retry-1")
+        recover_benchmarks(self.store)
+        recovered = self.store.get("benchmark_run", run["id"])
+        self.assertEqual(recovered["status"], "interrupted")
+        self.assertEqual([t["status"] for t in recovered["trials"]][3:], ["not_run"] * 3)
+        run, _ = self.engine.resume(run["id"], "retry-2")
+        self.assertEqual(len(self.store.list("benchmark_attempt")), 1)
+        self.assertEqual(run["trials"][3]["attempt"], 2)
+        self.assertEqual(self.engine.trial(run["id"], "trial-0004", 1)["status"], "error")
+
+    def test_retry_gets_a_new_harbor_job_and_preserves_original_logs(self):
+        run = self.interrupted_run()
+        original_work = self.store.root / "benchmarks" / run["id"] / "trial-0004"
+        original_work.mkdir(parents=True)
+        (original_work / "harbor.log").write_text("Original failure log")
+        run, credentials = self.engine.resume(run["id"], "retry-1")
+        trial = run["trials"][3]
+        roots = []
+        class Process:
+            returncode = 0
+            def __init__(self, args, **kwargs):
+                config = json.loads(Path(args[3]).read_text())
+                roots.append(config["jobs_dir"])
+                out = Path(config["jobs_dir"]) / config["job_name"] / "task__fixture"
+                (out / "verifier").mkdir(parents=True)
+                (out / "verifier/test-stdout.txt").write_text("Retry verifier output")
+                (out / "result.json").write_text(json.dumps({"verifier_result": {"rewards": {"reward": 1}}}))
+            def poll(self): return 0
+        with patch("evo_arena.benchmarks.subprocess.Popen", Process):
+            self.engine.run_trial(run, trial, self.store.root / "benchmarks" / run["id"], credentials[trial["entry"]])
+        self.engine.save_trial(run, trial)
+        self.engine.save(run)
+        self.assertEqual(trial["status"], "passed")
+        self.assertIn("/attempts/2/jobs", roots[0])
+        self.assertEqual((original_work / "harbor.log").read_text(), "Original failure log")
+        self.assertIn("Original failure log", self.engine.trial(run["id"], trial["id"], 1)["harbor_log"])
+        self.assertEqual(self.engine.trial(run["id"], trial["id"])["verifier_output"], "Retry verifier output")
+
+    def test_another_provider_failure_stops_and_can_be_retried_again(self):
+        run = self.interrupted_run()
+        run, credentials = self.engine.resume(run["id"], "retry-1")
+        def fail(run, trial, root, settings):
+            trial.update(status="error", provider_failure={"category": "response_failed"},
+                         usage={"calls": 2, "tokens": 250}, trace=[{"title": "Second failure", "body": "Retained"}])
+        with patch.object(self.engine, "run_trial", side_effect=fail) as execute, patch(
+                "evo_arena.benchmarks.subprocess.check_output", return_value="0.22.0"):
+            self.engine.execute(run, credentials)
+        self.assertEqual(execute.call_count, 1)
+        self.assertEqual(run["status"], "incomplete")
+        run, _ = self.engine.resume(run["id"], "retry-2")
+        self.assertEqual(run["trials"][3]["attempt"], 3)
+        self.assertEqual([a["attempt"] for a in run["trials"][3]["attempts"]], [1, 2])
+        self.assertEqual(self.engine.trial(run["id"], "trial-0004", 1)["trace"][0]["title"], "Original")
+        self.assertEqual(self.engine.trial(run["id"], "trial-0004", 2)["trace"][0]["title"], "Second failure")
+        self.assertEqual(sum(s["tokens"] for s in run["summary"]), 650)
 
 
 if __name__ == "__main__":

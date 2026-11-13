@@ -108,5 +108,15 @@ class DashboardTests(unittest.TestCase):
         self.assertNotIn("private-", json.dumps(dashboard_view(self.store)))
         with self.assertRaises(ValueError): dashboard_view(self.store, "missing-run")
 
+    def test_scores_use_latest_valid_result_but_costs_include_retries(self):
+        run = self.run_record()
+        run["trials"][0]["attempts"] = [{"attempt": 1, "status": "error", "seconds": 20,
+                                      "usage": {"tokens": 70, "calls": 2, "unknown_usage_calls": 1}}]
+        self.save(run)
+        pi = next(e for e in dashboard_view(self.store)["entries"] if e["id"] == "pi")
+        self.assertEqual((pi["score"], pi["tokens"], pi["calls"], pi["retries"]), (100, 270, 4, 1))
+        self.assertEqual(pi["mean_seconds"], 21.5)
+        self.assertFalse(pi["usage_known"])
+
 
 if __name__ == "__main__": unittest.main()

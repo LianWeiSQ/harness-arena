@@ -117,6 +117,23 @@ class Manager:
             self.worker.start()
             return state, 202
 
+    def resume_benchmark(self, engine, ident, key):
+        with self.lock:
+            old = self.store.get("benchmark_resume_request", digest(key)) if key else None
+            if old:
+                if old["run"] != ident:
+                    return {"error": "恢复请求幂等键冲突"}, 409
+                return self.store.get("benchmark_run", ident), 200
+            if self.worker and self.worker.is_alive():
+                return {"error": "后台已有任务正在运行"}, 409
+            if not self.store.get("benchmark_run", ident):
+                return {"error": "评测不存在"}, 404
+            run, credentials = engine.resume(ident, key)
+            self.current = ident
+            self.worker = threading.Thread(target=engine.execute, args=(run, credentials), daemon=True)
+            self.worker.start()
+            return run, 202
+
     def start_campaign(self, engine, payload, key):
         with self.lock:
             previous = self.store.get("evo_campaign_request", digest(key))
@@ -284,7 +301,8 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
                 return self.send_json(benchmarks.overview())
             if path.startswith("/api/benchmarks/runs/") and "/trials/" in path:
                 parts = path.split("/")
-                result = benchmarks.trial(parts[4], parts[6]) if len(parts) == 7 and parts[5] == "trials" else None
+                attempt = parse_qs(parsed.query).get("attempt", [None])[0]
+                result = benchmarks.trial(parts[4], parts[6], attempt) if len(parts) == 7 and parts[5] == "trials" else None
                 return self.send_json(result or {"error": "not_found"}, 200 if result else 404)
             if path.startswith("/api/benchmarks/runs/"):
                 result = benchmarks.run_view(path.rsplit("/", 1)[-1])
@@ -443,6 +461,12 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
                     return self.send_json(benchmarks.preflight())
                 if self.path == "/api/benchmarks/runs":
                     data, code = manager.start_benchmark(benchmarks, payload, self.headers.get("Idempotency-Key", ""))
+                    return self.send_json(data, code)
+                if self.path.startswith("/api/benchmarks/runs/") and self.path.endswith("/resume"):
+                    if payload: raise ValueError("继续评测沿用原始配置，不接受附加参数")
+                    parts = self.path.split("/")
+                    if len(parts) != 6: return self.send_json({"error": "not_found"}, 404)
+                    data, code = manager.resume_benchmark(benchmarks, parts[4], self.headers.get("Idempotency-Key", ""))
                     return self.send_json(data, code)
                 if self.path.startswith("/api/benchmarks/runs/") and self.path.endswith("/cancel"):
                     if payload: raise ValueError("停止评测不接受附加参数")

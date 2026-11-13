@@ -17,11 +17,12 @@ def entry_view(run, entry):
     actual = [(t["task"], t.get("repeat", 1)) for t in trials]
     grid_complete = bool(expected) and len(actual) == len(expected) and set(actual) == expected
     binary_complete = grid_complete and all(t["status"] in {"passed", "failed"} for t in trials)
-    usages = [t.get("usage") or {} for t in trials]
+    attempts = [a for t in trials for a in [*t.get("attempts", []), t]]
+    usages = [t.get("usage") or {} for t in attempts]
     tokens = sum(u["tokens"] for u in usages if number(u.get("tokens")))
     usage_known = bool(trials) and all(number(u.get("tokens")) and not u.get("unknown_usage_calls")
-                                    and not t.get("usage_unconfirmed") for t, u in zip(trials, usages))
-    seconds = [t["seconds"] for t in trials if number(t.get("seconds"))]
+                                    and not t.get("usage_unconfirmed") for t, u in zip(attempts, usages))
+    seconds = [t["seconds"] for t in attempts if number(t.get("seconds"))]
     versions = sorted({t["agent_info"]["version"] for t in trials
                        if isinstance(t.get("agent_info"), dict) and t["agent_info"].get("version")})
     return {"id": entry["id"], "runner": entry["runner"], "model": entry["model"],
@@ -31,8 +32,9 @@ def entry_view(run, entry):
             "graded": counts["passed"] + counts["failed"], "scored": counts["scored"],
             "pending": sum(counts[s] for s in ACTIVE), "not_run": counts["not_run"] + counts["cancelled"],
             "total": len(expected), "tokens": tokens, "usage_known": usage_known,
+            "retries": sum(len(t.get("attempts", [])) for t in trials),
             "calls": sum(u["calls"] for u in usages if number(u.get("calls"))),
-            "mean_seconds": sum(seconds) / len(seconds) if grid_complete and len(seconds) == len(expected) else None}
+            "mean_seconds": sum(seconds) / len(expected) if grid_complete and len(seconds) == len(attempts) else None}
 
 
 def run_brief(run):

@@ -16,6 +16,13 @@ LABELS = {"environment": "准备任务环境", "dependencies": "安装系统依�
 ACTIVE = {"running", "cancelling", "preparing"}
 
 
+def attempt_root(root, trial):
+    attempt = trial.get("attempt", 1)
+    if type(attempt) is not int or attempt < 1:
+        raise ValueError("无效的执行次数")
+    return root if attempt == 1 else root / "attempts" / str(attempt)
+
+
 def tail(path, limit=12000):
     """Do not follow sandbox-created links or block on FIFOs; return the newest output."""
     try:
@@ -70,7 +77,7 @@ def snapshot(data_root, run, trial, include_logs=False):
     result = dict(trial)
     if not re.fullmatch(r"bench-[a-f0-9]{12}", run["id"]) or not re.fullmatch(r"trial-\d{4,}", trial["id"]):
         return result
-    root = data_root / "benchmarks" / run["id"]
+    root = attempt_root(data_root / "benchmarks" / run["id"], trial)
     job = root / "jobs" / trial["id"]
     work = root / trial["id"]
     # Only the host-owned direct job children may contribute live files.

@@ -5,12 +5,13 @@ const statusText = {queued:'待执行',preparing:'准备中',running:'执行中'
 const initialQuery=new URLSearchParams(location.search);
 let state = {datasets:[],runs:[]}, profiles = [], selected = new Set(), page = 0, currentRun = null, requestedRun = initialQuery.get('run')||'', loading = false;
 let pendingTrial=initialQuery.get('trial')||'';
+let resuming=false;const resumeKeys=new Map();
 let evidenceSelection = null, evidenceBusy = false, evidenceInitialized = false;
 let entries = [{runner:'pi',model_profile:''},{runner:'dsh',model_profile:''}];
-async function api(url, body) {
+async function api(url, body, key=crypto.randomUUID()) {
   const signal=AbortSignal.timeout(url.endsWith('/preflight')?40000:15000);
-  const response = await fetch(url, body === undefined ? {signal} : {signal,method:'POST', headers:{'Content-Type':'application/json','X-EvoArena-Request':'1','Idempotency-Key':crypto.randomUUID()},body:JSON.stringify(body)});
-  const data = await response.json(); if (!response.ok) throw new Error(data.error || '请求失败'); return data;
+  const response = await fetch(url, body === undefined ? {signal} : {signal,method:'POST', headers:{'Content-Type':'application/json','X-EvoArena-Request':'1','Idempotency-Key':key},body:JSON.stringify(body)});
+  const data = await response.json(); if (!response.ok) {const error=new Error(data.error || '请求失败');error.status=response.status;throw error;} return data;
 }
 function notice(text) { $('notice').textContent = text; $('notice').hidden = !text; }
 function duration(seconds) {
@@ -39,9 +40,15 @@ function renderEvidence(t) {
   const p=t.progress||{},active=['running','preparing','cancelling'].includes(t.status);
   const installation=['environment','dependencies','node','harness','ready'].includes(p.stage);
   if(!evidenceInitialized){
-    $('evidence-content').innerHTML=`<div class="live-title"><b id="evidence-phase"></b><span id="evidence-time"></span></div><p id="evidence-architecture" class="muted"></p><p id="evidence-message" role="status"></p><p id="evidence-freshness" class="muted"></p><details data-evidence="installation" ${installation?'open':''}><summary>安装日志</summary><pre id="installation-log"></pre></details><details data-evidence="harbor" ${installation&&!t.installation_log?'open':''}><summary>Harbor 日志</summary><pre id="harbor-log"></pre></details><details data-evidence="agent" ${active&&!installation?'open':''}><summary>工具实时输出</summary><pre id="agent-output"></pre></details><details data-evidence="verifier" ${!active&&t.status!=='queued'?'open':''}><summary>验收器输出</summary><pre id="verifier-log"></pre></details><details data-evidence="trace" ${active&&!installation?'open':''}><summary id="trace-title">执行轨迹</summary><div id="trace-content"></div></details><details data-evidence="identity"><summary>任务校验和</summary><pre id="evidence-checksum"></pre></details>`;
+    $('evidence-content').innerHTML=`<label id="attempt-control" hidden>执行尝试<select id="attempt-select" aria-label="执行尝试"></select></label><div class="live-title"><b id="evidence-phase"></b><span id="evidence-time"></span></div><p id="evidence-architecture" class="muted"></p><p id="evidence-message" role="status"></p><p id="evidence-freshness" class="muted"></p><details data-evidence="installation" ${installation?'open':''}><summary>安装日志</summary><pre id="installation-log"></pre></details><details data-evidence="harbor" ${installation&&!t.installation_log?'open':''}><summary>Harbor 日志</summary><pre id="harbor-log"></pre></details><details data-evidence="agent" ${active&&!installation?'open':''}><summary>工具实时输出</summary><pre id="agent-output"></pre></details><details data-evidence="verifier" ${!active&&t.status!=='queued'?'open':''}><summary>验收器输出</summary><pre id="verifier-log"></pre></details><details data-evidence="trace" ${active&&!installation?'open':''}><summary id="trace-title">执行轨迹</summary><div id="trace-content"></div></details><details data-evidence="identity"><summary>任务校验和</summary><pre id="evidence-checksum"></pre></details>`;
     evidenceInitialized=true;
   }
+  const options=t.attempt_options||[];
+  $('attempt-control').hidden=options.length<2;
+  const optionHtml=options.map(a=>`<option value="${a.attempt}">第 ${a.attempt} 次 · ${esc(statusText[a.status]||a.status)}</option>`).join('');
+  if($('attempt-select').innerHTML!==optionHtml)$('attempt-select').innerHTML=optionHtml;
+  $('attempt-select').value=String(t.attempt||1);
+  $('attempt-select').onchange=async e=>{evidenceSelection={...evidenceSelection,attempt:e.target.value};await refreshEvidence();};
   $('evidence-title').textContent=t.task+' · '+t.runner.toUpperCase();
   $('evidence-phase').textContent=active?(p.label||t.phase||'执行中'):(statusText[t.status]||t.status);
   $('evidence-time').textContent='已用 '+duration(p.elapsed_seconds??t.seconds);
@@ -63,7 +70,7 @@ async function refreshEvidence() {
   if(!selected||evidenceBusy)return;
   evidenceBusy=true;
   try{
-    const t=await api('/api/benchmarks/runs/'+encodeURIComponent(selected.run)+'/trials/'+encodeURIComponent(selected.trial));
+    const t=await api('/api/benchmarks/runs/'+encodeURIComponent(selected.run)+'/trials/'+encodeURIComponent(selected.trial)+(selected.attempt?'?attempt='+encodeURIComponent(selected.attempt):''));
     if(evidenceSelection===selected&&$('evidence-dialog').open)renderEvidence(t);
   }catch(error){
     if(evidenceSelection===selected){
@@ -112,11 +119,20 @@ function renderRun() {
   const r=currentRun;
   $('run-meta').textContent=`${r.dataset.name} · ${statusText[r.status]||r.status} · ${r.selected_tasks.length} 题 × ${r.entries.length} 组合 × ${r.repeats} 次${r.error?' · '+r.error:''}`;
   $('cancel').hidden=!['queued','running','preparing'].includes(r.status);
-  $('comparison').innerHTML=`<div class="comparison-grid">${r.summary.map(e=>`<div class="score-card"><b>${esc(e.runner.toUpperCase())}</b><div class="model">${esc(e.model)}</div><div class="score">${e.pass_rate===null?'—':(e.pass_rate*100).toFixed(1)+'%'}<small>${e.pass_rate===null?'尚无完整通过率':'通过率'}</small></div><progress class="bar" max="${Math.max(1,e.total)}" value="${e.passed}" aria-label="已通过任务比例"></progress><div class="score-meta">${e.passed} 通过 · ${e.failed} 未通过 · ${e.error} 异常<br>${e.calls} 请求 · ${e.tokens.toLocaleString()} Token${e.unknown_usage_calls?' · '+e.unknown_usage_calls+' 次用量未知':''}${e.unconfirmed_usage_trials?' · '+e.unconfirmed_usage_trials+' 题用量待核对':''}</div></div>`).join('')}</div>`;
+  const recovery=r.recovery;
+  $('resume').hidden=!recovery?.eligible;
+  $('resume').disabled=resuming||state.runs.some(run=>['queued','running','preparing','cancelling'].includes(run.status));
+  $('resume').textContent=resuming?'正在提交…':`重试并继续 · ${recovery?.remaining||0}`;
+  $('recovery-info').hidden=!recovery?.eligible;
+  if(recovery?.eligible)$('recovery-info').textContent=`保留 ${recovery.preserved} 条有效结果 · 重试 ${recovery.retry_count} 条异常/中断执行 · 继续 ${recovery.unrun_count} 条未执行任务。沿用原配置，重试从该题重新开始。`;
+  $('comparison').innerHTML=`<div class="comparison-grid">${r.summary.map(e=>`<div class="score-card"><b>${esc(e.runner.toUpperCase())}</b><div class="model">${esc(e.model)}</div><div class="score">${e.pass_rate===null?'—':(e.pass_rate*100).toFixed(1)+'%'}<small>${e.pass_rate===null?'尚无完整通过率':'通过率'}</small></div><progress class="bar" max="${Math.max(1,e.total)}" value="${e.passed}" aria-label="已通过任务比例"></progress><div class="score-meta">${e.passed} 通过 · ${e.failed} 未通过 · ${e.error} 异常<br>${e.retries?'已重试 '+e.retries+' 次 · ':''}${e.calls} 请求 · ${e.tokens.toLocaleString()} Token${e.unknown_usage_calls?' · '+e.unknown_usage_calls+' 次用量未知':''}${e.unconfirmed_usage_trials?' · '+e.unconfirmed_usage_trials+' 题用量待核对':''}</div></div>`).join('')}</div>`;
   renderLiveProgress(r);
-  const done=r.trials.filter(t=>!['queued','running'].includes(t.status)).length;
-  $('progress').textContent=`${done} / ${r.trials.length}`;
-  $('trials').innerHTML=`<div class="table-scroll"><table><thead><tr><th>任务</th><th>组合</th><th>结果</th><th>耗时</th><th></th></tr></thead><tbody>${r.trials.map(t=>`<tr><td class="task-name">${esc(t.task)}${r.repeats>1?' #'+t.repeat:''}</td><td>${esc(t.runner.toUpperCase())}<span class="muted">${esc(t.model)}</span></td><td class="status-${esc(t.status)}">${esc(t.status==='running'?(t.progress?.label||t.phase||'执行中'):(statusText[t.status]||t.status))}${t.error?'<span class="muted">'+esc(t.error)+'</span>':''}${t.status==='scored'?'<span class="muted">'+esc(JSON.stringify(t.rewards))+'</span>':''}</td><td>${duration(t.progress?.elapsed_seconds ?? t.seconds)}</td><td><button data-trial="${esc(t.id)}" class="text-button">查看 ↗</button></td></tr>`).join('')}</tbody></table></div>`;
+  const graded=r.trials.filter(t=>['passed','failed','scored'].includes(t.status)).length;
+  const errors=r.trials.filter(t=>t.status==='error').length;
+  const unrun=r.trials.filter(t=>t.status==='not_run'||(t.status==='cancelled'&&!t.started)).length;
+  const stopped=r.trials.filter(t=>t.status==='cancelled'&&t.started).length;
+  $('progress').textContent=`已评测 ${graded} / ${r.trials.length}${errors?' · '+errors+' 异常':''}${unrun?' · '+unrun+' 未执行':''}${stopped?' · '+stopped+' 已停止':''}`;
+  $('trials').innerHTML=`<div class="table-scroll"><table><thead><tr><th>任务</th><th>组合</th><th>结果</th><th>耗时</th><th></th></tr></thead><tbody>${r.trials.map(t=>`<tr><td class="task-name">${esc(t.task)}${r.repeats>1?' #'+t.repeat:''}${t.attempt>1?'<span class="muted">第 '+t.attempt+' 次尝试</span>':''}</td><td>${esc(t.runner.toUpperCase())}<span class="muted">${esc(t.model)}</span></td><td class="status-${esc(t.status)}">${esc(t.status==='running'?(t.progress?.label||t.phase||'执行中'):(statusText[t.status]||t.status))}${t.error?'<span class="muted">'+esc(t.error)+'</span>':''}${t.status==='scored'?'<span class="muted">'+esc(JSON.stringify(t.rewards))+'</span>':''}</td><td>${duration(t.progress?.elapsed_seconds ?? t.seconds)}</td><td><button data-trial="${esc(t.id)}" class="text-button">查看 ↗</button></td></tr>`).join('')}</tbody></table></div>`;
 }
 async function refresh() {
   if(loading) return; loading=true;
@@ -144,6 +160,18 @@ $('sync').onclick=async()=>{try{$('sync').disabled=true;await api('/api/benchmar
 $('preflight').onclick=async()=>{try{$('preflight').disabled=true;const r=await api('/api/benchmarks/preflight',{});notice(r.checks.map(c=>`${c.ok?'✓':'×'} ${c.name}：${c.detail}`).join('　'));}catch(e){notice(e.message);}finally{$('preflight').disabled=false;}};
 $('start').onclick=async()=>{try{$('start').disabled=true;const run=await api('/api/benchmarks/runs',{dataset:dataset().id,tasks:[...selected],entries,repeats:Number($('repeats').value),max_calls:Number($('calls').value),max_tokens:Number($('tokens').value)});requestedRun=run.id;notice('评测已提交。');await refresh();}catch(e){notice(e.message);updateCount();}};
 $('history').onchange=async()=>{requestedRun=$('history').value;window.history.replaceState(null,'','/evo?run='+encodeURIComponent(requestedRun)+location.hash);await refresh();};
+$('resume').onclick=async()=>{
+  if(!currentRun||resuming)return;
+  const id=currentRun.id;
+  if(!resumeKeys.has(id))resumeKeys.set(id,crypto.randomUUID());
+  resuming=true;renderRun();
+  try{
+    await api('/api/benchmarks/runs/'+encodeURIComponent(id)+'/resume',{},resumeKeys.get(id));
+    resumeKeys.delete(id);requestedRun=id;
+    notice('已继续评测：保留有效结果，重试异常并执行剩余任务。');await refresh();
+  }catch(error){if(error.status&&error.status<500)resumeKeys.delete(id);notice(error.message);}
+  finally{resuming=false;renderRun();}
+};
 $('cancel').onclick=async()=>{if(currentRun){try{await api('/api/benchmarks/runs/'+currentRun.id+'/cancel',{});notice('正在停止任务并关闭模型连接。');}catch(e){notice(e.message);}}};
 $('open-import').onclick=()=>$('import-dialog').showModal();
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>$(b.dataset.close).close());
