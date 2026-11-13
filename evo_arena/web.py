@@ -474,7 +474,7 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
                     with manager.lock:
                         run = store.get("benchmark_run", ident)
                         if not run: return self.send_json({"error": "not_found"}, 404)
-                        if manager.current == ident and run["status"] in {"queued", "running"}:
+                        if manager.current == ident and run["status"] in {"queued", "preparing", "running"}:
                             benchmarks.cancel.set()
                         return self.send_json({"id": ident, "cancellation_requested": benchmarks.cancel.is_set()})
                 if (self.path in {"/api/evo/experiments", "/api/evo/campaigns", "/api/evo/calibrate", "/api/harness/matches", "/api/seasons"}

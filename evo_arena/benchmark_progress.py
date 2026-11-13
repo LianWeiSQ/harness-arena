@@ -12,8 +12,8 @@ from pathlib import Path
 LABELS = {"environment": "准备任务环境", "dependencies": "安装系统依赖", "node": "下载 Node.js",
           "harness": "安装运行器", "ready": "运行器已就绪", "agent": "Agent 执行",
           "model": "等待模型响应", "verifier": "运行验收器", "queued": "等待前一组合完成",
-          "finished": "执行结束"}
-ACTIVE = {"running", "cancelling", "preparing"}
+          "retrying": "等待自动重试", "finished": "执行结束"}
+ACTIVE = {"running", "cancelling", "preparing", "retrying"}
 
 
 def attempt_root(root, trial):
@@ -116,6 +116,8 @@ def snapshot(data_root, run, trial, include_logs=False):
     stage_at = (trial.get("stage_started") if stage == controller else state.get("started_at")) or trial.get("started")
     if trial["status"] == "queued":
         stage, stage_at = "queued", None
+    elif trial["status"] == "retrying":
+        stage, stage_at = "retrying", None
     elif trial["status"] not in ACTIVE:
         stage = "finished"
     elif (work / "agent-ended").is_file():
@@ -125,6 +127,7 @@ def snapshot(data_root, run, trial, include_logs=False):
     heartbeat = epoch(trial.get("heartbeat_at"))
     activity = max(times) if times else start
     result["progress"] = {"stage": stage, "label": LABELS.get(stage, stage),
+        "retry_seconds": max(0, round(epoch(trial["retry_at"]) - current)) if trial.get("retry_at") else None,
         "started_at": trial.get("started"), "stage_started_at": stage_at,
         "elapsed_seconds": max(0, round((end or current) - start)) if start else trial.get("seconds"),
         "stage_elapsed_seconds": max(0, round((end or current) - epoch(stage_at))) if epoch(stage_at) else None,

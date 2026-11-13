@@ -1,7 +1,7 @@
 'use strict';
 const $=id=>document.getElementById(id);
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const statuses={queued:'待执行',preparing:'准备中',running:'执行中',cancelling:'停止中',completed:'已完成',incomplete:'未完整完成',interrupted:'已中断',cancelled:'已停止',not_run:'未执行',passed:'通过',failed:'未通过',scored:'原始评分',error:'执行异常',mixed:'部分通过'};
+const statuses={queued:'待执行',retrying:'等待自动重试',preparing:'准备中',running:'执行中',cancelling:'停止中',completed:'已完成',incomplete:'未完整完成',interrupted:'已中断',cancelled:'已停止',not_run:'未执行',passed:'通过',failed:'未通过',scored:'原始评分',error:'执行异常',mixed:'部分通过'};
 let selectedRun=new URLSearchParams(location.search).get('run')||'',loading=false;
 const label=r=>r==='pi'?'Pi':r==='dsh'?'DSH':r;
 const color=r=>r==='dsh'?'runner-dsh':'runner-pi';

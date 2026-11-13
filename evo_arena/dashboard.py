@@ -3,7 +3,7 @@ from collections import Counter
 import math
 
 
-ACTIVE = {"queued", "preparing", "running", "cancelling"}
+ACTIVE = {"queued", "preparing", "running", "cancelling", "retrying"}
 
 
 def number(value):
@@ -82,7 +82,7 @@ def dashboard_view(store, run_id=None):
             if complete and counts["passed"] + counts["failed"] == len(trials):
                 status = "passed" if counts["passed"] == len(trials) else "failed" if not counts["passed"] else "mixed"
             else:
-                status = next((s for s in ("running", "preparing", "cancelling", "error", "queued", "cancelled", "not_run", "scored") if counts[s]), "not_run")
+                status = next((s for s in ("running", "retrying", "preparing", "cancelling", "error", "queued", "cancelled", "not_run", "scored") if counts[s]), "not_run")
             cells.append({"entry": entry["id"], "status": status, "passed": counts["passed"],
                           "total": selected["repeats"], "trial_ids": [t["id"] for t in trials],
                           "rewards": [t.get("rewards") for t in trials if t["status"] == "scored"]})

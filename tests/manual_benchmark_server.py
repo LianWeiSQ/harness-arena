@@ -32,6 +32,12 @@ def fake_trial(self, run, trial, root, settings):
     trial.update(status="running", started=now(), stage="environment")
     run["platform"] = {"engine_arch": "arm64"}
     self.save(run)
+    if "--auto-retry" in sys.argv and trial["runner"] == "pi" and trial.get("attempt", 1) == 1:
+        trial.update(status="error", error="模型响应以失败状态结束", finished=now(), seconds=1,
+                     provider_failure={"category": "response_failed"},
+                     usage={"calls": 1, "tokens": 50, "unknown_usage_calls": 1},
+                     trace=[{"title": "Automatic retry fixture", "body": "First attempt failed; no model was called."}])
+        return
     if trial["runner"] == "pi":
         agent = root / "jobs" / trial["id"] / "task__fixture" / "agent"
         (agent / "setup").mkdir(parents=True)

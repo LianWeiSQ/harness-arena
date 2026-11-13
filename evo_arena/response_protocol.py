@@ -17,6 +17,9 @@ READ_ERRORS = {"TimeoutError", "URLError", "IncompleteRead", "RemoteDisconnected
 
 TERMINALS = {"response.completed": "completed", "response.failed": "failed",
              "response.incomplete": "incomplete"}
+PROVIDER_CODES = {"server_error", "rate_limit_exceeded", "invalid_api_key", "authentication_error",
+                  "insufficient_quota", "billing_hard_limit_reached", "model_not_found",
+                  "context_length_exceeded", "content_filter", "policy_violation"}
 CATEGORIES = {"ok", "invalid_response", "missing_terminal", "conflicting_terminal",
               "response_failed", "response_incomplete", "missing_usage", "http_error",
               "transport_error", "timeout", "response_too_large", "cancelled", "task_ended",
@@ -44,6 +47,8 @@ def public_summary(value):
             result[key] = value[key]
     if value.get("timeout_phase") in ("connect", "response"):
         result["timeout_phase"] = value["timeout_phase"]
+    if isinstance(value.get("provider_code"), str) and value["provider_code"] in PROVIDER_CODES:
+        result["provider_code"] = value["provider_code"]
     for key in ("bytes", "event_count", "http_status"):
         if type(value.get(key)) is int and 0 <= value[key] <= 6_000_001:
             result[key] = value[key]
@@ -138,6 +143,9 @@ def decode_response(body: bytes, content_type: str):
                 raise ValueError()
             summary["terminal"] = status
         usage = response.get("usage")
+        error = response.get("error")
+        if isinstance(error, dict) and isinstance(error.get("code"), str) and error["code"] in PROVIDER_CODES:
+            summary["provider_code"] = error["code"]
         known = isinstance(usage, dict) and type(usage.get("total_tokens")) is int and usage["total_tokens"] >= 0
         summary["usage_state"] = "known" if known else "unknown"
         if summary["terminal"] != "completed":

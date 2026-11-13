@@ -33,7 +33,7 @@ class BenchmarkTests(unittest.TestCase):
         (task / "tests" / "test.sh").write_text("#!/bin/sh\necho 1 > /logs/verifier/reward.txt\n")
         self.task = task
         self.dataset = self.catalog.import_local({"name": "Fixture", "path": str(task.parent)})
-        self.payload = {"dataset": self.dataset["id"], "tasks": ["task-one"],
+        self.payload = {"dataset": self.dataset["id"], "tasks": ["task-one"], "max_auto_retries": 0,
                         "entries": [{"runner": "pi", "model_profile": "startup"},
                                     {"runner": "dsh", "model_profile": "startup"}]}
 

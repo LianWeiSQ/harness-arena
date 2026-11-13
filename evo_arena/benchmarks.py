@@ -10,6 +10,7 @@ import subprocess
 import threading
 import time
 import uuid
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from .datasets import DatasetCatalog
@@ -17,9 +18,11 @@ from .harness import TrialGateway, read_text
 from .provider import Budget
 from .store import canonical, digest, now
 from .benchmark_progress import attempt_root, snapshot
+from .benchmark_retry import DEFAULT_RETRIES, BACKOFF_SECONDS, retry_reason
+from .benchmark_runtime import check_environment
 
 ADAPTERS = {"pi": "BenchmarkPi", "dsh": "BenchmarkDSH"}
-ACTIVE = {"queued", "preparing", "running", "cancelling"}
+ACTIVE = {"queued", "preparing", "running", "cancelling", "retrying"}
 DETAIL_FIELDS = {"trace", "verifier_output", "harbor_log", "installation_log", "agent_output", "progress"}
 GRADED = {"passed", "failed", "scored"}
 RETRYABLE = {"error", "not_run", "cancelled"}
@@ -69,6 +72,11 @@ def trial_result(path, failure=None, budget_exhausted=False):
     if failure or budget_exhausted or exception:
         result.update(status="error", error=failure or ("单题预算耗尽" if budget_exhausted else
                       "Harbor: " + str(exception.get("exception_type", "execution_error"))[:160]))
+        if exception:
+            result["exception_type"] = str(exception.get("exception_type", "execution_error"))[:160]
+            result["failure_stage"] = ("verifier" if (data.get("verifier") or {}).get("started_at") else
+                "agent" if (data.get("agent_execution") or {}).get("started_at") else
+                "setup" if (data.get("agent_setup") or {}).get("started_at") else "environment")
     elif (isinstance(rewards, dict) and type(rewards.get("reward")) in (float, int)
           and math.isfinite(rewards["reward"]) and rewards["reward"] in (0, 1)):
         result.update(status="passed" if rewards["reward"] == 1 else "failed")
@@ -86,7 +94,7 @@ def summarize(run):
     for entry in run["entries"]:
         trials = [t for t in run["trials"] if t["entry"] == entry["id"]]
         counts = {status: sum(t["status"] == status for t in trials)
-                  for status in ("passed", "failed", "scored", "error", "cancelled", "queued", "running")}
+                  for status in ("passed", "failed", "scored", "error", "cancelled", "queued", "running", "retrying")}
         graded = counts["passed"] + counts["failed"]
         complete = len(trials) == graded
         attempts = [a for t in trials for a in [*t.get("attempts", []), t]]
@@ -111,24 +119,19 @@ class BenchmarkEngine:
         runs = [{k: v for k, v in run.items() if k != "trials"} for run in self.store.list("benchmark_run")]
         return {"datasets": self.catalog.list(), "runs": runs,
                 "runners": {"pi": "Pi · 0.82.1", "dsh": "DSH · 0.1.2-rc.1"},
+                "automation": {"preflight": True, "install_runtime": True, "default_retries": DEFAULT_RETRIES},
                 "installation": self.store.get("benchmark_sync", "terminal-bench-2.1")}
 
-    def preflight(self):
-        checks = []
-        for name, command in (("Harbor", [str(self.harbor), "--version"]),
-                              ("Docker", ["docker", "info", "--format", "{{.ServerVersion}}"]),
-                              ("Git", ["git", "--version"])):
-            try:
-                value = subprocess.check_output(command, text=True, stderr=subprocess.DEVNULL, timeout=12).strip()
-                checks.append({"name": name, "ok": bool(value), "detail": value})
-            except (OSError, subprocess.SubprocessError):
-                checks.append({"name": name, "ok": False, "detail": "未就绪"})
-        checks.append({"name": "模型配置", "ok": bool(self.models.public()["profiles"]),
-                       "detail": "只检查本地配置，不调用模型"})
-        return {"checks": checks, "ready": all(row["ok"] for row in checks), "model_calls": 0}
+    def preflight(self, *, repair=False, on_update=None):
+        harbor, result = check_environment(self.store.root, self.harbor,
+            self.cancel if repair else threading.Event(),
+            bool(self.models.public()["profiles"]), repair=repair, on_update=on_update)
+        if repair:
+            self.harbor = harbor
+        return result
 
     def plan(self, payload):
-        allowed = {"dataset", "tasks", "entries", "repeats", "max_calls", "max_tokens"}
+        allowed = {"dataset", "tasks", "entries", "repeats", "max_calls", "max_tokens", "max_auto_retries"}
         if set(payload) - allowed:
             raise ValueError("评测配置包含未知字段")
         dataset = self.catalog.get(payload.get("dataset"))
@@ -140,9 +143,10 @@ class BenchmarkEngine:
         for task in selected:
             self.catalog.task_path(dataset, task)
         repeats, calls, tokens = payload.get("repeats", 1), payload.get("max_calls", 128), payload.get("max_tokens", 1000000)
-        for value, low, high in ((repeats, 1, 5), (calls, 1, 1000), (tokens, 1000, 10000000)):
+        for value, low, high in ((repeats, 1, 5), (calls, 1, 1000), (tokens, 1000, 10000000),
+                                 (payload.get("max_auto_retries", DEFAULT_RETRIES), 0, 5)):
             if type(value) is not int or not low <= value <= high:
-                raise ValueError("重复次数或单题预算超出范围")
+                raise ValueError("重复次数、自动重试次数或单题预算超出范围")
         entries = payload.get("entries")
         if not isinstance(entries, list) or not 1 <= len(entries) <= 8:
             raise ValueError("请选择 1–8 个 Harness × 模型组合")
@@ -167,8 +171,6 @@ class BenchmarkEngine:
         if not key or len(key) > 200:
             raise ValueError("缺少有效的幂等请求标识")
         dataset, selected, entries, credentials, repeats, calls, tokens = self.plan(payload)
-        if not self.harbor or not self.harbor.is_file():
-            raise ValueError("Harbor CLI 未安装")
         ident = "bench-" + uuid.uuid4().hex[:12]
         trials = [{"id": f"trial-{i + 1:04d}", "task": task, "entry": entry["id"],
                    "runner": entry["runner"], "model": entry["model"], "repeat": repeat,
@@ -179,12 +181,53 @@ class BenchmarkEngine:
         run = {"id": ident, "status": "queued", "created": now(), "dataset": dataset,
                "selected_tasks": selected, "entries": entries, "repeats": repeats, "trials": trials,
                "limits": {"calls_per_trial": calls, "tokens_per_trial": tokens},
-               "protocol": "official-task-timeouts; sequential; manual-infrastructure-retry; bounded-model-relay"}
+               "automation": {"max_retries": payload.get("max_auto_retries", DEFAULT_RETRIES),
+                              "backoff_seconds": list(BACKOFF_SECONDS)},
+               "protocol": "official-task-timeouts; sequential; classified-infrastructure-retry; bounded-model-relay"}
         run["summary"] = summarize(run)
         self.store.create("benchmark_run", ident, run)
         self.store.create("benchmark_request", digest(key), {"run": ident, "payload_sha256": digest(payload)})
         self.cancel.clear()
         return run, credentials
+
+    def reset_trial(self, run, trial):
+        """Prepare fresh work and write intents; caller commits them with the run."""
+        writes, previous = [], list(trial.get("attempts", []))
+        attempt = trial.get("attempt", 1)
+        if trial["status"] == "error" or trial.get("started"):
+            evidence = self.trial(run["id"], trial["id"])
+            evidence.pop("attempt_options", None)
+            evidence.pop("attempts", None)
+            evidence["attempt"] = attempt
+            writes.append(("benchmark_attempt", f"{run['id']}/{trial['id']}/{attempt}", evidence))
+            previous.append({k: v for k, v in evidence.items() if k not in DETAIL_FIELDS})
+            attempt += 1
+        replacement = {k: trial[k] for k in ("id", "task", "entry", "runner", "model", "repeat")}
+        replacement.update(status="queued", attempt=attempt, attempts=previous, trace=[])
+        trial.clear()
+        trial.update(replacement)
+        writes.append(("benchmark_trial", f"{run['id']}/{trial['id']}", trial))
+        return writes
+
+    def write_retry(self, run, writes):
+        # Called under the Store lock and a single SQLite transaction.
+        for kind, ident, value in writes:
+            sql = "INSERT INTO objects VALUES(?,?,?,?)"
+            if kind == "benchmark_trial":
+                sql += " ON CONFLICT(kind,id) DO UPDATE SET data=excluded.data"
+            self.store.db.execute(sql, (kind, ident, canonical(value), now()))
+        run["updated_at"], run["summary"] = now(), summarize(run)
+        self.store.db.execute("UPDATE objects SET data=? WHERE kind='benchmark_run' AND id=?", (canonical(run), run["id"]))
+
+    def queue_auto_retry(self, run, trial, reason):
+        retry = trial.get("auto_retries", 0) + 1
+        delay = run["automation"]["backoff_seconds"][retry - 1]
+        with self.store.lock, self.store.db:
+            writes = self.reset_trial(run, trial)
+            trial.update(status="retrying", auto_retries=retry, retry_reason=reason,
+                         retry_at=(datetime.now(timezone.utc) + timedelta(seconds=delay)).isoformat())
+            self.write_retry(run, writes)
+        return delay
 
     def resume(self, run_id, key):
         """Enqueue only unresolved slots; preserve every paid attempt atomically."""
@@ -194,8 +237,6 @@ class BenchmarkEngine:
             run = self.store.get("benchmark_run", run_id)
             if not run or not recovery_view(run)["eligible"]:
                 raise ValueError("这场评测没有可继续的异常或未执行任务")
-            if not self.harbor or not self.harbor.is_file():
-                raise ValueError("Harbor CLI 未安装")
             pending = [t for t in run["trials"] if t["status"] in RETRYABLE]
             credentials = {}
             for task in {t["task"] for t in pending}:
@@ -212,35 +253,18 @@ class BenchmarkEngine:
                 credentials[entry["id"]] = settings
             writes = []
             for trial in pending:
-                previous = list(trial.get("attempts", []))
-                attempt = trial.get("attempt", 1)
-                if trial["status"] == "error" or trial.get("started"):
-                    evidence = self.trial(run_id, trial["id"])
-                    evidence.pop("attempt_options", None)
-                    evidence.pop("attempts", None)
-                    evidence["attempt"] = attempt
-                    writes.append(("benchmark_attempt", f"{run_id}/{trial['id']}/{attempt}", evidence))
-                    previous.append({k: v for k, v in evidence.items() if k not in DETAIL_FIELDS})
-                    attempt += 1
-                replacement = {k: trial[k] for k in ("id", "task", "entry", "runner", "model", "repeat")}
-                replacement.update(status="queued", attempt=attempt, attempts=previous, trace=[])
-                trial.clear()
-                trial.update(replacement)
-                writes.append(("benchmark_trial", f"{run_id}/{trial['id']}", replacement))
+                writes.extend(self.reset_trial(run, trial))
             run.pop("error", None)
             run.pop("finished", None)
-            run.update(status="queued", updated_at=now(),
-                       protocol="official-task-timeouts; sequential; manual-infrastructure-retry; bounded-model-relay")
+            # A legacy record opts into the new default only when explicitly continued.
+            run.setdefault("automation", {"max_retries": DEFAULT_RETRIES, "backoff_seconds": list(BACKOFF_SECONDS)})
+            run["protocol"] = "official-task-timeouts; sequential; classified-infrastructure-retry; bounded-model-relay"
+            run.update(status="queued", updated_at=now())
             run.setdefault("resumptions", []).append({"queued_at": now(), "trials": [t["id"] for t in pending]})
             run["summary"] = summarize(run)
             # One SQLite transaction: an interrupted enqueue cannot lose the old evidence
             # or leave a committed retry without its idempotency record.
-            for kind, ident, value in writes:
-                sql = "INSERT INTO objects VALUES(?,?,?,?)"
-                if kind == "benchmark_trial":
-                    sql += " ON CONFLICT(kind,id) DO UPDATE SET data=excluded.data"
-                self.store.db.execute(sql, (kind, ident, canonical(value), now()))
-            self.store.db.execute("UPDATE objects SET data=? WHERE kind='benchmark_run' AND id=?", (canonical(run), run_id))
+            self.write_retry(run, writes)
             self.store.db.execute("INSERT INTO objects VALUES(?,?,?,?)",
                 ("benchmark_resume_request", digest(key), canonical({"run": run_id}), now()))
         self.cancel.clear()
@@ -289,8 +313,19 @@ class BenchmarkEngine:
         root = self.store.root / "benchmarks" / run["id"]
         try:
             root.mkdir(parents=True, exist_ok=True)
-            run.update(status="running", last_started=now())
+            run.update(status="preparing", last_started=now())
             run.setdefault("started", now())
+            def progress(value):
+                run["preflight"] = value
+                self.save(run)
+            readiness = self.preflight(repair=True, on_update=progress)
+            if self.cancel.is_set():
+                run["status"] = "cancelled"
+                return
+            if not readiness["ready"]:
+                run.update(status="incomplete", error="；".join(c["detail"] for c in readiness["checks"] if not c["ok"]))
+                return
+            run["status"] = "running"
             run["platform"] = {"host_arch": platform.machine()}
             try:
                 run["platform"]["engine_arch"] = subprocess.check_output(
@@ -305,15 +340,27 @@ class BenchmarkEngine:
                     continue
                 if self.cancel.is_set():
                     break
-                self.run_trial(run, trial, root, credentials[trial["entry"]])
-                self.save_trial(run, trial)
-                self.save(run)
-                for key in DETAIL_FIELDS:
-                    trial.pop(key, None)
+                while not self.cancel.is_set():
+                    self.run_trial(run, trial, root, credentials[trial["entry"]])
+                    self.save_trial(run, trial)
+                    self.save(run)
+                    for key in DETAIL_FIELDS:
+                        trial.pop(key, None)
+                    reason = retry_reason(trial)
+                    retries = (run.get("automation") or {}).get("max_retries", 0)
+                    if not reason or trial.get("auto_retries", 0) >= retries or self.cancel.is_set():
+                        break
+                    delay = self.queue_auto_retry(run, trial, reason)
+                    if self.cancel.wait(delay):
+                        break
+                    trial.update(status="queued")
+                    trial.pop("retry_at", None)
                 if self.cancel.is_set():
                     break
                 if trial.get("provider_failure") or trial.get("budget_exhausted"):
-                    run["error"] = "单题预算耗尽，可重试并继续" if trial.get("budget_exhausted") else "模型调用异常，可重试并继续"
+                    run["error"] = ("单题预算耗尽，需要处理" if trial.get("budget_exhausted") else
+                                    "自动重试后模型仍异常，需要处理" if trial.get("auto_retries") else
+                                    "模型调用异常，需要处理")
                     break
             run["status"] = "cancelled" if self.cancel.is_set() else (
                 "completed" if all(t["status"] in {"passed", "failed", "scored"} for t in run["trials"]) else "incomplete")
@@ -324,7 +371,7 @@ class BenchmarkEngine:
                 if trial["status"] == "running":
                     trial.update(status="error", error="执行中断，结果未知", usage_unconfirmed=True)
                     self.save_trial(run, trial)
-                elif trial["status"] == "queued":
+                elif trial["status"] in {"queued", "retrying"}:
                     trial["status"] = "cancelled" if self.cancel.is_set() else "not_run"
             run["finished"] = now()
             self.save(run)
@@ -436,7 +483,7 @@ def recover_benchmarks(store):
         if run["status"] in ACTIVE:
             run.update(status="interrupted", finished=now(), error="服务重启，未自动重放评测")
             for trial in run["trials"]:
-                if trial["status"] in {"running", "queued"}:
+                if trial["status"] in {"running", "queued", "retrying"}:
                     if trial["status"] == "running":
                         trial["usage_unconfirmed"] = True
                     trial["status"] = "error" if trial["status"] == "running" else "not_run"

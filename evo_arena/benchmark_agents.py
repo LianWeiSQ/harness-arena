@@ -26,6 +26,7 @@ async def install_runtime(agent, environment, runner):
     # Install into an isolated prefix; do not replace the task's node/npm binaries.
     script = f"""set -eu
 mkdir -p /opt/evo-agent /usr/local/lib
+if [ "$(/opt/evo-agent/bin/node --version 2>/dev/null || true)" != "v{NODE_VERSION}" ]; then
 case "$(uname -m)" in
   x86_64) evo_arch=x64 ;;
   aarch64|arm64) evo_arch=arm64 ;;
@@ -36,13 +37,20 @@ curl --http1.1 --fail --progress-bar --show-error --location --retry 2 --retry-a
   -o /tmp/evo-node.tar.gz
 tar -xzf /tmp/evo-node.tar.gz -C /opt/evo-agent --strip-components=1
 rm /tmp/evo-node.tar.gz
+else
+  echo "Node.js v{NODE_VERSION} already installed"
+fi
+test "$(/opt/evo-agent/bin/node --version)" = "v{NODE_VERSION}"
 """
     await agent.exec_as_root(environment, "(\n" + script + "\n) 2>&1 | tee -a /logs/agent/setup/install.log", timeout_sec=600)
     stage("harness")
+    version = PACKAGES[runner].rsplit("@", 1)[1]
     await agent.exec_as_root(environment,
         '(export PATH="/opt/evo-agent/bin:$PATH"; set -eu; '
-        f'npm install --global --prefix /opt/evo-agent --no-audit --no-fund --loglevel=http {PACKAGES[runner]}; '
-        f'{runner} --version) 2>&1 | tee -a /logs/agent/setup/install.log', timeout_sec=1800)
+        f'if [ "$(/opt/evo-agent/bin/{runner} --version 2>/dev/null || true)" != "{version}" ]; then '
+        f'npm install --global --prefix /opt/evo-agent --no-audit --no-fund --loglevel=http --fetch-retries=2 {PACKAGES[runner]}; fi; '
+        f'test "$(/opt/evo-agent/bin/{runner} --version)" = "{version}"; '
+        f'echo "{runner} {version} ready") 2>&1 | tee -a /logs/agent/setup/install.log', timeout_sec=1800)
     await environment.upload_file(
         Path(__file__).with_name("fixtures") / "harness" / "relay.cjs",
         "/usr/local/lib/evoarena-relay.cjs",

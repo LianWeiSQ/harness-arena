@@ -156,6 +156,33 @@ class LiveProgressTests(unittest.TestCase):
             asyncio.run(agent.exec_as_agent(environment, "dsh --profile headless fixture"))
         self.assertIn("harness-failed", log.read_text())
 
+    def test_runtime_detection_reuses_exact_versions_without_network_or_npm(self):
+        try:
+            from evo_arena.benchmark_agents import install_runtime
+        except ImportError:
+            self.skipTest("Install Harbor extra")
+        prefix = self.root / "runtime"
+        (prefix / "bin").mkdir(parents=True)
+        for name, version in (("node", "v22.22.0"), ("pi", "0.82.1")):
+            target = prefix / "bin" / name
+            target.write_text("#!/bin/sh\necho " + version + "\n")
+            target.chmod(0o700)
+        async def execute(environment, command, **kwargs):
+            command = command.replace("/opt/evo-agent", str(prefix)).replace("/usr/local/lib", str(self.root / "lib"))
+            command = command.replace("/logs/agent/setup", str(self.agent / "setup"))
+            result = subprocess.run(["bash", "-e", "-o", "pipefail", "-c",
+                "curl() { echo unexpected-download; return 9; }; npm() { echo unexpected-npm; return 9; }; " + command],
+                text=True, capture_output=True, timeout=5)
+            if result.returncode:
+                raise RuntimeError(result.stdout + result.stderr)
+            return result
+        agent = SimpleNamespace(logs_dir=self.agent, ensure_system_dependencies=AsyncMock(), exec_as_root=execute)
+        asyncio.run(install_runtime(agent, SimpleNamespace(upload_file=AsyncMock()), "pi"))
+        log = (self.agent / "setup/install.log").read_text()
+        self.assertIn("already installed", log)
+        self.assertIn("pi 0.82.1 ready", log)
+        self.assertNotIn("unexpected", log)
+
 
 if __name__ == "__main__":
     unittest.main()
