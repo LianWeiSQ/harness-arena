@@ -51,5 +51,7 @@ async function refresh(){
   finally{loading=false;}
 }
 $('run-select').onchange=()=>{selectedRun=$('run-select').value;window.history.replaceState(null,'','/?run='+encodeURIComponent(selectedRun));refresh();};
+try{document.documentElement.dataset.theme=localStorage.getItem('arena-theme')||'light';}catch{}
+$('theme-toggle').onclick=()=>{const theme=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=theme;try{localStorage.setItem('arena-theme',theme);}catch{}};
 refresh();setInterval(()=>{if(!document.hidden)refresh();},8000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});

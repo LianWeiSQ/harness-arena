@@ -4,15 +4,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Evo · 设置</title>
-    <link rel="stylesheet" href="/harness.css?v=5" />
-    <link rel="stylesheet" href="/evo.css?v=5" />
-    <script defer src="/settings.js?v=4"></script>
+    <link rel="stylesheet" href="/harness.css?v=7" />
+    <script defer src="/settings.js?v=5"></script>
   </head>
   <body>
     <header class="topbar">
-      <a class="brand" href="/"
-        ><span class="brand-mark" aria-hidden="true">◇</span> E<b>vo</b></a
-      >
+      <a class="brand" href="/" aria-label="Evo 首页"><span class="brand-mark" aria-hidden="true"></span><span class="brand-name">Evo</span></a>
       <nav aria-label="页面导航">
         <a href="/">首页</a><a href="/evo#evaluation">评测</a><a href="/evo#datasets">任务集</a><a href="/settings" aria-current="page">设置</a>
       </nav>
@@ -26,15 +23,13 @@
     <main class="page settings-page">
       <div class="page-heading">
         <div>
-          <p class="eyebrow">SETTINGS / MODEL CONNECTIONS</p>
           <h1>模型连接</h1>
+          <p class="page-description">管理评测使用的模型与 API 连接</p>
         </div>
         <a href="/evo">返回评测工作台 ↗</a>
       </div>
-      <p class="hint">
-        管理评测使用的模型连接，点击「编辑」修改已有配置。
-      </p>
       <div class="settings-grid">
+        <aside class="settings-sidebar">
         <section class="card" aria-labelledby="profiles-title">
           <header class="card-head">
             <h2 id="profiles-title">已保存连接</h2>
@@ -42,11 +37,20 @@
           </header>
           <div id="profiles"></div>
         </section>
-        <section class="card" aria-labelledby="form-title">
+        <section class="card settings-runtime" aria-labelledby="runtime-title">
+          <header class="card-head"><h2 id="runtime-title">运行环境</h2><button id="inspect-system">检查依赖</button></header>
+          <div class="settings-runtime-body">
+            <div id="system-checks" role="status">检查 Docker、Harbor 与模型配置。</div>
+            <div id="system-defaults"><p>次数与预算在<a href="/evo">评测工作台</a>设置。</p></div>
+          </div>
+        </section>
+        <details class="settings-help"><summary>连接说明</summary><p>支持兼容 OpenAI Responses API 的服务，模型 ID 需与服务商一致。</p><p>密钥保存在本机，页面不会回显。修改对新评测生效，正在执行的任务使用启动时的配置。</p></details>
+        </aside>
+        <section class="card settings-editor" aria-labelledby="form-title">
           <header class="card-head">
-            <div>
-              <p class="eyebrow">OPENAI-COMPATIBLE / RESPONSES API</p>
+            <div class="settings-editor-title">
               <h2 id="form-title">添加模型连接</h2>
+              <span class="api-label">Responses API</span>
             </div>
             <button id="new-profile" type="button">新建 +</button>
           </header>
@@ -76,7 +80,7 @@
                 required
                 spellcheck="false"
             /></label>
-            <p class="hint">填写 Responses API 的基础地址，通常以 /v1 结尾。</p>
+            <p class="hint">填写 API 基础地址，通常以 /v1 结尾。</p>
             <label class="field"
               >API Key<input
                 id="profile-key"
@@ -86,7 +90,7 @@
                 required
             /></label>
             <p id="key-hint" class="hint">
-              密钥仅保存在本机数据目录，页面只显示是否已配置。
+              密钥保存在本机，页面不会回显。
             </p>
             <label class="checkbox-field"
               ><input
@@ -103,16 +107,6 @@
           </form>
         </section>
       </div>
-      <div class="settings-info">
-        <p>
-          当前支持兼容 OpenAI Responses API 的模型服务。模型 ID 和 API
-          地址需与服务商配置一致。
-        </p>
-        <p>
-          启动连接也可以编辑。保存后对新评测生效，正在执行的任务使用启动时的配置。
-        </p>
-      </div>
-      <div class="evo-system-grid"><section class="evo-panel"><div class="evo-inline"><h2>运行环境</h2><button id="inspect-system">检查依赖</button></div><p>检查本地 Docker、Harbor 和模型配置，不调用模型。</p><div id="system-checks" role="status">点击检查，查看当前依赖状态和数据目录。</div></section><section class="evo-panel"><h2>执行设置</h2><div id="system-defaults"><p>次数和单题预算在评测工作台设置。</p></div></section></div>
       <footer>
         <span>Evo · 本地设置</span><a href="/harness">历史竞技记录 ↗</a>
       </footer>

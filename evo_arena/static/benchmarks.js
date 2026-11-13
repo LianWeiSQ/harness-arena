@@ -73,7 +73,7 @@ async function refreshEvidence() {
   }finally{evidenceBusy=false;}
 }
 function dataset() { return state.datasets.find(d => d.id === $('dataset').value) || state.datasets[0]; }
-function route() { const view = location.hash === '#datasets' ? 'datasets' : 'evaluation'; document.querySelectorAll('[data-view]').forEach(e => e.hidden = e.dataset.view !== view); document.querySelectorAll('[data-nav]').forEach(e=>e.classList.toggle('active',e.dataset.nav===view)); }
+function route() { const view = location.hash === '#datasets' ? 'datasets' : 'evaluation'; document.querySelectorAll('[data-view]').forEach(e => e.hidden = e.dataset.view !== view); document.querySelectorAll('[data-nav]').forEach(e=>{const active=e.dataset.nav===view;e.classList.toggle('active',active);if(active)e.setAttribute('aria-current','page');else e.removeAttribute('aria-current');}); }
 function renderEntries() {
   $('entries').innerHTML = entries.map((e,i)=>`<div class="entry"><select data-entry="${i}" data-field="runner" aria-label="Harness ${i+1}"><option value="pi" ${e.runner==='pi'?'selected':''}>Pi</option><option value="dsh" ${e.runner==='dsh'?'selected':''}>DSH</option></select><select data-entry="${i}" data-field="model_profile" aria-label="模型 ${i+1}">${profiles.length?profiles.map(p=>`<option value="${esc(p.id)}" ${p.id===e.model_profile?'selected':''}>${esc(p.name)} · ${esc(p.model)}</option>`).join(''):'<option value="">先配置模型</option>'}</select><a class="edit-model" href="/settings?edit=${encodeURIComponent(e.model_profile)}" aria-label="编辑模型 ${i+1}">编辑</a><button data-remove="${i}" aria-label="移除组合 ${i+1}" ${entries.length===1?'disabled':''}>×</button></div>`).join('');
   updateCount();
@@ -103,7 +103,7 @@ function renderCatalog() {
 function filteredTasks() { const q=$('search').value.toLowerCase(),c=$('category').value;return (dataset()?.tasks||[]).filter(t=>(!c||t.category===c)&&(!q||(t.id+' '+t.description).toLowerCase().includes(q))); }
 function renderTasks() {
   const tasks=filteredTasks(), pages=Math.max(1,Math.ceil(tasks.length/10)); page=Math.min(page,pages-1);
-  $('task-list').innerHTML=tasks.length?`<div class="table-scroll"><table><thead><tr><th></th><th>任务</th><th>分类</th><th>时限 / 资源</th></tr></thead><tbody>${tasks.slice(page*10,page*10+10).map(t=>`<tr><td><input class="task-select" type="checkbox" data-task="${esc(t.id)}" aria-label="选择 ${esc(t.id)}" ${selected.has(t.id)?'checked':''}></td><td><span class="task-name">${esc(t.id)}</span><span class="muted">${esc(t.description)}</span></td><td>${esc(t.category)}<span class="muted">${esc(t.difficulty)}</span></td><td>${Math.round(t.seconds/60)} 分钟<span class="muted">${esc(t.cpus)} CPU · ${Math.round((t.memory_mb||0)/1024*10)/10} GB${t.gpus?' · '+t.gpus+' GPU':''}</span></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty"><h3>暂无任务</h3><p>接入官方任务集，或导入自己的 Harbor 目录。</p></div>';
+  $('task-list').innerHTML=tasks.length?`<div class="table-scroll"><table><thead><tr><th></th><th>任务</th><th>分类</th><th>时限 / 资源</th></tr></thead><tbody>${tasks.slice(page*10,page*10+10).map(t=>`<tr><td><input class="task-select" type="checkbox" data-task="${esc(t.id)}" aria-label="选择 ${esc(t.id)}" ${selected.has(t.id)?'checked':''}></td><td><span class="task-name">${esc(t.id)}</span><span class="muted" title="${esc(t.description)}">${esc(t.description)}</span></td><td>${esc(t.category)}<span class="muted">${esc(t.difficulty)}</span></td><td>${Math.round(t.seconds/60)} 分钟<span class="muted">${esc(t.cpus)} CPU · ${Math.round((t.memory_mb||0)/1024*10)/10} GB${t.gpus?' · '+t.gpus+' GPU':''}</span></td></tr>`).join('')}</tbody></table></div>`:'<div class="empty"><h3>暂无任务</h3><p>接入官方任务集，或导入自己的 Harbor 目录。</p></div>';
   $('task-count').textContent=`${tasks.length} 个任务 · 已选 ${selected.size}`; $('page-number').textContent=`${page+1} / ${pages}`;
   $('prev').disabled=page===0; $('next').disabled=page>=pages-1;
 }
@@ -158,5 +158,7 @@ async function openEvidence(id){
 $('trials').onclick=async e=>{const id=e.target.closest('[data-trial]')?.dataset.trial;if(id)await openEvidence(id);};
 $('evidence-dialog').addEventListener('close',()=>{evidenceSelection=null;evidenceInitialized=false;const query=new URLSearchParams(location.search);query.delete('trial');window.history.replaceState(null,'','/evo?'+query+location.hash);});
 
+try{document.documentElement.dataset.theme=localStorage.getItem('arena-theme')||'light';}catch{}
+$('theme-toggle').onclick=()=>{const theme=document.documentElement.dataset.theme==='dark'?'light':'dark';document.documentElement.dataset.theme=theme;try{localStorage.setItem('arena-theme',theme);}catch{}};
 window.addEventListener('hashchange',route);route();
 (async()=>{try{const m=await api('/api/models');profiles=m.profiles;entries.forEach(e=>e.model_profile=m.default||profiles[0]?.id||'');renderEntries();await refresh();}catch(e){notice(e.message);}setInterval(refresh,4000);})();

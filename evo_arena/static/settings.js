@@ -47,8 +47,10 @@ function edit(profile) {
   $("profile-default").checked = profile?.id === profiles?.default;
   $("save-model").textContent = profile ? "保存修改" : "保存连接";
   $("key-hint").textContent = profile?.id === "startup"
-    ? "保存为本机覆盖配置，重启后仍生效；密钥留空则沿用。"
-    : "密钥留空可沿用已有配置，页面不会回显密钥。";
+    ? "留空保留原密钥，修改对新评测生效。"
+    : profile ? "留空保留原密钥。" : "密钥保存在本机，页面不会回显。";
+  document.querySelectorAll('[data-profile-id]').forEach(item =>
+    item.classList.toggle('is-editing', item.dataset.profileId === profile?.id));
   status("");
 }
 function render() {
@@ -56,6 +58,8 @@ function render() {
   $("profiles").replaceChildren(
     ...profiles.profiles.map((profile) => {
       const item = el("article", null, "profile");
+      item.dataset.profileId = profile.id;
+      item.classList.toggle('is-editing', $("profile-id").value === profile.id);
       const title = el("div", null, "profile-title");
       title.append(el("strong", profile.name));
       if (profile.id === profiles.default)
@@ -166,8 +170,8 @@ $("inspect-system").onclick = async () => {
   $("system-checks").textContent = "正在检查本地依赖…";
   try {
     const data = await api("/api/benchmarks/preflight", {});
-    $("system-checks").replaceChildren(...data.checks.map(c => el("p", `${c.ok ? "✓" : "×"} ${c.name} · ${c.detail}`, c.ok ? "evo-ok" : "evo-error")));
-    $("system-defaults").replaceChildren(el("p", "任务环境、安装运行器、模型执行和验收会分别显示进度。"), el("p", "单题预算和重复次数在启动前设置；点击开始评测后才调用模型。"));
+    $("system-checks").replaceChildren(...data.checks.map(c => el("p", `${c.ok ? "✓" : "×"} ${c.name} · ${c.detail}`, c.ok ? "pass" : "fail")));
+    $("system-defaults").replaceChildren(el("p", "次数与预算在评测工作台设置。"));
   } catch(error) {$("system-checks").textContent=error.message;}
   finally {$("inspect-system").disabled=false;}
 };
