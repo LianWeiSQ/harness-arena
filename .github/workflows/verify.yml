@@ -16,7 +16,7 @@ jobs:
           node-version: "22"
       - run: uv sync --frozen --extra harbor --python 3.13
       - run: uv run --frozen --extra harbor python -m unittest discover -s tests
-      - run: node --check evo_arena/static/evo.js && node --check evo_arena/static/settings.js && node --check evo_arena/static/benchmarks.js
+      - run: node --check evo_arena/static/evo.js && node --check evo_arena/static/settings.js && node --check evo_arena/static/benchmarks.js && node --check evo_arena/static/dashboard.js
       - run: node tests/relay_wait.mjs
       - run: uv run --frozen --extra harbor evo-arena calibrate-business
       - run: uv build --wheel

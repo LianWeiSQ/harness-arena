@@ -2,7 +2,9 @@
 const $ = (id) => document.getElementById(id);
 const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const statusText = {queued:'待执行',preparing:'准备中',running:'执行中',completed:'已完成',incomplete:'未完整完成',interrupted:'已中断',cancelled:'已停止',not_run:'未执行',passed:'通过',failed:'未通过',scored:'已评分',error:'执行异常'};
-let state = {datasets:[],runs:[]}, profiles = [], selected = new Set(), page = 0, currentRun = null, requestedRun = '', loading = false;
+const initialQuery=new URLSearchParams(location.search);
+let state = {datasets:[],runs:[]}, profiles = [], selected = new Set(), page = 0, currentRun = null, requestedRun = initialQuery.get('run')||'', loading = false;
+let pendingTrial=initialQuery.get('trial')||'';
 let evidenceSelection = null, evidenceBusy = false, evidenceInitialized = false;
 let entries = [{runner:'pi',model_profile:''},{runner:'dsh',model_profile:''}];
 async function api(url, body) {
@@ -124,7 +126,8 @@ async function refresh() {
     $('history').innerHTML=state.runs.length?state.runs.map(r=>`<option value="${esc(r.id)}">${esc(statusText[r.status]||r.status)} · ${esc(new Date(r.created).toLocaleString())}</option>`).join(''):'<option value="">尚无评测</option>';
     if(chosen&&state.runs.some(r=>r.id===chosen)) { $('history').value=chosen;currentRun=await api('/api/benchmarks/runs/'+encodeURIComponent(chosen));renderRun(); }
     requestedRun='';
-    if ($('evidence-dialog').open) await refreshEvidence();
+    if(pendingTrial&&currentRun){const id=pendingTrial;pendingTrial='';await openEvidence(id);}
+    else if ($('evidence-dialog').open) await refreshEvidence();
   } catch(e) { notice(e.message); } finally { loading=false; }
 }
 $('entries').onchange=e=>{const i=e.target.dataset.entry;if(i!==undefined) {entries[Number(i)][e.target.dataset.field]=e.target.value;renderEntries();}updateCount();};
@@ -140,19 +143,20 @@ $('repeats').oninput=updateCount;
 $('sync').onclick=async()=>{try{$('sync').disabled=true;await api('/api/benchmarks/sync',{});notice('正在下载并校验官方任务，不调用模型。');await refresh();}catch(e){notice(e.message);$('sync').disabled=false;}};
 $('preflight').onclick=async()=>{try{$('preflight').disabled=true;const r=await api('/api/benchmarks/preflight',{});notice(r.checks.map(c=>`${c.ok?'✓':'×'} ${c.name}：${c.detail}`).join('　'));}catch(e){notice(e.message);}finally{$('preflight').disabled=false;}};
 $('start').onclick=async()=>{try{$('start').disabled=true;const run=await api('/api/benchmarks/runs',{dataset:dataset().id,tasks:[...selected],entries,repeats:Number($('repeats').value),max_calls:Number($('calls').value),max_tokens:Number($('tokens').value)});requestedRun=run.id;notice('评测已提交。');await refresh();}catch(e){notice(e.message);updateCount();}};
-$('history').onchange=async()=>{requestedRun=$('history').value;await refresh();};
+$('history').onchange=async()=>{requestedRun=$('history').value;window.history.replaceState(null,'','/evo?run='+encodeURIComponent(requestedRun)+location.hash);await refresh();};
 $('cancel').onclick=async()=>{if(currentRun){try{await api('/api/benchmarks/runs/'+currentRun.id+'/cancel',{});notice('正在停止任务并关闭模型连接。');}catch(e){notice(e.message);}}};
 $('open-import').onclick=()=>$('import-dialog').showModal();
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>$(b.dataset.close).close());
 $('import-form').onsubmit=async e=>{e.preventDefault();$('import-submit').disabled=true;try{const d=await api('/api/benchmarks/import',{name:$('import-name').value,path:$('import-path').value});$('import-dialog').close();await refresh();$('dataset').value=d.id;selected.clear();renderCatalog();notice('已导入自建评测集。');}catch(err){$('import-error').textContent=err.message;}finally{$('import-submit').disabled=false;}};
-$('trials').onclick=async e=>{
-  const id=e.target.closest('[data-trial]')?.dataset.trial;
-  if(!id)return;
+async function openEvidence(id){
+  if(!currentRun?.trials.some(t=>t.id===id)){notice('这条执行记录不存在。');return;}
   evidenceSelection={run:currentRun.id,trial:id};evidenceInitialized=false;
+  window.history.replaceState(null,'','/evo?'+new URLSearchParams({run:currentRun.id,trial:id})+location.hash);
   $('evidence-title').textContent='执行详情';$('evidence-content').textContent='正在读取执行进度…';
   $('evidence-dialog').showModal();await refreshEvidence();
-};
-$('evidence-dialog').addEventListener('close',()=>{evidenceSelection=null;evidenceInitialized=false;});
+}
+$('trials').onclick=async e=>{const id=e.target.closest('[data-trial]')?.dataset.trial;if(id)await openEvidence(id);};
+$('evidence-dialog').addEventListener('close',()=>{evidenceSelection=null;evidenceInitialized=false;const query=new URLSearchParams(location.search);query.delete('trial');window.history.replaceState(null,'','/evo?'+query+location.hash);});
 
 window.addEventListener('hashchange',route);route();
 (async()=>{try{const m=await api('/api/models');profiles=m.profiles;entries.forEach(e=>e.model_profile=m.default||profiles[0]?.id||'');renderEntries();await refresh();}catch(e){notice(e.message);}setInterval(refresh,4000);})();

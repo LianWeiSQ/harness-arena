@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Evo · Harness 评分</title><link rel="stylesheet" href="/harness.css?v=6"><link rel="stylesheet" href="/dashboard.css?v=1"><script defer src="/dashboard.js?v=1"></script></head>
+<body>
+<header class="topbar"><a class="brand" href="/"><span class="brand-mark">◇</span><span>E<b>vo</b></span></a><nav aria-label="页面导航"><a href="/" aria-current="page">首页</a><a href="/evo">评测</a><a href="/evo#datasets">任务集</a><a href="/settings">设置</a></nav><span class="system-status" id="sync-status">读取中</span></header>
+<main class="dashboard">
+<div class="heading"><div><p class="eyebrow">HARNESS × MODEL</p><h1>Harness 评分</h1><p class="muted">同一组任务，看得分，也看执行效率。</p></div><a class="primary" href="/evo">发起评测 ↗</a></div>
+<p id="error" class="message" role="status" hidden></p><div id="active" class="active-run" hidden></div>
+<section id="empty" class="empty-state" hidden><span class="empty-mark">↗</span><h2>第一场评测，从这里开始</h2><p>选择任务和 Harness × 模型，完成后自动生成评分与对比。</p><a class="primary" href="/evo">配置第一场评测 ↗</a><a href="/evo#datasets">浏览任务集</a></section>
+<div id="content" hidden>
+<div class="scope"><div><strong id="dataset"></strong><span id="scope-badge" class="badge"></span><span id="coverage" class="muted"></span></div><label for="run-select">评测记录</label><select id="run-select" aria-label="选择评分记录"></select></div>
+<section class="metrics" aria-label="本场概况"><div><span>参评组合</span><strong id="entry-count">—</strong><small>Harness × 模型</small></div><div><span>评测任务</span><strong id="task-count">—</strong><small id="repeat-count"></small></div><div><span>有效验收</span><strong id="graded-count">—</strong><small id="run-state"></small></div><div><span>历史评测</span><strong id="run-count">—</strong><small>记录与证据均保留</small></div></section>
+<section class="panel leaderboard"><div class="panel-heading"><h2>本场评分榜</h2><span class="muted small">通过率 × 100 · 同分并列</span></div><div class="table-scroll"><table><thead><tr><th>排名</th><th>Harness / 模型</th><th>评分 <span class="muted">/ 100</span></th><th>通过 / 执行</th><th>平均用时</th><th>Token</th><th></th></tr></thead><tbody id="scores"></tbody></table></div><p class="footnote" id="score-note"></p></section>
+<div class="lower-grid">
+<section class="panel"><div class="panel-heading"><h2>执行效率</h2><span class="muted small">仅对比已完整评分的组合</span></div><div class="efficiency"><div><h3>平均用时 <span>含环境准备</span></h3><div id="time-chart"></div></div><div><h3>记录 Token <span>本场合计</span></h3><div id="token-chart"></div></div></div></section>
+<section class="panel"><div class="panel-heading"><h2>最近评测</h2><span class="muted small" id="recent-count"></span></div><div id="recent-runs"></div></section>
+</div>
+<section class="panel task-panel"><div class="panel-heading"><h2>逐题对比</h2><a id="view-run" href="/evo">完整执行记录 ↗</a></div><div class="table-scroll task-matrix" id="task-matrix"></div></section>
+</div>
+<footer><span>Evo · Evaluation Foundation</span><a href="/archive">历史实验归档 ↗</a></footer>
+</main></body></html>

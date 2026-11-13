@@ -12,6 +12,7 @@ from .arena import SeasonRunner
 from .harness import ACTIVE, TASKS, HarnessMatch
 from .comparison import compare_match
 from .models import ModelProfiles
+from .dashboard import dashboard_view
 from .provider import Budget, ResponsesClient
 from .scenario import build_image, docker
 from .store import Store, digest, now
@@ -274,6 +275,11 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
         def do_GET(self):
             parsed = urlparse(self.path)
             path = parsed.path
+            if path == "/api/dashboard":
+                try:
+                    return self.send_json(dashboard_view(store, parse_qs(parsed.query).get("run", [None])[0]))
+                except ValueError as error:
+                    return self.send_json({"error": str(error)}, 404)
             if path == "/api/benchmarks":
                 return self.send_json(benchmarks.overview())
             if path.startswith("/api/benchmarks/runs/") and "/trials/" in path:
@@ -387,7 +393,8 @@ def serve(store: Store, settings, host="127.0.0.1", port=8787, base_image="pytho
                     return self.send_json({"events": store.events(args.get("scope", [None])[0], int(args.get("after", [0])[0]))})
                 except ValueError:
                     return self.send_json({"error": "invalid_cursor"}, 400)
-            files = {"/": "benchmarks.html", "/evo": "benchmarks.html", "/archive": "evo.html",
+            files = {"/": "dashboard.html", "/home": "dashboard.html", "/evo": "benchmarks.html", "/archive": "evo.html",
+                     "/dashboard.js": "dashboard.js", "/dashboard.css": "dashboard.css",
                      "/benchmarks.js": "benchmarks.js", "/benchmarks.css": "benchmarks.css",
                      "/evo.js": "evo.js", "/evo.css": "evo.css",
                      "/fixops": "index.html",

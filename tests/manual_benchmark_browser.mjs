@@ -8,6 +8,9 @@ const page = await browser.newPage({viewport:{width:1440,height:1000}});
 const errors=[];page.on('pageerror', e=>errors.push(e.message));
 page.on('console', e=>{if(e.type()==='error') errors.push(e.text());});
 try {
+  await page.goto('http://127.0.0.1:8797/');
+  await page.waitForSelector('#empty:not([hidden])');
+  assert.equal(await page.locator('#scores tr').count(),0);
   await page.goto('http://127.0.0.1:8797/settings?edit=startup');
   await page.waitForFunction(()=>document.querySelector('#form-title').textContent==='编辑模型连接');
   assert.equal(await page.locator('#profile-key').inputValue(),'');
@@ -57,6 +60,23 @@ try {
   assert.equal(await page.locator('.score-card').count(),2);
   await page.setViewportSize({width:390,height:844});
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+  await page.goto('http://127.0.0.1:8797/');
+  await page.waitForSelector('#scores tr');
+  assert.equal(await page.locator('#scores tr').count(),2);
+  assert.deepEqual(await page.locator('#scores .score-number').allTextContents(),['100.0','0.0']);
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
+  const run=await page.locator('#run-select').inputValue();
+  await page.setViewportSize({width:1440,height:1000});
+  await page.locator('#task-matrix .task-result').first().click();
+  await page.waitForFunction(()=>document.querySelector('#evidence-dialog').open&&document.querySelector('#evidence-content').textContent.includes('Controlled browser fixture'));
+  assert.equal(new URL(page.url()).searchParams.get('run'),run);
+  await page.reload();
+  await page.waitForFunction(()=>document.querySelector('#evidence-dialog').open&&document.querySelector('#evidence-content').textContent.includes('Controlled browser fixture'));
+  await page.click('[data-close="evidence-dialog"]');
+  await page.waitForFunction(()=>!new URL(location.href).searchParams.has('trial'));
+  assert.equal(new URL(page.url()).searchParams.has('trial'),false);
+  await page.locator('nav a').filter({hasText:'首页'}).click();
+  await page.waitForSelector('#scores tr');
   assert.deepEqual(errors,[]);
-  console.log('PASS: startup editing, key preservation, live stages/logs, modal auto-refresh, selection, comparisons, reload, mobile; fixture only.');
+  console.log('PASS: home empty state, scoring/ranks, evidence deep links, startup editing, live logs, comparisons, reload, mobile; fixture only.');
 } finally {await browser.close();}
